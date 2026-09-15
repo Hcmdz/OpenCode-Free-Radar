@@ -6,7 +6,7 @@ val versionFile = rootProject.file("version.properties")
 val props = Properties()
 if (versionFile.exists()) {
     FileInputStream(versionFile).use { props.load(it) }
-}
+} // ponytail: clean clones (CI) have no version file; fall back to 0.1.0+1 so versionCode stays > 0. CI never ships.
 
 fun p(name: String): Int = (props.getProperty(name) ?: "0").toIntOrNull() ?: 0
 
@@ -14,6 +14,10 @@ var major = p("major")
 var minor = p("minor")
 var patch = p("patch")
 var build = p("build")
+if (!versionFile.exists() && major == 0 && minor == 0 && patch == 0 && build == 0) {
+    minor = 1
+    build = 1
+}
 
 val type = project.findProperty("versionType") as? String
 when (type) {
