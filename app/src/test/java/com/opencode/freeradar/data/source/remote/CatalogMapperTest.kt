@@ -14,9 +14,11 @@ class CatalogMapperTest {
     private fun offer(
         inputPrice: Double? = 0.0,
         outputPrice: Double? = 0.0,
-        supportsTools: Boolean? = true
+        supportsTools: Boolean? = true,
+        providerId: String = "bothub",
+        conditions: String? = null
     ) = SourceOffer(
-        providerId = "bothub",
+        providerId = providerId,
         modelId = "m",
         name = "M",
         inputPrice = inputPrice,
@@ -27,7 +29,7 @@ class CatalogMapperTest {
         supportsVision = false,
         supportsStructuredOutput = true,
         quota = null,
-        conditions = null,
+        conditions = conditions,
         officialUrl = null,
         sourceUrl = null
     )
@@ -50,6 +52,44 @@ class CatalogMapperTest {
     fun `missing cost maps to UNKNOWN, never FREE`() {
         val mapped = offer(inputPrice = null, outputPrice = null).toOffer(now = 1_000L)
         assertThat(mapped.freeStatus).isEqualTo(FreeStatus.UNKNOWN)
+    }
+
+    @Test
+    fun `dated expiry maps to TRIAL, never FREE`() {
+        // Live proof: dots-3-note-preview:free expires 2026-09-30 but
+        // prices 0/0 — a time-bombed trial, not a free offer.
+        val mapped = offer(conditions = "Free trial ends 2026-09-30.").toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.TRIAL)
+    }
+
+    @Test
+    fun `plan-gated provider maps to LIMITED, never FREE`() {
+        // Live proof: *-token-plan/*-coding-plan $0 rows are free tiers
+        // inside a purchasable plan (alibaba, xiaomi, tencent, ...).
+        val mapped = offer(providerId = "xiaomi-token-plan-cn").toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.LIMITED)
+    }
+
+    @Test
+    fun `account-gated gateway maps to LIMITED, never FREE`() {
+        // Live proof (official docs 2026-09-15): gitlab needs Premium/
+        // Ultimate + Duo/credits; opencode Zen needs account + billing
+        // and its "Free" models are limited-time trials.
+        assertThat(offer(providerId = "gitlab").toOffer(now = 1_000L).freeStatus)
+            .isEqualTo(FreeStatus.LIMITED)
+        assertThat(offer(providerId = "opencode").toOffer(now = 1_000L).freeStatus)
+            .isEqualTo(FreeStatus.LIMITED)
+    }
+
+    @Test
+    fun `plan and trial rules never touch PAID or UNKNOWN`() {
+        assertThat(
+            offer(inputPrice = 1.0, outputPrice = 1.0, providerId = "gitlab").toOffer(now = 1_000L).freeStatus
+        ).isEqualTo(FreeStatus.PAID)
+        assertThat(
+            offer(inputPrice = null, outputPrice = null, conditions = "Free trial ends 2026-09-30.")
+                .toOffer(now = 1_000L).freeStatus
+        ).isEqualTo(FreeStatus.UNKNOWN)
     }
 
     @Test
