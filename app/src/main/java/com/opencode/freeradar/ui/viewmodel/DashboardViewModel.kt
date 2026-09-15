@@ -108,6 +108,12 @@ class DashboardViewModel(
     fun onAction(action: DashboardAction) {
         when (action) {
             DashboardAction.Refresh -> viewModelScope.launch {
+                // A second pull while the spinner is up would start a second
+                // full sync: double watermark, double afterSync, and the first
+                // finisher drops the flag while work is still in flight.
+                // Launches run sequentially on Main with no suspension between
+                // the check and the set, so this coalesces to the running sync.
+                if (refreshing.value) return@launch
                 refreshing.value = true
                 try {
                     val watermark = gate.beforeSync()
