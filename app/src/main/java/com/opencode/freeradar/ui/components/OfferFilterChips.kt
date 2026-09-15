@@ -13,13 +13,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.theme.AppThemePreview
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun OfferFilterChips(
-    selected: OfferFilter,
-    onSelect: (OfferFilter) -> Unit,
+private fun ChipRow(
+    labels: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     FlowRow(
@@ -27,14 +29,44 @@ fun OfferFilterChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        OfferFilter.entries.forEach { filter ->
+        labels.forEachIndexed { index, label ->
             FilterChip(
-                selected = filter == selected,
-                onClick = { onSelect(filter) },
-                label = { Text(text = stringResource(filter.labelRes)) }
+                selected = index == selectedIndex,
+                onClick = { onSelect(index) },
+                label = { Text(text = label) }
             )
         }
     }
+}
+
+@Composable
+fun OfferFilterChips(
+    selected: OfferFilter,
+    onSelect: (OfferFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val entries = OfferFilter.entries
+    ChipRow(
+        labels = entries.map { stringResource(it.labelRes) },
+        selectedIndex = entries.indexOf(selected),
+        onSelect = { onSelect(entries[it]) },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun SourceFilterChips(
+    selected: SourceFilter,
+    onSelect: (SourceFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val entries = SourceFilter.entries
+    ChipRow(
+        labels = entries.map { stringResource(it.labelRes) },
+        selectedIndex = entries.indexOf(selected),
+        onSelect = { onSelect(entries[it]) },
+        modifier = modifier
+    )
 }
 
 @Preview(name = "Light", showBackground = true)

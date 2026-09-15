@@ -20,6 +20,7 @@ import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.SourceFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -91,14 +92,15 @@ class NoopSyncNotifier : SyncNotifier {
 fun sampleOffer(
     remoteId: String = "p/m",
     compatible: Boolean = true,
-    status: FreeStatus = FreeStatus.FREE
+    status: FreeStatus = FreeStatus.FREE,
+    source: String = "opencode-data"
 ) = Offer(
     remoteId = remoteId, providerId = "p", modelId = "m", name = "M",
     inputPrice = 0.0, outputPrice = 0.0, freeStatus = status,
     quota = null, quotaPeriod = null, temporary = false, conditions = null,
     contextLength = 1000, maxOutputTokens = null, supportsTools = true,
     supportsVision = false, supportsStructuredOutput = false,
-    openCodeCompatible = compatible, officialUrl = null, source = "opencode-data",
+    openCodeCompatible = compatible, officialUrl = null, source = source,
     sourceUrl = null, retrievedAt = 1_000L, verifiedAt = 1_000L,
     confidence = Confidence.OFFICIAL, favorite = false
 )
@@ -206,6 +208,50 @@ class DashboardViewModelTest {
             while (filtered.filter != OfferFilter.FREE_COMPATIBLE) filtered = awaitItem()
             assertThat(repo.lastCompatibleOnly).isEqualTo(true)
             assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+        }
+    }
+
+    @Test
+    fun `selecting NVIDIA source hides S1 offers`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer(),
+            sampleOffer("nvidia/m", source = "nvidia-build")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.NVIDIA))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.NVIDIA) filtered = awaitItem()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("nvidia/m"))
+        }
+    }
+
+    @Test
+    fun `source and status filters intersect`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer(),
+            sampleOffer("p/paid", status = FreeStatus.PAID),
+            sampleOffer("nvidia/m", source = "nvidia-build")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SelectFilter(OfferFilter.ALL))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENCODE))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "p/paid"))
         }
     }
 

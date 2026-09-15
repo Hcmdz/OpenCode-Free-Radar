@@ -9,6 +9,7 @@ import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
 import com.opencode.freeradar.ui.model.toUi
@@ -26,6 +27,7 @@ data class DashboardUiState(
     val isLoading: Boolean = true,
     val offers: List<OfferUi> = emptyList(),
     val filter: OfferFilter = OfferFilter.FREE,
+    val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
     val offline: Boolean = false,
     val lastSyncAt: Long? = null,
     val error: UiText? = null
@@ -34,6 +36,7 @@ data class DashboardUiState(
 sealed interface DashboardAction {
     data object Refresh : DashboardAction
     data class SelectFilter(val filter: OfferFilter) : DashboardAction
+    data class SelectSource(val source: SourceFilter) : DashboardAction
     data class OpenOffer(val remoteId: String) : DashboardAction
     data object DismissError : DashboardAction
 }
@@ -48,6 +51,7 @@ class DashboardViewModel(
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(OfferFilter.FREE)
+    private val sourceFilter = MutableStateFlow(SourceFilter.ALL_SOURCES)
     private val manualError = MutableStateFlow<UiText?>(null)
     private val events = Channel<DashboardEvent>(Channel.BUFFERED)
     val eventFlow = events.receiveAsFlow()
@@ -65,9 +69,9 @@ class DashboardViewModel(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val offersFlow = filter.flatMapLatest { repository.observeOffers(it.compatibleOnly()) }
 
-    private data class Prefs(val filter: OfferFilter, val error: UiText?)
+    private data class Prefs(val filter: OfferFilter, val source: SourceFilter, val error: UiText?)
 
-    private val prefsFlow = combine(filter, manualError, ::Prefs)
+    private val prefsFlow = combine(filter, sourceFilter, manualError, ::Prefs)
 
     val state = combine(
         offersFlow,
@@ -80,8 +84,10 @@ class DashboardViewModel(
                 offers = offers
                     .filter { !prefs.filter.freeOnly() || it.freeStatus == FreeStatus.FREE }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
+                    .filter { prefs.source.sourceId == null || it.source == prefs.source.sourceId }
                     .map { it.toUi() },
                 filter = prefs.filter,
+                sourceFilter = prefs.source,
                 offline = health.any { it.state == HealthState.UNAVAILABLE },
                 lastSyncAt = lastRun?.completedAt ?: lastRun?.startedAt,
                 error = prefs.error
@@ -102,6 +108,7 @@ class DashboardViewModel(
                 }
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter
+            is DashboardAction.SelectSource -> sourceFilter.value = action.source
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))
             DashboardAction.DismissError -> manualError.value = null
         }

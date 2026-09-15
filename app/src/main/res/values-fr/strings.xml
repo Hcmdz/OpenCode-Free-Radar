@@ -17,6 +17,9 @@
     <string name="filter_free">Gratuits</string>
     <string name="filter_compatible">Compatibles</string>
     <string name="filter_free_compatible">Gratuits + Compatibles</string>
+    <string name="filter_all_sources">Toutes sources</string>
+    <string name="filter_source_opencode">OpenCode</string>
+    <string name="filter_source_nvidia">NVIDIA</string>
     <string name="refresh_now">Actualiser</string>
     <string name="retry">Réessayer</string>
     <string name="offline_banner">Hors ligne — données du %1$s</string>

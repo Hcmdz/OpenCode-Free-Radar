@@ -11,7 +11,7 @@ data class OfferUi(
     val freeStatus: FreeStatus,
     val contextLength: Int?,
     val verifiedAt: Long,
-    val sourceLabel: String
+    val source: String
 )
 
 /**
@@ -31,5 +31,5 @@ fun Offer.toUi(): OfferUi = OfferUi(
     freeStatus = freeStatus,
     contextLength = contextLength,
     verifiedAt = verifiedAt,
-    sourceLabel = sourceLabel(source)
+    source = source
 )

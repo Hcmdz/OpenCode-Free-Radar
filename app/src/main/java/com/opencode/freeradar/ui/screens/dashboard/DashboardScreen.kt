@@ -39,12 +39,14 @@ import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.ui.components.ErrorBanner
 import com.opencode.freeradar.ui.components.OfferFilterChips
+import com.opencode.freeradar.ui.components.SourceFilterChips
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferUi
+import com.opencode.freeradar.ui.model.sourceLabel
 import com.opencode.freeradar.ui.model.text
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.viewmodel.DashboardAction
@@ -123,6 +125,14 @@ fun DashboardScreen(
                 onSelect = { onAction(DashboardAction.SelectFilter(it)) },
                 modifier = Modifier
                     .testTag("dashboard_filter")
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            SourceFilterChips(
+                selected = state.sourceFilter,
+                onSelect = { onAction(DashboardAction.SelectSource(it)) },
+                modifier = Modifier
+                    .testTag("dashboard_source_filter")
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -214,7 +224,7 @@ private fun OfferCard(offer: OfferUi, onClick: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
-                StatusPill(text = offer.sourceLabel, tone = StatusTone.NEUTRAL)
+                StatusPill(text = sourceLabel(offer.source), tone = StatusTone.NEUTRAL)
                 offer.contextLength?.let {
                     AssistChip(onClick = {}, label = { Text("$it tokens") })
                 }
@@ -232,7 +242,7 @@ private fun DashboardListPreview() {
                 isLoading = false,
                 filter = OfferFilter.FREE_COMPATIBLE,
                 offers = listOf(
-                    OfferUi("p/m", "Model", "p", FreeStatus.FREE, 1_000_000, 1_000L, "OpenCode")
+                    OfferUi("p/m", "Model", "p", FreeStatus.FREE, 1_000_000, 1_000L, "opencode-data")
                 )
             ),
             onAction = {}

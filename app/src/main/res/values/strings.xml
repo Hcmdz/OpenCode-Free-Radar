@@ -18,6 +18,9 @@
     <string name="filter_free">Free</string>
     <string name="filter_compatible">Compatible</string>
     <string name="filter_free_compatible">Free + Compatible</string>
+    <string name="filter_all_sources">All sources</string>
+    <string name="filter_source_opencode">OpenCode</string>
+    <string name="filter_source_nvidia">NVIDIA</string>
     <string name="refresh_now">Refresh now</string>
     <string name="retry">Retry</string>
     <string name="offline_banner">Offline — showing data from %1$s</string>
