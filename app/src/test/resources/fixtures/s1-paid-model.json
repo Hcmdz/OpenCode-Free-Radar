@@ -1,0 +1,40 @@
+{
+ "provider": "openrouter",
+ "model": {
+  "id": "qwen/qwen3.7-max",
+  "name": "Qwen3.7 Max",
+  "description": "Qwen frontier model tuned for agent frameworks, coding assistants, and long tasks",
+  "family": "qwen",
+  "attachment": false,
+  "reasoning": true,
+  "reasoning_options": [
+   {
+    "type": "toggle"
+   }
+  ],
+  "tool_call": true,
+  "structured_output": true,
+  "temperature": true,
+  "release_date": "2026-05-21",
+  "last_updated": "2026-05-21",
+  "modalities": {
+   "input": [
+    "text"
+   ],
+   "output": [
+    "text"
+   ]
+  },
+  "open_weights": false,
+  "limit": {
+   "context": 1000000,
+   "output": 131072
+  },
+  "cost": {
+   "input": 1.475,
+   "output": 4.425,
+   "cache_read": 0.295,
+   "cache_write": 1.84375
+  }
+ }
+}

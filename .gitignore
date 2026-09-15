@@ -1,0 +1,22 @@
+# Published: app code only. Everything below stays local, never committed.
+# See constitution rule 9 + T022 audit.
+
+/Technical Project Plan.m
+/AGENTS.md
+/memory/
+/specs/
+/docs/decisions/
+
+# Build / local secrets (standard Android)
+local.properties
+*.keystore
+*.jks
+version.properties
+.idea/
+build/
+.gradle/
+.kotlin/
+*.apk
+*.aab
+*.hprof
+*.env

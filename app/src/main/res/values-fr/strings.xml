@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello_title">Radar des modèles gratuits pour OpenCode</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="amoled_black">Noir AMOLED</string>
+    <string name="lang_system">Système</string>
+    <string name="lang_english">Anglais</string>
+    <string name="lang_french">Français</string>
+    <string name="lang_arabic">Arabe</string>
+    <string name="dashboard_title">Modèles gratuits</string>
+    <string name="details_title">Détails de l’offre</string>
+    <string name="compatible_only">Compatibles OpenCode uniquement</string>
+    <string name="free_only">Offres gratuites uniquement</string>
+    <string name="filter_all">Tous</string>
+    <string name="filter_free">Gratuits</string>
+    <string name="filter_compatible">Compatibles</string>
+    <string name="filter_free_compatible">Gratuits + Compatibles</string>
+    <string name="refresh_now">Actualiser</string>
+    <string name="retry">Réessayer</string>
+    <string name="offline_banner">Hors ligne — données du %1$s</string>
+    <string name="empty_offers_title">Aucune offre pour l’instant</string>
+    <string name="empty_offers_hint">Touchez Actualiser une fois en ligne.</string>
+    <string name="error_no_internet">Pas de connexion internet.</string>
+    <string name="error_timeout">La requête a expiré.</string>
+    <string name="error_server">Le serveur a échoué. Réessayez plus tard.</string>
+    <string name="error_rate_limited">Limite atteinte. Réessayez plus tard.</string>
+    <string name="error_serialization">La source a changé de format.</string>
+    <string name="error_unknown">Une erreur est survenue.</string>
+    <string name="provenance_title">Provenance</string>
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_appearance">Apparence</string>
+    <string name="settings_language">Langue</string>
+    <string name="desc_settings">Paramètres</string>
+    <string name="desc_back">Retour</string>
+    <string name="section_prices">Tarifs</string>
+    <string name="section_quotas">Quotas</string>
+    <string name="section_conditions">Conditions</string>
+    <string name="section_capabilities">Capacités</string>
+    <string name="section_compat">Compatibilité OpenCode</string>
+    <string name="section_history">Historique</string>
+    <string name="label_provider">Fournisseur</string>
+    <string name="label_status">Statut</string>
+    <string name="label_context">Contexte</string>
+    <string name="label_output">Sortie max</string>
+    <string name="label_tools">Appel d’outils</string>
+    <string name="label_vision">Vision</string>
+    <string name="value_yes">Oui</string>
+    <string name="value_no">Non</string>
+    <string name="value_unknown">Inconnu</string>
+    <string name="history_empty">Aucun changement enregistré.</string>
+    <plurals name="offers_count">
+        <item quantity="one">%1$d offre gratuite</item>
+        <item quantity="many">%1$d d’offres gratuites</item>
+        <item quantity="other">%1$d offres gratuites</item>
+    </plurals>
+    <plurals name="models_count">
+        <item quantity="one">%1$d modèle</item>
+        <item quantity="many">%1$d de modèles</item>
+        <item quantity="other">%1$d modèles</item>
+    </plurals>
+</resources>

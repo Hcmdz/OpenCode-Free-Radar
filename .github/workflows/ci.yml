@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew lintDebug
+
+      # Constitution rule 10 (English-only): tripwire for French
+      # stop-words in code and docs. values-fr/ and values-ar/ hold
+      # localized strings and are excluded by design.
+      - name: language-gate
+        run: |
+          ! grep -rInw \
+            --include='*.kt' --include='*.kts' \
+            --include='*.md' --include='*.xml' \
+            --exclude-dir=build --exclude-dir=.git --exclude-dir=.gradle \
+            --exclude-dir=values-fr --exclude-dir=values-ar \
+            -e 'le' -e 'la' -e 'les' -e 'des' -e 'une' \
+            -e 'est' -e 'sont' -e 'dans' -e 'pour' -e 'avec' \
+            -e 'sans' -e 'entre' -e 'cette' -e 'ces' -e 'leur' \
+            -e 'voici' -e 'chaque' -e 'tous' -e 'moins' -e 'quand' \
+            .

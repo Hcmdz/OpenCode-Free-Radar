@@ -1,0 +1,43 @@
+{
+ "provider": "bothub",
+ "model": {
+  "id": "nemotron-3-ultra-550b-a55b:free",
+  "name": "Nemotron 3 Ultra (free)",
+  "description": "Largest Nemotron 3 model for maximum open-weight reasoning and agent accuracy",
+  "family": "nemotron",
+  "attachment": false,
+  "reasoning": true,
+  "reasoning_options": [
+   {
+    "type": "effort",
+    "values": [
+     "none",
+     "medium",
+     "high"
+    ]
+   }
+  ],
+  "tool_call": true,
+  "interleaved": true,
+  "temperature": true,
+  "release_date": "2026-06-04",
+  "last_updated": "2026-06-04",
+  "modalities": {
+   "input": [
+    "text"
+   ],
+   "output": [
+    "text"
+   ]
+  },
+  "open_weights": true,
+  "limit": {
+   "context": 1000000,
+   "output": 128000
+  },
+  "cost": {
+   "input": 0,
+   "output": 0
+  }
+ }
+}
