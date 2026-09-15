@@ -5,6 +5,7 @@ import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
@@ -117,9 +119,18 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = searchExpanded) {
+    // ponytail: single dismiss path for back-press, tap-outside and filter taps.
+    val dismissSearch = {
         searchExpanded = false
         focusManager.clearFocus()
+    }
+    BackHandler(enabled = searchExpanded) {
+        dismissSearch()
+    }
+    // Scrolling the list folds the panel; the typed query lives in the
+    // ViewModel and survives. Also covers the scroll-top FAB animation.
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) dismissSearch()
     }
     // Visible past the first item only; Scaffold docks it bottom-end (right).
     val showScrollTop = listState.firstVisibleItemIndex > 0
@@ -174,7 +185,16 @@ fun DashboardScreen(
         // value) in an Expressive container instead of the stateful
         // TextFieldState API.
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            // Tap-outside dismiss: pointerInput adds no semantics, so TalkBack
+            // never sees this layer. Scoped to the content column only — the
+            // bottom search dock is a sibling and never collapses itself.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { dismissSearch() })
+                    }
+            ) {
             if (state.offline) {
                 OfflineBanner(lastSyncAt = state.lastSyncAt)
             }
@@ -184,9 +204,19 @@ fun DashboardScreen(
                 statusCounts = state.statusCounts,
                 sourceCounts = state.sourceCounts,
                 showReset = state.showResetFilters,
-                onSelectFilter = { onAction(DashboardAction.SelectFilter(it)) },
-                onSelectSource = { onAction(DashboardAction.SelectSource(it)) },
-                onReset = { onAction(DashboardAction.ResetFilters) },
+                onSelectFilter = {
+                    dismissSearch()
+                    onAction(DashboardAction.SelectFilter(it))
+                },
+                onSelectSource = {
+                    dismissSearch()
+                    onAction(DashboardAction.SelectSource(it))
+                },
+                onReset = {
+                    dismissSearch()
+                    onAction(DashboardAction.ResetFilters)
+                },
+                onOpenSheet = dismissSearch,
                 modifier = Modifier
                     .testTag("dashboard_filter")
                     .fillMaxWidth()

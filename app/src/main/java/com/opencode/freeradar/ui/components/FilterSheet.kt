@@ -177,6 +177,7 @@ fun FilterBar(
     onSelectFilter: (OfferFilter) -> Unit,
     onSelectSource: (SourceFilter) -> Unit,
     onReset: () -> Unit,
+    onOpenSheet: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var open by remember { mutableStateOf(false) }
@@ -189,7 +190,10 @@ fun FilterBar(
             sourceLabels = SourceFilter.entries.associateWith { stringResource(it.labelRes) },
             defaultTitle = title
         ),
-        onOpen = { open = true },
+        onOpen = {
+            onOpenSheet()
+            open = true
+        },
         modifier = modifier
     )
     FilterSheet(
