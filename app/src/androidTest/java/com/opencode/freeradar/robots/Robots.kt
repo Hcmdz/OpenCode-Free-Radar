@@ -27,6 +27,10 @@ class DashboardRobot(private val rule: RadarRule) {
         rule.onAllNodesWithTag("offer_card")[0].performClick()
     }
 
+    fun openSecondOffer(): DashboardRobot = apply {
+        rule.onAllNodesWithTag("offer_card")[1].performClick()
+    }
+
     fun openSettings(): DashboardRobot = apply {
         rule.onNodeWithTag("dashboard_settings").performClick()
     }
@@ -47,6 +51,11 @@ class DetailsRobot(private val rule: RadarRule) {
 
     fun assertTitle(name: String): DetailsRobot = apply {
         rule.onNodeWithText(name).assertIsDisplayed()
+    }
+
+    fun readTitle(): String {
+        val node = rule.onNodeWithTag("details_title").fetchSemanticsNode()
+        return node.config[androidx.compose.ui.semantics.SemanticsProperties.Text].first().text
     }
 
     fun assertPricesSection(): DetailsRobot = apply {

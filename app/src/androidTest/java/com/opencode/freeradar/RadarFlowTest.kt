@@ -31,9 +31,20 @@ class RadarFlowTest {
         val dashboard = DashboardRobot(rule).assertVisible()
         dashboard.openFirstOffer()
 
-        DetailsRobot(rule)
+        val details = DetailsRobot(rule)
             .assertVisible()
             .assertPricesSection()
+        val firstTitle = details.readTitle()
+
+        // Regression: the second Details must not reuse the first offerId
+        // (shared ViewModelStore across Nav3 entries).
+        Espresso.pressBack()
+        DashboardRobot(rule).assertVisible().openSecondOffer()
+
+        val secondTitle = DetailsRobot(rule).assertVisible().readTitle()
+        assert(secondTitle != firstTitle) {
+            "Second details showed the first offer: $secondTitle"
+        }
 
         Espresso.pressBack()
         DashboardRobot(rule).assertVisible().openSettings()

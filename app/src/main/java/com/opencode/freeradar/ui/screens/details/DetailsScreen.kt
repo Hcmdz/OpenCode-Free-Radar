@@ -87,7 +87,11 @@ fun DetailsScreen(state: DetailsUiState, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(text = offer.name, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = offer.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("details_title")
+                )
                 Text(
                     text = "${stringResource(R.string.label_provider)}: ${offer.providerId}",
                     style = MaterialTheme.typography.bodyMedium
