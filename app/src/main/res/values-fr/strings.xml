@@ -21,7 +21,12 @@
     <string name="filter_source_opencode">OpenCode</string>
     <string name="filter_source_openrouter">OpenRouter</string>
     <string name="filter_title">Filtres</string>
-    <string name="conflict_warning">Informations contradictoires entre les sources — vérifiez avant usage.</string>
+    <string name="conflict_warning">Statut à vérifier — confirmez avant usage.</string>
+    <string name="status_unverified">Non vérifié</string>
+    <string name="desc_favorite">Suivre cette offre</string>
+    <string name="desc_unfavorite">Ne plus suivre cette offre</string>
+    <string name="search_hint">Rechercher modèles ou providers</string>
+    <string name="search_clear">Effacer la recherche</string>
     <string name="section_status">Statut</string>
     <string name="section_source">Source</string>
     <string name="reset_filters">Réinitialiser</string>
@@ -76,6 +81,7 @@
     </plurals>
     <string name="settings_notifications">Notifications</string>
     <string name="notif_enable">M’alerter des nouvelles offres gratuites et expirations</string>
+    <string name="notif_benefit">Soyez alerté dès qu’une offre gratuite apparaît ou qu’un prix tombe à 0.</string>
     <string name="notif_denied_hint">Notifications bloquées. Activez-les dans les paramètres système pour recevoir des alertes.</string>
     <string name="notif_open_settings">Ouvrir les paramètres système</string>
     <string name="notif_channel_events">Alertes d’offres</string>

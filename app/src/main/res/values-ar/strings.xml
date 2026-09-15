@@ -21,7 +21,12 @@
     <string name="filter_source_opencode">OpenCode</string>
     <string name="filter_source_openrouter">OpenRouter</string>
     <string name="filter_title">عوامل التصفية</string>
-    <string name="conflict_warning">معلومات متضاربة بين المصادر — تحقق قبل الاستخدام.</string>
+    <string name="conflict_warning">الحالة تحتاج إلى تحقق — تأكد قبل الاستخدام.</string>
+    <string name="status_unverified">غير مؤكد</string>
+    <string name="desc_favorite">تتبع هذا العرض</string>
+    <string name="desc_unfavorite">إلغاء تتبع هذا العرض</string>
+    <string name="search_hint">ابحث في النماذج أو المزودين</string>
+    <string name="search_clear">مسح البحث</string>
     <string name="section_status">الحالة</string>
     <string name="section_source">المصدر</string>
     <string name="reset_filters">إعادة تعيين</string>
@@ -82,6 +87,7 @@
     </plurals>
     <string name="settings_notifications">الإشعارات</string>
     <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة والمنتهية</string>
+    <string name="notif_benefit">احصل على تنبيه عند ظهور عرض مجاني جديد أو انخفاض سعر إلى 0.</string>
     <string name="notif_denied_hint">الإشعارات محظورة. فعّلها في إعدادات النظام لتلقي التنبيهات.</string>
     <string name="notif_open_settings">فتح إعدادات النظام</string>
     <string name="notif_channel_events">تنبيهات العروض</string>

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.ui.model
 
+import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
 
@@ -11,7 +12,10 @@ data class OfferUi(
     val freeStatus: FreeStatus,
     val contextLength: Int?,
     val verifiedAt: Long,
-    val source: String
+    val source: String,
+    /** Zen-roster ghost: visible but unconfirmed — neutral chip, no bell. */
+    val unverified: Boolean = false,
+    val favorite: Boolean = false
 )
 
 /**
@@ -32,5 +36,7 @@ fun Offer.toUi(): OfferUi = OfferUi(
     freeStatus = freeStatus,
     contextLength = contextLength,
     verifiedAt = verifiedAt,
-    source = source
+    source = source,
+    unverified = confidence == Confidence.TO_VERIFY,
+    favorite = favorite
 )

@@ -9,6 +9,7 @@ import com.opencode.freeradar.domain.repository.OfferRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class DetailsUiState(
     val isLoading: Boolean = true,
@@ -17,8 +18,8 @@ data class DetailsUiState(
 )
 
 class DetailsViewModel(
-    offerId: String,
-    repository: OfferRepository
+    private val offerId: String,
+    private val repository: OfferRepository
 ) : ViewModel() {
 
     val state = combine(
@@ -27,4 +28,11 @@ class DetailsViewModel(
     ) { offer, history ->
         DetailsUiState(isLoading = false, offer = offer, history = history)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailsUiState())
+
+    fun toggleFavorite() {
+        viewModelScope.launch {
+            val current = state.value.offer ?: return@launch
+            repository.setFavorite(current.remoteId, !current.favorite)
+        }
+    }
 }

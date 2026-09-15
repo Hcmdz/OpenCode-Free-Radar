@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.model.HealthState
+import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
@@ -17,10 +18,12 @@ import com.opencode.freeradar.ui.model.facetCounts
 import com.opencode.freeradar.ui.model.freeOnly
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
+import java.util.Locale
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,6 +34,8 @@ data class DashboardUiState(
     val offers: List<OfferUi> = emptyList(),
     val filter: OfferFilter = OfferFilter.FREE,
     val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
+    val query: String = "",
+    val recentSearches: List<String> = emptyList(),
     val statusCounts: Map<OfferFilter, Int> = emptyMap(),
     val sourceCounts: Map<SourceFilter, Int> = emptyMap(),
     val showResetFilters: Boolean = false,
@@ -45,6 +50,9 @@ sealed interface DashboardAction {
     data class SelectSource(val source: SourceFilter) : DashboardAction
     data object ResetFilters : DashboardAction
     data class OpenOffer(val remoteId: String) : DashboardAction
+    data class SubmitSearch(val query: String) : DashboardAction
+    data class ToggleFavorite(val remoteId: String, val favorite: Boolean) : DashboardAction
+    data class Search(val query: String) : DashboardAction
     data object DismissError : DashboardAction
 }
 
@@ -57,10 +65,16 @@ class DashboardViewModel(
     private val gate: SyncNotifier
 ) : ViewModel() {
 
+    companion object {
+        const val MAX_RECENTS = 3
+    }
+
     private val filter = MutableStateFlow(OfferFilter.FREE)
     private val sourceFilter = MutableStateFlow(SourceFilter.ALL_SOURCES)
     private val refreshing = MutableStateFlow(false)
     private val manualError = MutableStateFlow<UiText?>(null)
+    private val query = MutableStateFlow("")
+    private val recents = MutableStateFlow<List<String>>(emptyList())
     private val events = Channel<DashboardEvent>(Channel.BUFFERED)
     val eventFlow = events.receiveAsFlow()
 
@@ -72,17 +86,35 @@ class DashboardViewModel(
         val filter: OfferFilter,
         val source: SourceFilter,
         val refreshing: Boolean,
-        val error: UiText?
+        val error: UiText?,
+        val query: String,
+        val recentSearches: List<String> = emptyList()
     )
 
-    private val prefsFlow = combine(filter, sourceFilter, refreshing, manualError, ::Prefs)
+    private val prefsFlow = combine(filter, sourceFilter, refreshing, manualError, query, ::Prefs)
+        .combine(recents) { prefs, recents -> prefs.copy(recentSearches = recents) }
 
-    val state = combine(
+    // Debounced for filtering only: the field itself always shows the raw
+    // query, otherwise a stale display value reverts keystrokes mid-typing.
+    private val filterQuery = query.debounce(300)
+
+    /** Locale-fixed match: default lowercase breaks Turkish dotted-I. */
+    private fun matchesQuery(offer: Offer, raw: String): Boolean {
+        val q = raw.trim().lowercase(Locale.ROOT)
+        if (q.isEmpty()) return true
+        return offer.name.lowercase(Locale.ROOT).contains(q) ||
+            offer.providerId.lowercase(Locale.ROOT).contains(q) ||
+            offer.modelId.lowercase(Locale.ROOT).contains(q)
+    }
+
+    private val tripleFlow = combine(
         offersFlow,
         repository.observeHealth(),
         repository.observeLatestRun()
     ) { offers, health, lastRun -> Triple(offers, health, lastRun) }
-        .combine(prefsFlow) { (offers, health, lastRun), prefs ->
+
+    val state = combine(tripleFlow, prefsFlow, filterQuery) { triple, prefs, activeQuery ->
+        val (offers, health, lastRun) = triple
             val counts = facetCounts(offers, prefs.filter, prefs.source)
             DashboardUiState(
                 isLoading = false,
@@ -91,9 +123,12 @@ class DashboardViewModel(
                     .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
                     .filter { prefs.source.sourceId == null || it.source == prefs.source.sourceId }
+                    .filter { matchesQuery(it, activeQuery) }
                     .map { it.toUi() },
                 filter = prefs.filter,
                 sourceFilter = prefs.source,
+                query = prefs.query,
+                recentSearches = prefs.recentSearches,
                 statusCounts = counts.status,
                 sourceCounts = counts.source,
                 showResetFilters = prefs.filter != OfferFilter.FREE ||
@@ -135,6 +170,17 @@ class DashboardViewModel(
                 sourceFilter.value = SourceFilter.ALL_SOURCES
             }
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))
+            is DashboardAction.Search -> query.value = action.query
+            is DashboardAction.SubmitSearch -> {
+                val submitted = action.query.trim()
+                if (submitted.isNotEmpty()) {
+                    recents.value = (listOf(submitted) + recents.value.filter { it != submitted })
+                        .take(MAX_RECENTS)
+                }
+            }
+            is DashboardAction.ToggleFavorite -> viewModelScope.launch {
+                repository.setFavorite(action.remoteId, action.favorite)
+            }
             DashboardAction.DismissError -> manualError.value = null
         }
     }

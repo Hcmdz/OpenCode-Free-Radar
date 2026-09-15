@@ -59,7 +59,7 @@ class ConflictWarningTest {
                 )
             }
         }
-        rule.onNodeWithText("Conflicting information between sources — verify before use.")
+        rule.onNodeWithText("Status to verify — confirm before use.")
             .assertIsDisplayed()
     }
 
@@ -73,7 +73,7 @@ class ConflictWarningTest {
                 )
             }
         }
-        rule.onNodeWithText("Conflicting information between sources — verify before use.")
+        rule.onNodeWithText("Status to verify — confirm before use.")
             .assertDoesNotExist()
     }
 }

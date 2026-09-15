@@ -223,6 +223,11 @@ fun SettingsScreen(
                         onCheckedChange = onNotifToggle
                     )
                 }
+                Text(
+                    text = stringResource(R.string.notif_benefit),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (notifDenied) {
                     Text(
                         text = stringResource(R.string.notif_denied_hint),

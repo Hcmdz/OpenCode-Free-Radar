@@ -74,7 +74,11 @@ class FakeOfferRepository : OfferRepository {
         return refreshResult
     }
 
-    override suspend fun setFavorite(remoteId: String, favorite: Boolean) = Unit
+    var lastFavorite: Pair<String, Boolean>? = null
+
+    override suspend fun setFavorite(remoteId: String, favorite: Boolean) {
+        lastFavorite = remoteId to favorite
+    }
 
     override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> =
         emptyList()
@@ -96,9 +100,10 @@ fun sampleOffer(
     remoteId: String = "p/m",
     compatible: Boolean = true,
     status: FreeStatus = FreeStatus.FREE,
-    source: String = "opencode-data"
+    source: String = "opencode-data",
+    name: String = "M"
 ) = Offer(
-    remoteId = remoteId, providerId = "p", modelId = "m", name = "M",
+    remoteId = remoteId, providerId = "p", modelId = "m", name = name,
     inputPrice = 0.0, outputPrice = 0.0, freeStatus = status,
     quota = null, quotaPeriod = null, temporary = false, conditions = null,
     contextLength = 1000, maxOutputTokens = null, supportsTools = true,
@@ -388,6 +393,86 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `search filters by name`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer("p/alpha", name = "Alpha Coder"),
+            sampleOffer("p/beta", name = "Beta Chat")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.Search("alp"))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.offers.map { it.remoteId } != listOf("p/alpha")) {
+                filtered = awaitItem()
+            }
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/alpha"))
+        }
+    }
+
+    @Test
+    fun `search combines with status filter`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer("p/alpha", name = "Alpha Coder"),
+            sampleOffer("p/beta", name = "Alpha Paid", status = FreeStatus.PAID)
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.Search("alpha"))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.query != "alpha" || filtered.offers.map { it.remoteId } != listOf("p/alpha")) {
+                filtered = awaitItem()
+            }
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/alpha"))
+        }
+    }
+
+    @Test
+    fun `submitted searches are remembered distinct and capped`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SubmitSearch("muse"))
+            vm.onAction(DashboardAction.SubmitSearch("  "))
+            vm.onAction(DashboardAction.SubmitSearch("qwq"))
+            vm.onAction(DashboardAction.SubmitSearch("muse"))
+            vm.onAction(DashboardAction.SubmitSearch("zzz"))
+            vm.onAction(DashboardAction.SubmitSearch("yyy"))
+            testScheduler.advanceUntilIdle()
+            var state = awaitItem()
+            while (state.recentSearches != listOf("yyy", "zzz", "muse")) {
+                state = awaitItem()
+            }
+            assertThat(state.recentSearches).isEqualTo(listOf("yyy", "zzz", "muse"))
+        }
+    }
+
+    @Test
+    fun `toggle favorite records setFavorite`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.onAction(DashboardAction.ToggleFavorite("p/m", true))
+        testScheduler.advanceUntilIdle()
+        assertThat(repo.lastFavorite).isEqualTo("p/m" to true)
+    }
+
+    @Test
     fun `offline reflects unavailable source health`() = runTest {        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
@@ -424,6 +509,22 @@ class DetailsViewModelTest {
             assertThat(loaded.offer?.remoteId).isEqualTo("p/m")
             assertThat(loaded.history).isEqualTo(emptyList())
             assertThat(loaded.isLoading).isFalse()
+        }
+    }
+
+    @Test
+    fun `toggle favorite flips the current flag`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(sampleOffer())
+        val vm = DetailsViewModel("p/m", repo)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.toggleFavorite()
+            testScheduler.advanceUntilIdle()
+            assertThat(repo.lastFavorite).isEqualTo("p/m" to true)
         }
     }
 }

@@ -21,6 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,12 +52,16 @@ fun DetailsRoot(
     viewModel: DetailsViewModel = koinViewModel { parametersOf(offerId) }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    DetailsScreen(state = state, onBack = onBack)
+    DetailsScreen(state = state, onBack = onBack, onToggleFavorite = viewModel::toggleFavorite)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailsScreen(state: DetailsUiState, onBack: () -> Unit) {
+fun DetailsScreen(
+    state: DetailsUiState,
+    onBack: () -> Unit,
+    onToggleFavorite: () -> Unit = {}
+) {
     Scaffold(
         modifier = Modifier.testTag("details_screen"),
         topBar = {
@@ -66,6 +72,20 @@ fun DetailsScreen(state: DetailsUiState, onBack: () -> Unit) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.desc_back)
+                        )
+                    }
+                },
+                actions = {
+                    val favorite = state.offer?.favorite == true
+                    IconButton(
+                        modifier = Modifier.testTag("details_favorite"),
+                        onClick = onToggleFavorite
+                    ) {
+                        Icon(
+                            imageVector = if (favorite) Icons.Filled.Star else Icons.Filled.StarBorder,
+                            contentDescription = stringResource(
+                                if (favorite) R.string.desc_unfavorite else R.string.desc_favorite
+                            )
                         )
                     }
                 }
@@ -108,9 +128,11 @@ fun DetailsScreen(state: DetailsUiState, onBack: () -> Unit) {
                         "${stringResource(R.string.label_output)}: ${offer.maxOutputTokens ?: unknown()}")
                 }
             }
-            item {
-                Section(R.string.section_quotas) {
-                    Text(offer.quota ?: unknown())
+            if (offer.quota != null || offer.quotaPeriod != null) {
+                item {
+                    Section(R.string.section_quotas) {
+                        Text(offer.quota ?: unknown())
+                    }
                 }
             }
             offer.conditions?.let { conditions ->
