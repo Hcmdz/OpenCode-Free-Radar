@@ -60,4 +60,20 @@
         <item quantity="many">%1$d de modèles</item>
         <item quantity="other">%1$d modèles</item>
     </plurals>
+    <string name="settings_notifications">Notifications</string>
+    <string name="notif_enable">M’alerter des nouvelles offres gratuites et expirations</string>
+    <string name="notif_denied_hint">Notifications bloquées. Activez-les dans les paramètres système pour recevoir des alertes.</string>
+    <string name="notif_open_settings">Ouvrir les paramètres système</string>
+    <string name="notif_channel_events">Alertes d’offres</string>
+    <string name="notif_title">Radar des offres gratuites</string>
+    <plurals name="notif_new_free">
+        <item quantity="one">%1$d nouvelle offre gratuite</item>
+        <item quantity="many">%1$d de nouvelles offres gratuites</item>
+        <item quantity="other">%1$d nouvelles offres gratuites</item>
+    </plurals>
+    <plurals name="notif_expired">
+        <item quantity="one">%1$d offre expirée</item>
+        <item quantity="many">%1$d d’offres expirées</item>
+        <item quantity="other">%1$d offres expirées</item>
+    </plurals>
 </resources>

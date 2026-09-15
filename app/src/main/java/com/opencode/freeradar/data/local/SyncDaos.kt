@@ -15,6 +15,15 @@ interface ChangeEventDao {
     )
     fun observeHistory(remoteId: String): Flow<List<ChangeEventEntity>>
 
+    @Query(
+        "SELECT * FROM change_event WHERE id > :sinceId AND type IN (:types) " +
+            "ORDER BY id ASC"
+    )
+    suspend fun eventsAfter(sinceId: Long, types: List<String>): List<ChangeEventEntity>
+
+    @Query("SELECT COALESCE(MAX(id), 0) FROM change_event")
+    suspend fun maxEventId(): Long
+
     @Query("DELETE FROM change_event WHERE createdAt < :cutoff")
     suspend fun pruneOlderThan(cutoff: Long)
 }

@@ -18,6 +18,7 @@ import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.model.SourceHealth
 import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -63,6 +64,21 @@ class FakeOfferRepository : OfferRepository {
     }
 
     override suspend fun setFavorite(remoteId: String, favorite: Boolean) = Unit
+
+    override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> =
+        emptyList()
+
+    override suspend fun latestEventId(): Long = 0L
+}
+
+class NoopSyncNotifier : SyncNotifier {
+    var afterSyncCalls = 0
+
+    override suspend fun beforeSync(): Long = 0L
+
+    override suspend fun afterSync(watermark: Long) {
+        afterSyncCalls++
+    }
 }
 
 fun sampleOffer(
@@ -93,7 +109,7 @@ class DashboardViewModelTest {
     fun `loading then list`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             assertThat(awaitItem().isLoading).isTrue()
             repo.offersFlow.value = listOf(sampleOffer())
@@ -112,7 +128,7 @@ class DashboardViewModelTest {
             sampleOffer(),
             sampleOffer("p/paid", status = FreeStatus.PAID)
         )
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
@@ -130,7 +146,7 @@ class DashboardViewModelTest {
             sampleOffer(),
             sampleOffer("p/paid", status = FreeStatus.PAID)
         )
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
@@ -148,7 +164,7 @@ class DashboardViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.offersFlow.value = listOf(sampleOffer(), sampleOffer("p/x", compatible = false))
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
@@ -172,7 +188,7 @@ class DashboardViewModelTest {
             sampleOffer("p/paid", status = FreeStatus.PAID),
             sampleOffer("p/nc", compatible = false)
         )
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
@@ -191,7 +207,7 @@ class DashboardViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.refreshResult = RefreshResult.Failed(SourceError.Timeout)
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
@@ -207,11 +223,46 @@ class DashboardViewModelTest {
         }
     }
 
-    @Test
-    fun `offline reflects unavailable source health`() = runTest {
+        @Test
+    fun `manual refresh evaluates the notification gate on success`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
-        val vm = DashboardViewModel(repo)
+        val gate = NoopSyncNotifier()
+        val vm = DashboardViewModel(repo, gate)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.Refresh)
+            testScheduler.advanceUntilIdle()
+            assertThat(repo.refreshCalls).isEqualTo(1)
+            assertThat(gate.afterSyncCalls).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `manual refresh skips the gate on failure`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.refreshResult = RefreshResult.Failed(SourceError.Timeout)
+        val gate = NoopSyncNotifier()
+        val vm = DashboardViewModel(repo, gate)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.Refresh)
+            testScheduler.advanceUntilIdle()
+            assertThat(awaitItem().error).isNotNull()
+            assertThat(repo.refreshCalls).isEqualTo(1)
+            assertThat(gate.afterSyncCalls).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun `offline reflects unavailable source health`() = runTest {        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             repo.healthFlow.value = listOf(

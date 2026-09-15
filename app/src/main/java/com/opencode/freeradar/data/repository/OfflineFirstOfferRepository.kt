@@ -98,6 +98,11 @@ class OfflineFirstOfferRepository(
         offers.setFavorite(remoteId, favorite)
     }
 
+    override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> =
+        events.eventsAfter(sinceId, types).map { it.toDomain() }
+
+    override suspend fun latestEventId(): Long = events.maxEventId()
+
     private fun SourceError.code(): String = when (this) {
         SourceError.Unreachable -> "unreachable"
         SourceError.Timeout -> "timeout"

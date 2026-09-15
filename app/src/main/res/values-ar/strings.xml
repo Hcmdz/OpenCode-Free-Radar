@@ -66,4 +66,26 @@
         <item quantity="many">%1$d نموذجًا</item>
         <item quantity="other">%1$d نموذج</item>
     </plurals>
+    <string name="settings_notifications">الإشعارات</string>
+    <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة والمنتهية</string>
+    <string name="notif_denied_hint">الإشعارات محظورة. فعّلها في إعدادات النظام لتلقي التنبيهات.</string>
+    <string name="notif_open_settings">فتح إعدادات النظام</string>
+    <string name="notif_channel_events">تنبيهات العروض</string>
+    <string name="notif_title">رادار العروض المجانية</string>
+    <plurals name="notif_new_free">
+        <item quantity="zero">لا عروض جديدة</item>
+        <item quantity="one">عرض مجاني جديد واحد</item>
+        <item quantity="two">عرضان مجانيان جديدان</item>
+        <item quantity="few">%1$d عروض مجانية جديدة</item>
+        <item quantity="many">%1$d عرضًا مجانيًا جديدًا</item>
+        <item quantity="other">%1$d عرض مجاني جديد</item>
+    </plurals>
+    <plurals name="notif_expired">
+        <item quantity="zero">لا عروض منتهية</item>
+        <item quantity="one">عرض واحد منتهٍ</item>
+        <item quantity="two">عرضان منتهيان</item>
+        <item quantity="few">%1$d عروض منتهية</item>
+        <item quantity="many">%1$d عرضًا منتهيًا</item>
+        <item quantity="other">%1$d عرض منتهٍ</item>
+    </plurals>
 </resources>

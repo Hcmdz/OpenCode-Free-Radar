@@ -7,6 +7,7 @@ import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
@@ -42,7 +43,10 @@ sealed interface DashboardEvent {
     data class OpenDetails(val remoteId: String) : DashboardEvent
 }
 
-class DashboardViewModel(private val repository: OfferRepository) : ViewModel() {
+class DashboardViewModel(
+    private val repository: OfferRepository,
+    private val gate: SyncNotifier
+) : ViewModel() {
 
     private val filter = MutableStateFlow(OfferFilter.FREE)
     private val manualError = MutableStateFlow<UiText?>(null)
@@ -89,10 +93,13 @@ class DashboardViewModel(private val repository: OfferRepository) : ViewModel() 
     fun onAction(action: DashboardAction) {
         when (action) {
             DashboardAction.Refresh -> viewModelScope.launch {
+                val watermark = gate.beforeSync()
                 when (val result = repository.refresh(SyncWorker.SOURCE_ID)) {
-                    is RefreshResult.Ok -> manualError.value = null
+                    RefreshResult.Ok, is RefreshResult.Partial -> {
+                        manualError.value = null
+                        gate.afterSync(watermark)
+                    }
                     is RefreshResult.Failed -> manualError.value = result.error.toUiText()
-                    is RefreshResult.Partial -> manualError.value = null
                 }
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter

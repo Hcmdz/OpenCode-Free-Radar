@@ -59,4 +59,18 @@
         <item quantity="one">%1$d model</item>
         <item quantity="other">%1$d models</item>
     </plurals>
+    <string name="settings_notifications">Notifications</string>
+    <string name="notif_enable">Alert me about new and expired free offers</string>
+    <string name="notif_denied_hint">Notifications are blocked. Enable them in system settings to receive alerts.</string>
+    <string name="notif_open_settings">Open system settings</string>
+    <string name="notif_channel_events">Offer alerts</string>
+    <string name="notif_title">Free offer radar</string>
+    <plurals name="notif_new_free">
+        <item quantity="one">%1$d new free offer</item>
+        <item quantity="other">%1$d new free offers</item>
+    </plurals>
+    <plurals name="notif_expired">
+        <item quantity="one">%1$d offer expired</item>
+        <item quantity="other">%1$d offers expired</item>
+    </plurals>
 </resources>

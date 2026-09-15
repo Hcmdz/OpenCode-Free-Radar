@@ -2,12 +2,16 @@
 package com.opencode.freeradar.di
 
 import androidx.room3.Room
+import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
 import com.opencode.freeradar.data.source.remote.ModelsDevSource
 import com.opencode.freeradar.data.source.remote.createHttpClient
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.domain.repository.OfferSource
+import com.opencode.freeradar.notifications.NotificationGate
+import com.opencode.freeradar.notifications.OfferNotifier
+import com.opencode.freeradar.notifications.SyncNotifier
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -28,4 +32,7 @@ val appModule = module {
     single { createHttpClient() }
     singleOf(::ModelsDevSource) bind OfferSource::class
     single<OfferRepository> { OfflineFirstOfferRepository(get(), get()) }
+    single { NotificationPrefs(androidContext()) }
+    single { OfferNotifier(androidContext()) }
+    singleOf(::NotificationGate) bind SyncNotifier::class
 }
