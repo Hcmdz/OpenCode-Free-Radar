@@ -3,6 +3,9 @@
 Native Android app that tracks AI models free to use with
 [OpenCode](https://opencode.ai) and notifies you when new free offers appear.
 
+Unofficial community project — not affiliated with, endorsed, or sponsored
+by Anomaly Innovations, Inc.
+
 ## Features
 
 - Daily catalog sync from public model indexes (starting with models.dev)
