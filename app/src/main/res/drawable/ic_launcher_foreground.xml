@@ -1,0 +1,35 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:translateX="54" android:translateY="54">
+        <path
+            android:fillColor="#00000000"
+            android:strokeWidth="4"
+            android:strokeColor="@color/ic_radar_green"
+            android:pathData="M32,0 A32,32 0 1,1 -32,0 A32,32 0 1,1 32,0 Z" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeWidth="4"
+            android:strokeColor="@color/ic_radar_green"
+            android:pathData="M22,0 A22,22 0 1,1 -22,0 A22,22 0 1,1 22,0 Z" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeWidth="4"
+            android:strokeColor="@color/ic_radar_green"
+            android:pathData="M12,0 A12,12 0 1,1 -12,0 A12,12 0 1,1 12,0 Z" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeWidth="6"
+            android:strokeLineCap="round"
+            android:strokeColor="@color/ic_radar_green"
+            android:pathData="M0,0 L23,-23" />
+        <path
+            android:fillColor="@color/ic_radar_green"
+            android:pathData="M6,0 A6,6 0 1,1 -6,0 A6,6 0 1,1 6,0 Z" />
+        <path
+            android:fillColor="@color/ic_radar_green"
+            android:pathData="M-10.5,17.5 A3.5,3.5 0 1,1 -17.5,17.5 A3.5,3.5 0 1,1 -10.5,17.5 Z" />
+    </group>
+</vector>
