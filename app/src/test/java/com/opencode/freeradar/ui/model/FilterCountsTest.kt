@@ -59,8 +59,23 @@ class FilterCountsTest {
 
     @Test
     fun `source counts honor the active status filter`() {
+        // o/ltd is LIMITED: usable-free, so counted under the FREE view.
         val counts = facetCounts(offers, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
-        assertThat(counts.source[SourceFilter.ALL_SOURCES]).isEqualTo(2)
+        assertThat(counts.source[SourceFilter.ALL_SOURCES]).isEqualTo(3)
         assertThat(counts.source[SourceFilter.OPENCODE]).isEqualTo(2)
+    }
+
+    @Test
+    fun `limited trial and temporary count as free, paid expired unknown do not`() {
+        val rows = listOf(
+            offer("s/ltd", "opencode-data", FreeStatus.LIMITED),
+            offer("s/trl", "opencode-data", FreeStatus.TRIAL),
+            offer("s/tmp", "opencode-data", FreeStatus.TEMPORARY),
+            offer("s/exp", "opencode-data", FreeStatus.EXPIRED),
+            offer("s/unk", "opencode-data", FreeStatus.UNKNOWN),
+            offer("s/paid", "opencode-data", FreeStatus.PAID)
+        )
+        val counts = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
+        assertThat(counts.status[OfferFilter.FREE]).isEqualTo(3)
     }
 }

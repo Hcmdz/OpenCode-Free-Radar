@@ -305,7 +305,8 @@ class DashboardViewModelTest {
             while (reset.showResetFilters) reset = awaitItem()
             assertThat(reset.filter).isEqualTo(OfferFilter.FREE)
             assertThat(reset.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
-            assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+            // other/m is LIMITED: usable-free, so visible in the default view.
+            assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "other/m"))
         }
     }
 

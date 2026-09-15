@@ -3,8 +3,8 @@ package com.opencode.freeradar.ui.model
 
 import androidx.annotation.StringRes
 import com.opencode.freeradar.R
-import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isUsableFree
 
 enum class OfferFilter(@StringRes val labelRes: Int) {
     ALL(R.string.filter_all),
@@ -41,7 +41,7 @@ data class FacetCounts(
  */
 fun facetCounts(offers: List<Offer>, filter: OfferFilter, source: SourceFilter): FacetCounts {
     fun List<Offer>.matchingStatus(f: OfferFilter) = filter {
-        (!f.freeOnly() || it.freeStatus == FreeStatus.FREE) &&
+        (!f.freeOnly() || it.freeStatus.isUsableFree()) &&
             (!f.compatibleOnly() || it.openCodeCompatible)
     }
     val bySource = offers.filter { source.sourceId == null || it.source == source.sourceId }

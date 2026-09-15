@@ -4,11 +4,11 @@ package com.opencode.freeradar.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opencode.freeradar.domain.error.RefreshResult
-import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.domain.model.isUsableFree
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
@@ -88,7 +88,7 @@ class DashboardViewModel(
                 isLoading = false,
                 isRefreshing = prefs.refreshing,
                 offers = offers
-                    .filter { !prefs.filter.freeOnly() || it.freeStatus == FreeStatus.FREE }
+                    .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
                     .filter { prefs.source.sourceId == null || it.source == prefs.source.sourceId }
                     .map { it.toUi() },

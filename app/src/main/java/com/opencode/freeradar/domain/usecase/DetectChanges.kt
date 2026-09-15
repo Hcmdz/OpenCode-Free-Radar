@@ -5,6 +5,7 @@ import com.opencode.freeradar.domain.model.ChangeEvent
 import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isUsableFree
 
 fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEvent> {
     val oldById = old.associateBy { it.remoteId }
@@ -14,16 +15,22 @@ fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEve
     for ((id, current) in newById) {
         val previous = oldById[id]
         if (previous == null) {
-            events += ChangeEvent(id, ChangeType.NEW_MODEL, null, null, now)
+            // Status stamp for notification counting: only usable-free
+            // newcomers ring the free bell (legacy rows have null = counted).
+            events += ChangeEvent(id, ChangeType.NEW_MODEL, null, current.freeStatus.name, now)
             continue
         }
-        if (previous.freeStatus != FreeStatus.FREE && current.freeStatus == FreeStatus.FREE) {
+        if (!previous.freeStatus.isUsableFree() && current.freeStatus.isUsableFree()) {
+            // Becoming free-with-conditions alerts like becoming FREE (e.g. a
+            // Muse Spark-style limited trial): that is the app's purpose.
             events += ChangeEvent(id, ChangeType.BECAME_FREE, previous.freeStatus.name, current.freeStatus.name, now)
         }
-        if (previous.freeStatus == FreeStatus.FREE && current.freeStatus != FreeStatus.FREE &&
-            current.freeStatus != FreeStatus.UNKNOWN
+        if (previous.freeStatus == FreeStatus.FREE &&
+            (current.freeStatus == FreeStatus.PAID || current.freeStatus == FreeStatus.EXPIRED)
         ) {
             // Missing cost maps to UNKNOWN, never expiry (fail-closed per spec FR-002).
+            // Refinements to LIMITED/TRIAL/TEMPORARY stay usable at $0 with
+            // conditions, so they never ring the expiry alarm either.
             events += ChangeEvent(id, ChangeType.FREE_EXPIRED, previous.freeStatus.name, current.freeStatus.name, now)
         }
         if (previous.inputPrice != current.inputPrice || previous.outputPrice != current.outputPrice) {

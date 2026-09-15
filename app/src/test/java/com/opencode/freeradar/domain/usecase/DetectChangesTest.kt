@@ -76,6 +76,18 @@ class DetectChangesTest {
     }
 
     @Test
+    fun `paid to limited emits BECAME_FREE`() {
+        // The Zen pattern: becoming free-with-conditions must alert like
+        // becoming FREE (e.g. a Muse Spark-style limited trial appears).
+        val events = detectChanges(
+            old = listOf(offer(freeStatus = FreeStatus.PAID, inputPrice = 1.0)),
+            new = listOf(offer(freeStatus = FreeStatus.LIMITED, inputPrice = 0.0)),
+            now = 2_000L
+        )
+        assertThat(types(events).contains(ChangeType.BECAME_FREE)).isEqualTo(true)
+    }
+
+    @Test
     fun `free to paid emits FREE_EXPIRED`() {
         val events = detectChanges(
             old = listOf(offer()),
@@ -129,6 +141,20 @@ class DetectChangesTest {
             now = 2_000L
         )
         assertThat(types(events).contains(ChangeType.FREE_EXPIRED)).isEqualTo(false)
+    }
+
+    @Test
+    fun `free to limited trial or temporary never emits FREE_EXPIRED`() {
+        // Refinement rollout: still usable at $0 with conditions, so no
+        // false "expired" alarm (same rationale as the UNKNOWN guard).
+        for (status in listOf(FreeStatus.LIMITED, FreeStatus.TRIAL, FreeStatus.TEMPORARY)) {
+            val events = detectChanges(
+                old = listOf(offer()),
+                new = listOf(offer(freeStatus = status)),
+                now = 2_000L
+            )
+            assertThat(types(events).contains(ChangeType.FREE_EXPIRED)).isEqualTo(false)
+        }
     }
 
     @Test
