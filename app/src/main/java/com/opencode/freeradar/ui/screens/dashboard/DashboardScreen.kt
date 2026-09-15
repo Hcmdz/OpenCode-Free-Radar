@@ -32,10 +32,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -181,9 +180,8 @@ fun DashboardScreen(
         }
     ) { padding ->
         // Truly floating search: overlay in a Box over the list instead of a
-        // docked bottomBar slot. The bar hosts our debugged input (raw display
-        // value) in an Expressive container instead of the stateful
-        // TextFieldState API.
+        // docked bottomBar slot. The dock hosts our debugged input (raw display
+        // value) in a plain container.
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             // Tap-outside dismiss: pointerInput adds no semantics, so TalkBack
             // never sees this layer. Scoped to the content column only — the
@@ -313,24 +311,27 @@ fun DashboardScreen(
                             .padding(bottom = 8.dp)
                     )
                 }
-                SearchBar(
-                    state = rememberSearchBarState(),
-                    inputField = {
-                        SearchInput(
-                            query = state.query,
-                            onQueryChange = { onAction(DashboardAction.Search(it)) },
-                            onFocusChange = { focused -> if (focused) searchExpanded = true },
-                            onSubmit = {
-                                onAction(DashboardAction.SubmitSearch(state.query))
-                                searchExpanded = false
-                                focusManager.clearFocus()
-                            }
-                        )
-                    },
+                // Plain docked container instead of the Expressive SearchBar:
+                // that component installs a soft-keyboard interceptor for any
+                // input field not wired to its SearchBarState, so the IME
+                // never opened. A framework TextField opens it on tap.
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = SearchBarDefaults.dockedShape,
+                    color = SearchBarDefaults.colors().containerColor,
                     shadowElevation = 6.dp
-                )
+                ) {
+                    SearchInput(
+                        query = state.query,
+                        onQueryChange = { onAction(DashboardAction.Search(it)) },
+                        onFocusChange = { focused -> if (focused) searchExpanded = true },
+                        onSubmit = {
+                            onAction(DashboardAction.SubmitSearch(state.query))
+                            searchExpanded = false
+                            focusManager.clearFocus()
+                        }
+                    )
+                }
             }
         }
     }
@@ -409,7 +410,7 @@ private fun SearchInput(
     onFocusChange: (Boolean) -> Unit = {},
     onSubmit: () -> Unit = {}
 ) {
-    // Borderless: the SearchBar container already provides the docked shape
+    // Borderless: the docked container already provides the shape
     // and tonal background, so this field only draws text and icons.
     TextField(
         value = query,
