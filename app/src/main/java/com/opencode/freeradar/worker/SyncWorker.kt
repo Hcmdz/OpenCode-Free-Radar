@@ -19,7 +19,7 @@ class SyncWorker(context: Context, params: WorkerParameters) :
     override suspend fun doWork(): Result {
         return try {
             val watermark = gate.beforeSync()
-            when (repository.refresh(SOURCE_ID)) {
+            when (repository.refreshAll()) {
                 RefreshResult.Ok, is RefreshResult.Partial -> {
                     gate.afterSync(watermark)
                     Result.success()
@@ -34,7 +34,6 @@ class SyncWorker(context: Context, params: WorkerParameters) :
     }
 
     companion object {
-        const val SOURCE_ID = "opencode-data"
         const val MAX_ATTEMPTS = 3
     }
 }

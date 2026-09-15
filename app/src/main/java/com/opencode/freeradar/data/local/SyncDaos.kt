@@ -51,6 +51,9 @@ interface SyncRunDao {
     )
     fun observeLastRun(source: String): Flow<SyncRunEntity?>
 
+    @Query("SELECT * FROM sync_run ORDER BY startedAt DESC LIMIT 1")
+    fun observeLatestRun(): Flow<SyncRunEntity?>
+
     @Query(
         "DELETE FROM sync_run WHERE source = :source AND id NOT IN " +
             "(SELECT id FROM sync_run WHERE source = :source " +

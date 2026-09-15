@@ -58,7 +58,14 @@ class FakeOfferRepository : OfferRepository {
 
     override fun observeLastRun(source: String): Flow<SyncRun?> = lastRunFlow
 
+    override fun observeLatestRun(): Flow<SyncRun?> = lastRunFlow
+
     override suspend fun refresh(source: String): RefreshResult {
+        refreshCalls++
+        return refreshResult
+    }
+
+    override suspend fun refreshAll(): RefreshResult {
         refreshCalls++
         return refreshResult
     }

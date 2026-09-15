@@ -13,7 +13,6 @@ import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
-import com.opencode.freeradar.worker.SyncWorker
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -73,7 +72,7 @@ class DashboardViewModel(
     val state = combine(
         offersFlow,
         repository.observeHealth(),
-        repository.observeLastRun(SyncWorker.SOURCE_ID)
+        repository.observeLatestRun()
     ) { offers, health, lastRun -> Triple(offers, health, lastRun) }
         .combine(prefsFlow) { (offers, health, lastRun), prefs ->
             DashboardUiState(
@@ -94,7 +93,7 @@ class DashboardViewModel(
         when (action) {
             DashboardAction.Refresh -> viewModelScope.launch {
                 val watermark = gate.beforeSync()
-                when (val result = repository.refresh(SyncWorker.SOURCE_ID)) {
+                when (val result = repository.refreshAll()) {
                     RefreshResult.Ok, is RefreshResult.Partial -> {
                         manualError.value = null
                         gate.afterSync(watermark)

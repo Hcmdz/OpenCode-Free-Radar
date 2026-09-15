@@ -22,8 +22,8 @@ interface OfferDao {
 
     @Query("SELECT * FROM offer WHERE source = :source")
     suspend fun snapshotBySource(source: String): List<OfferEntity>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Query("SELECT * FROM offer")
+    suspend fun snapshotAll(): List<OfferEntity>    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(offers: List<OfferEntity>)
 
     @Query("DELETE FROM offer WHERE source = :source AND favorite = 0")
@@ -51,4 +51,7 @@ interface OfferDao {
 
     @Query("UPDATE offer SET favorite = :favorite WHERE remoteId = :remoteId")
     suspend fun setFavorite(remoteId: String, favorite: Boolean)
+
+    @Query("UPDATE offer SET confidence = :confidence WHERE remoteId IN (:remoteIds)")
+    suspend fun updateConfidence(remoteIds: List<String>, confidence: String)
 }

@@ -5,8 +5,14 @@ import androidx.room3.Room
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
+import com.opencode.freeradar.data.source.nvidia.NVIDIA_SOURCE_ID
+import com.opencode.freeradar.data.source.nvidia.NvidiaBuildSource
+import com.opencode.freeradar.data.source.nvidia.toNvidiaOffer
 import com.opencode.freeradar.data.source.remote.ModelsDevSource
+import com.opencode.freeradar.data.source.remote.SourceOffer
+import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.data.source.remote.createHttpClient
+import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.domain.repository.OfferSource
 import com.opencode.freeradar.notifications.NotificationGate
@@ -30,8 +36,22 @@ val appModule = module {
     single { get<RadarDatabase>().syncRunDao() }
     single { get<RadarDatabase>().sourceHealthDao() }
     single { createHttpClient() }
-    singleOf(::ModelsDevSource) bind OfferSource::class
-    single<OfferRepository> { OfflineFirstOfferRepository(get(), get()) }
+    singleOf(::ModelsDevSource)
+    singleOf(::NvidiaBuildSource)
+    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<NvidiaBuildSource>()) }
+    single<Map<String, (SourceOffer, Long) -> Offer>> {
+        mapOf(
+            "opencode-data" to { dto: SourceOffer, now: Long -> dto.toOffer(now) },
+            NVIDIA_SOURCE_ID to { dto: SourceOffer, now: Long -> dto.toNvidiaOffer(now) },
+        )
+    }
+    single<OfferRepository> {
+        OfflineFirstOfferRepository(
+            get(),
+            get<Set<OfferSource>>().associateBy { it.id },
+            get(),
+        )
+    }
     single { NotificationPrefs(androidContext()) }
     single { OfferNotifier(androidContext()) }
     singleOf(::NotificationGate) bind SyncNotifier::class
