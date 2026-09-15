@@ -20,7 +20,9 @@
     <string name="filter_free_compatible">Free + Compatible</string>
     <string name="filter_all_sources">All sources</string>
     <string name="filter_source_opencode">OpenCode</string>
+    <string name="filter_source_openrouter">OpenRouter</string>
     <string name="filter_title">Filters</string>
+    <string name="conflict_warning">Conflicting information between sources — verify before use.</string>
     <string name="section_status">Status</string>
     <string name="section_source">Source</string>
     <string name="reset_filters">Reset filters</string>

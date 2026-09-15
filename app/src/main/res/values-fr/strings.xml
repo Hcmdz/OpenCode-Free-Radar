@@ -19,7 +19,9 @@
     <string name="filter_free_compatible">Gratuits + Compatibles</string>
     <string name="filter_all_sources">Toutes sources</string>
     <string name="filter_source_opencode">OpenCode</string>
+    <string name="filter_source_openrouter">OpenRouter</string>
     <string name="filter_title">Filtres</string>
+    <string name="conflict_warning">Informations contradictoires entre les sources — vérifiez avant usage.</string>
     <string name="section_status">Statut</string>
     <string name="section_source">Source</string>
     <string name="reset_filters">Réinitialiser</string>

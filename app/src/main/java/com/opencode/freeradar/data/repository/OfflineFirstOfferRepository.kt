@@ -10,6 +10,8 @@ import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.model.ChangeEvent
+import com.opencode.freeradar.domain.model.ChangeType
+import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.model.SourceHealth
@@ -17,7 +19,10 @@ import com.opencode.freeradar.domain.model.SyncResult
 import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.domain.repository.OfferSource
+import com.opencode.freeradar.domain.usecase.AbsenceRow
+import com.opencode.freeradar.domain.usecase.crossCheck
 import com.opencode.freeradar.domain.usecase.detectChanges
+import com.opencode.freeradar.domain.usecase.planAbsence
 import java.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -90,12 +95,33 @@ class OfflineFirstOfferRepository(
                     )
                     return RefreshResult.Failed(SourceError.ParseFailed)
                 }
-                // ponytail: empty-only guard, ratio guard (<50% of cache) if partial truncations appear
+                // ponytail: empty-only guard; >50% shrink below is the partial-truncation guard
+                val present = incoming.map { it.remoteId }.toSet()
+                if (current.isNotEmpty() && incoming.size * 2 < current.size) {
+                    // Successful fetch that lost over half the catalog means a
+                    // truncated payload, never a mass delisting: fail closed.
+                    runs.finishRun(runId, clock.millis(), SyncResult.FAILED.name, "shrunk-catalog")
+                    health.upsert(
+                        SourceHealthEntity(
+                            source = source,
+                            state = HealthState.DEGRADED.name,
+                            checkedAt = clock.millis()
+                        )
+                    )
+                    return RefreshResult.Failed(SourceError.ParseFailed)
+                }
+                val plan = planAbsence(
+                    current.map { AbsenceRow(it.remoteId, it.missedSyncs, it.favorite) },
+                    present
+                )
+                if (plan.bump.isNotEmpty()) offers.bumpMissed(plan.bump)
                 val detected = detectChanges(current, incoming, now)
-                database.offerDao().replaceSourceWithEvents(
-                    source,
+                    .filter { it.type != ChangeType.MODEL_REMOVED }
+                val removals = plan.remove.map { ChangeEvent(it, ChangeType.MODEL_REMOVED, null, null, now) }
+                offers.replaceSource(
                     incoming.map { it.toEntity() },
-                    detected.map { it.toEntity() }
+                    (detected + removals).map { it.toEntity() },
+                    plan.remove
                 )
                 events.pruneOlderThan(now - HISTORY_RETENTION_MILLIS)
                 runs.pruneKeepLast(source, MAX_SYNC_RUNS)
@@ -126,7 +152,23 @@ class OfflineFirstOfferRepository(
     override suspend fun refreshAll(): RefreshResult = refreshMutex.withLock {
         // Deterministic order: map iteration follows DI registration.
         val results = sources.keys.associateWith { refresh(it) }
+        applyCrossCheck()
         return combineResults(results)
+    }
+
+    /**
+     * Pinned cross-source comparison after every run: agreement raises both
+     * rows to CROSS_CHECKED, disagreement drops both to TO_VERIFY (never
+     * overwrites user state — confidence is sync-owned, favorites are not).
+     */
+    private suspend fun applyCrossCheck() {
+        val result = crossCheck(offers.snapshotAll().map { it.toDomain() })
+        if (result.confirmed.isNotEmpty()) {
+            offers.updateConfidence(result.confirmed.toList(), Confidence.CROSS_CHECKED.name)
+        }
+        if (result.conflicts.isNotEmpty()) {
+            offers.updateConfidence(result.conflicts.toList(), Confidence.TO_VERIFY.name)
+        }
     }
 
     override suspend fun setFavorite(remoteId: String, favorite: Boolean) {

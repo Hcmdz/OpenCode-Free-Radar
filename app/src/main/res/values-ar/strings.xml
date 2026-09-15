@@ -19,7 +19,9 @@
     <string name="filter_free_compatible">المجانية + المتوافقة</string>
     <string name="filter_all_sources">كل المصادر</string>
     <string name="filter_source_opencode">OpenCode</string>
+    <string name="filter_source_openrouter">OpenRouter</string>
     <string name="filter_title">عوامل التصفية</string>
+    <string name="conflict_warning">معلومات متضاربة بين المصادر — تحقق قبل الاستخدام.</string>
     <string name="section_status">الحالة</string>
     <string name="section_source">المصدر</string>
     <string name="reset_filters">إعادة تعيين</string>

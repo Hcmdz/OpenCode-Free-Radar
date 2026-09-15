@@ -211,6 +211,27 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `selecting OPENROUTER source shows openrouter rows`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer(),
+            sampleOffer("or/m:free", source = "openrouter")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENROUTER))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.OPENROUTER) filtered = awaitItem()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("or/m:free"))
+        }
+    }
+
+    @Test
     fun `selecting OPENCODE source hides other sources`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()

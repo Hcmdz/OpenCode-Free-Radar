@@ -25,7 +25,9 @@ data class Offer(
     val retrievedAt: Long,
     val verifiedAt: Long,
     val confidence: Confidence,
-    val favorite: Boolean
+    val favorite: Boolean,
+    /** Consecutive successful-fetch absences (Story 2 gate, never user state). */
+    val missedSyncs: Int = 0
 )
 
 data class ChangeEvent(

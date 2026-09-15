@@ -134,6 +134,13 @@ fun DetailsScreen(state: DetailsUiState, onBack: () -> Unit) {
                             DateUtils.MINUTE_IN_MILLIS
                         ).toString()
                     )
+                    if (offer.confidence == Confidence.TO_VERIFY) {
+                        Text(
+                            text = stringResource(R.string.conflict_warning),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
             item {

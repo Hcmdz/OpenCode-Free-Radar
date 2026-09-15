@@ -40,7 +40,8 @@ fun Offer.toEntity(): OfferEntity = OfferEntity(
     retrievedAt = retrievedAt,
     verifiedAt = verifiedAt,
     confidence = confidence.name,
-    favorite = favorite
+    favorite = favorite,
+    missedSyncs = 0
 )
 
 fun OfferEntity.toDomain(): Offer = Offer(
@@ -68,7 +69,8 @@ fun OfferEntity.toDomain(): Offer = Offer(
     verifiedAt = verifiedAt,
     confidence = runCatching { Confidence.valueOf(confidence) }
         .getOrDefault(Confidence.TO_VERIFY),
-    favorite = favorite
+    favorite = favorite,
+    missedSyncs = missedSyncs
 )
 
 fun ChangeEvent.toEntity(): ChangeEventEntity = ChangeEventEntity(

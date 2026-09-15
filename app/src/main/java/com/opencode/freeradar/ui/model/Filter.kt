@@ -15,7 +15,8 @@ enum class OfferFilter(@StringRes val labelRes: Int) {
 
 enum class SourceFilter(@StringRes val labelRes: Int, val sourceId: String?) {
     ALL_SOURCES(R.string.filter_all_sources, null),
-    OPENCODE(R.string.filter_source_opencode, "opencode-data")
+    OPENCODE(R.string.filter_source_opencode, "opencode-data"),
+    OPENROUTER(R.string.filter_source_openrouter, "openrouter")
 }
 
 fun OfferFilter.freeOnly(): Boolean = when (this) {

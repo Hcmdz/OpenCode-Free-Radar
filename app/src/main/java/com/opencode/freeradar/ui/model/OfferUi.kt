@@ -21,6 +21,7 @@ data class OfferUi(
 fun sourceLabel(source: String): String = when (source) {
     "opencode-data" -> "OpenCode"
     "nvidia-build" -> "NVIDIA"
+    "openrouter" -> "OpenRouter"
     else -> source
 }
 
