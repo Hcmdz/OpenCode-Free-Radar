@@ -182,7 +182,7 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
             while (filtered.filter != OfferFilter.COMPATIBLE) filtered = awaitItem()
-            assertThat(repo.lastCompatibleOnly).isEqualTo(true)
+            // Compatible filtering now happens in-memory over the full list.
             assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
             assertThat(filtered.filter).isEqualTo(OfferFilter.COMPATIBLE)
         }
@@ -206,7 +206,6 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
             while (filtered.filter != OfferFilter.FREE_COMPATIBLE) filtered = awaitItem()
-            assertThat(repo.lastCompatibleOnly).isEqualTo(true)
             assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
         }
     }
@@ -252,6 +251,37 @@ class DashboardViewModelTest {
             var filtered = awaitItem()
             while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
             assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "p/paid"))
+        }
+    }
+
+    @Test
+    fun `reset restores defaults and full list`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer(),
+            sampleOffer("p/paid", status = FreeStatus.PAID),
+            sampleOffer("nvidia/m", source = "nvidia-build", status = FreeStatus.LIMITED)
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SelectFilter(OfferFilter.ALL))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.NVIDIA))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.NVIDIA) filtered = awaitItem()
+            assertThat(filtered.showResetFilters).isTrue()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("nvidia/m"))
+            vm.onAction(DashboardAction.ResetFilters)
+            testScheduler.advanceUntilIdle()
+            var reset = awaitItem()
+            while (reset.showResetFilters) reset = awaitItem()
+            assertThat(reset.filter).isEqualTo(OfferFilter.FREE)
+            assertThat(reset.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
+            assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
         }
     }
 

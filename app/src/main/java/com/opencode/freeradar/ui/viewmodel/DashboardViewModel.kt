@@ -12,13 +12,15 @@ import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
+import com.opencode.freeradar.ui.model.compatibleOnly
+import com.opencode.freeradar.ui.model.facetCounts
+import com.opencode.freeradar.ui.model.freeOnly
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,6 +30,9 @@ data class DashboardUiState(
     val offers: List<OfferUi> = emptyList(),
     val filter: OfferFilter = OfferFilter.FREE,
     val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
+    val statusCounts: Map<OfferFilter, Int> = emptyMap(),
+    val sourceCounts: Map<SourceFilter, Int> = emptyMap(),
+    val showResetFilters: Boolean = false,
     val offline: Boolean = false,
     val lastSyncAt: Long? = null,
     val error: UiText? = null
@@ -37,6 +42,7 @@ sealed interface DashboardAction {
     data object Refresh : DashboardAction
     data class SelectFilter(val filter: OfferFilter) : DashboardAction
     data class SelectSource(val source: SourceFilter) : DashboardAction
+    data object ResetFilters : DashboardAction
     data class OpenOffer(val remoteId: String) : DashboardAction
     data object DismissError : DashboardAction
 }
@@ -56,18 +62,9 @@ class DashboardViewModel(
     private val events = Channel<DashboardEvent>(Channel.BUFFERED)
     val eventFlow = events.receiveAsFlow()
 
-    private fun OfferFilter.compatibleOnly(): Boolean = when (this) {
-        OfferFilter.ALL, OfferFilter.FREE -> false
-        OfferFilter.COMPATIBLE, OfferFilter.FREE_COMPATIBLE -> true
-    }
-
-    private fun OfferFilter.freeOnly(): Boolean = when (this) {
-        OfferFilter.ALL, OfferFilter.COMPATIBLE -> false
-        OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE -> true
-    }
-
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    private val offersFlow = filter.flatMapLatest { repository.observeOffers(it.compatibleOnly()) }
+    // Full list once: facet counts need every option's base, and 8k rows
+    // filter in memory in under a millisecond — no per-option DAO roundtrips.
+    private val offersFlow = repository.observeOffers(false)
 
     private data class Prefs(val filter: OfferFilter, val source: SourceFilter, val error: UiText?)
 
@@ -79,6 +76,7 @@ class DashboardViewModel(
         repository.observeLatestRun()
     ) { offers, health, lastRun -> Triple(offers, health, lastRun) }
         .combine(prefsFlow) { (offers, health, lastRun), prefs ->
+            val counts = facetCounts(offers, prefs.filter, prefs.source)
             DashboardUiState(
                 isLoading = false,
                 offers = offers
@@ -88,6 +86,10 @@ class DashboardViewModel(
                     .map { it.toUi() },
                 filter = prefs.filter,
                 sourceFilter = prefs.source,
+                statusCounts = counts.status,
+                sourceCounts = counts.source,
+                showResetFilters = prefs.filter != OfferFilter.FREE ||
+                    prefs.source != SourceFilter.ALL_SOURCES,
                 offline = health.any { it.state == HealthState.UNAVAILABLE },
                 lastSyncAt = lastRun?.completedAt ?: lastRun?.startedAt,
                 error = prefs.error
@@ -109,6 +111,10 @@ class DashboardViewModel(
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter
             is DashboardAction.SelectSource -> sourceFilter.value = action.source
+            DashboardAction.ResetFilters -> {
+                filter.value = OfferFilter.FREE
+                sourceFilter.value = SourceFilter.ALL_SOURCES
+            }
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))
             DashboardAction.DismissError -> manualError.value = null
         }

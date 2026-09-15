@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -38,8 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.ui.components.ErrorBanner
-import com.opencode.freeradar.ui.components.OfferFilterChips
-import com.opencode.freeradar.ui.components.SourceFilterChips
+import com.opencode.freeradar.ui.components.FilterBar
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
@@ -120,19 +120,17 @@ fun DashboardScreen(
             if (state.offline) {
                 OfflineBanner(lastSyncAt = state.lastSyncAt)
             }
-            OfferFilterChips(
-                selected = state.filter,
-                onSelect = { onAction(DashboardAction.SelectFilter(it)) },
+            FilterBar(
+                filter = state.filter,
+                sourceFilter = state.sourceFilter,
+                statusCounts = state.statusCounts,
+                sourceCounts = state.sourceCounts,
+                showReset = state.showResetFilters,
+                onSelectFilter = { onAction(DashboardAction.SelectFilter(it)) },
+                onSelectSource = { onAction(DashboardAction.SelectSource(it)) },
+                onReset = { onAction(DashboardAction.ResetFilters) },
                 modifier = Modifier
                     .testTag("dashboard_filter")
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            SourceFilterChips(
-                selected = state.sourceFilter,
-                onSelect = { onAction(DashboardAction.SelectSource(it)) },
-                modifier = Modifier
-                    .testTag("dashboard_source_filter")
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
