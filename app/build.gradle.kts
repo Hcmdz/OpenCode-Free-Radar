@@ -41,7 +41,9 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(proprieteKeystore("RELEASE_STORE_FILE"))
+            // ponytail: file('') throws on clean clones, so storeFile is set only when a real path exists
+            val storePath = proprieteKeystore("RELEASE_STORE_FILE")
+            if (keystorePresent && storePath.isNotBlank()) storeFile = file(storePath)
             storePassword = proprieteKeystore("RELEASE_STORE_PASSWORD")
             keyAlias = proprieteKeystore("RELEASE_KEY_ALIAS")
             keyPassword = proprieteKeystore("RELEASE_KEY_PASSWORD")
