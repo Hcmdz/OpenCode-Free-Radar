@@ -135,6 +135,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.room3.testing)
+    androidTestImplementation(libs.work.testing)
     androidTestImplementation(libs.sqlite.driver)
     androidTestUtil(libs.test.orchestrator)
 }

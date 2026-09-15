@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
+import kotlin.coroutines.cancellation.CancellationException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -28,6 +29,10 @@ class SyncWorker(context: Context, params: WorkerParameters) :
                     if (runAttemptCount >= MAX_ATTEMPTS) Result.failure() else Result.retry()
                 }
             }
+        } catch (e: CancellationException) {
+            // A stopped worker must die: swallowing this schedules a zombie
+            // retry (e.g. every REPLACE-cancelled manual refresh re-syncs).
+            throw e
         } catch (e: Exception) {
             if (runAttemptCount >= MAX_ATTEMPTS) Result.failure() else Result.retry()
         }
