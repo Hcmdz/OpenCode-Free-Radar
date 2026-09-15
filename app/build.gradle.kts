@@ -138,6 +138,7 @@ dependencies {
     androidTestImplementation(libs.work.testing)
     androidTestImplementation(libs.sqlite.driver)
     androidTestUtil(libs.test.orchestrator)
+    lintChecks(libs.security.lint)
 }
 
 tasks.withType<Test> {

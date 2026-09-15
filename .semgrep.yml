@@ -1,0 +1,9 @@
+# Registry packs (same set as ElecPilot). NOTE: semgrep >= 1.177 rejects
+# registry shorthands inside a config file, so run via CLI instead:
+# semgrep --config p/security-audit --config p/owasp-top-ten \
+#   --config p/kotlin --config p/secrets app/src gradle
+rules:
+  - p/security-audit
+  - p/owasp-top-ten
+  - p/kotlin
+  - p/secrets

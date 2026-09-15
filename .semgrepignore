@@ -1,0 +1,12 @@
+build/
+.gradle/
+app/build/
+**/generated/
+**/test/
+**/androidTest/
+**/build/
+**/.gradle/
+**/generated/
+**/res/
+**/assets/
+**/*.xml
