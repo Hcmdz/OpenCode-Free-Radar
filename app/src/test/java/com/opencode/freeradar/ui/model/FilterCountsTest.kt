@@ -46,7 +46,7 @@ class FilterCountsTest {
         offer("s1/free", "opencode-data", FreeStatus.FREE),
         offer("s1/paid", "opencode-data", FreeStatus.PAID),
         offer("s1/nc", "opencode-data", FreeStatus.FREE, compatible = false),
-        offer("nv/ltd", "nvidia-build", FreeStatus.LIMITED)
+        offer("o/ltd", "other-source", FreeStatus.LIMITED)
     )
 
     @Test
@@ -62,6 +62,5 @@ class FilterCountsTest {
         val counts = facetCounts(offers, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
         assertThat(counts.source[SourceFilter.ALL_SOURCES]).isEqualTo(2)
         assertThat(counts.source[SourceFilter.OPENCODE]).isEqualTo(2)
-        assertThat(counts.source[SourceFilter.NVIDIA]).isEqualTo(0)
     }
 }

@@ -46,9 +46,9 @@ class FilterSheetTest {
         val selected = mutableListOf<SourceFilter>()
         content(onSelectSource = selected::add)
         rule.onNodeWithText("Filters").performClick()
-        rule.onNodeWithText("NVIDIA (2)").assertIsDisplayed()
-        rule.onNodeWithText("NVIDIA (2)").performClick()
-        rule.runOnIdle { assert(selected == listOf(SourceFilter.NVIDIA)) }
+        rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
+        rule.onNodeWithText("OpenCode (2)").performClick()
+        rule.runOnIdle { assert(selected == listOf(SourceFilter.OPENCODE)) }
     }
 
     @Test

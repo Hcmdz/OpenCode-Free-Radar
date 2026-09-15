@@ -213,7 +213,7 @@ private fun FilterBarPreview() {
     AppThemePreview {
         FilterBar(
             filter = OfferFilter.FREE,
-            sourceFilter = SourceFilter.NVIDIA,
+            sourceFilter = SourceFilter.OPENCODE,
             statusCounts = OfferFilter.entries.associateWith { 12 },
             sourceCounts = SourceFilter.entries.associateWith { 7 },
             showReset = true,

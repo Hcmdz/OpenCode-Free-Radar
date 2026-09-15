@@ -19,7 +19,6 @@
     <string name="filter_free_compatible">المجانية + المتوافقة</string>
     <string name="filter_all_sources">كل المصادر</string>
     <string name="filter_source_opencode">OpenCode</string>
-    <string name="filter_source_nvidia">NVIDIA</string>
     <string name="filter_title">عوامل التصفية</string>
     <string name="section_status">الحالة</string>
     <string name="section_source">المصدر</string>
@@ -95,5 +94,4 @@
         <item quantity="many">%1$d عرضًا منتهيًا</item>
         <item quantity="other">%1$d عرض منتهٍ</item>
     </plurals>
-    <string name="conflict_warning">معلومات متضاربة بين المصادر — تحقق قبل الاستخدام.</string>
 </resources>

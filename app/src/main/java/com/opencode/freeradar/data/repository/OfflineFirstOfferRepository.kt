@@ -10,7 +10,6 @@ import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.model.ChangeEvent
-import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.model.SourceHealth
@@ -19,7 +18,6 @@ import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.domain.repository.OfferSource
 import com.opencode.freeradar.domain.usecase.detectChanges
-import com.opencode.freeradar.domain.usecase.crossCheck
 import java.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -128,8 +126,7 @@ class OfflineFirstOfferRepository(
     override suspend fun refreshAll(): RefreshResult = refreshMutex.withLock {
         // Deterministic order: map iteration follows DI registration.
         val results = sources.keys.associateWith { refresh(it) }
-        applyCrossCheck()
-        combineResults(results)
+        return combineResults(results)
     }
 
     override suspend fun setFavorite(remoteId: String, favorite: Boolean) {
@@ -138,21 +135,6 @@ class OfflineFirstOfferRepository(
 
     override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> =
         events.eventsAfter(sinceId, types).map { it.toDomain() }
-
-    /**
-     * Pinned S1↔S2 comparison after every run: agreement raises both rows to
-     * CROSS_CHECKED, disagreement drops both to TO_VERIFY (never overwrites
-     * user state — confidence is sync-owned, favorites are not).
-     */
-    private suspend fun applyCrossCheck() {
-        val result = crossCheck(offers.snapshotAll().map { it.toDomain() })
-        if (result.confirmed.isNotEmpty()) {
-            offers.updateConfidence(result.confirmed.toList(), Confidence.CROSS_CHECKED.name)
-        }
-        if (result.conflicts.isNotEmpty()) {
-            offers.updateConfidence(result.conflicts.toList(), Confidence.TO_VERIFY.name)
-        }
-    }
 
     override suspend fun latestEventId(): Long = events.maxEventId()
 

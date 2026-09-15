@@ -19,7 +19,6 @@
     <string name="filter_free_compatible">Gratuits + Compatibles</string>
     <string name="filter_all_sources">Toutes sources</string>
     <string name="filter_source_opencode">OpenCode</string>
-    <string name="filter_source_nvidia">NVIDIA</string>
     <string name="filter_title">Filtres</string>
     <string name="section_status">Statut</string>
     <string name="section_source">Source</string>
@@ -83,5 +82,4 @@
         <item quantity="many">%1$d d’offres expirées</item>
         <item quantity="other">%1$d offres expirées</item>
     </plurals>
-    <string name="conflict_warning">Informations contradictoires entre les sources — vérifiez avant usage.</string>
 </resources>

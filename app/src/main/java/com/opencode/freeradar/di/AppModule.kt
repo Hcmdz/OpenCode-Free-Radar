@@ -5,9 +5,6 @@ import androidx.room3.Room
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
-import com.opencode.freeradar.data.source.nvidia.NVIDIA_SOURCE_ID
-import com.opencode.freeradar.data.source.nvidia.NvidiaBuildSource
-import com.opencode.freeradar.data.source.nvidia.toNvidiaOffer
 import com.opencode.freeradar.data.source.remote.ModelsDevSource
 import com.opencode.freeradar.data.source.remote.SourceOffer
 import com.opencode.freeradar.data.source.remote.toOffer
@@ -37,12 +34,10 @@ val appModule = module {
     single { get<RadarDatabase>().sourceHealthDao() }
     single { createHttpClient() }
     singleOf(::ModelsDevSource)
-    singleOf(::NvidiaBuildSource)
-    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<NvidiaBuildSource>()) }
+    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>()) }
     single<Map<String, (SourceOffer, Long) -> Offer>> {
         mapOf(
             "opencode-data" to { dto: SourceOffer, now: Long -> dto.toOffer(now) },
-            NVIDIA_SOURCE_ID to { dto: SourceOffer, now: Long -> dto.toNvidiaOffer(now) },
         )
     }
     single<OfferRepository> {

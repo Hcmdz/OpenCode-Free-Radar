@@ -211,23 +211,23 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `selecting NVIDIA source hides S1 offers`() = runTest {
+    fun `selecting OPENCODE source hides other sources`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.offersFlow.value = listOf(
             sampleOffer(),
-            sampleOffer("nvidia/m", source = "nvidia-build")
+            sampleOffer("other/m", source = "other-source")
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
             awaitItem()
             testScheduler.advanceUntilIdle()
             awaitItem()
-            vm.onAction(DashboardAction.SelectSource(SourceFilter.NVIDIA))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENCODE))
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
-            while (filtered.sourceFilter != SourceFilter.NVIDIA) filtered = awaitItem()
-            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("nvidia/m"))
+            while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
         }
     }
 
@@ -238,7 +238,7 @@ class DashboardViewModelTest {
         repo.offersFlow.value = listOf(
             sampleOffer(),
             sampleOffer("p/paid", status = FreeStatus.PAID),
-            sampleOffer("nvidia/m", source = "nvidia-build")
+            sampleOffer("other/m", source = "other-source")
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
@@ -261,7 +261,7 @@ class DashboardViewModelTest {
         repo.offersFlow.value = listOf(
             sampleOffer(),
             sampleOffer("p/paid", status = FreeStatus.PAID),
-            sampleOffer("nvidia/m", source = "nvidia-build", status = FreeStatus.LIMITED)
+            sampleOffer("other/m", source = "other-source", status = FreeStatus.LIMITED)
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
         vm.state.test {
@@ -269,12 +269,12 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             awaitItem()
             vm.onAction(DashboardAction.SelectFilter(OfferFilter.ALL))
-            vm.onAction(DashboardAction.SelectSource(SourceFilter.NVIDIA))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENCODE))
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
-            while (filtered.sourceFilter != SourceFilter.NVIDIA) filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
             assertThat(filtered.showResetFilters).isTrue()
-            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("nvidia/m"))
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "p/paid"))
             vm.onAction(DashboardAction.ResetFilters)
             testScheduler.advanceUntilIdle()
             var reset = awaitItem()
