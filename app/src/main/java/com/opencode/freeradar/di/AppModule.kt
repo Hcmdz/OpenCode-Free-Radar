@@ -2,9 +2,12 @@
 package com.opencode.freeradar.di
 
 import androidx.room3.Room
+import com.opencode.freeradar.data.local.MIGRATION_1_2
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
+import com.opencode.freeradar.data.source.openrouter.OPENROUTER_SOURCE_ID
+import com.opencode.freeradar.data.source.openrouter.OpenRouterSource
 import com.opencode.freeradar.data.source.remote.ModelsDevSource
 import com.opencode.freeradar.data.source.remote.SourceOffer
 import com.opencode.freeradar.data.source.remote.toOffer
@@ -26,7 +29,7 @@ val appModule = module {
             androidContext(),
             RadarDatabase::class.java,
             "radar.db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
     single { get<RadarDatabase>().offerDao() }
     single { get<RadarDatabase>().changeEventDao() }
@@ -34,10 +37,12 @@ val appModule = module {
     single { get<RadarDatabase>().sourceHealthDao() }
     single { createHttpClient() }
     singleOf(::ModelsDevSource)
-    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>()) }
+    singleOf(::OpenRouterSource)
+    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<OpenRouterSource>()) }
     single<Map<String, (SourceOffer, Long) -> Offer>> {
         mapOf(
             "opencode-data" to { dto: SourceOffer, now: Long -> dto.toOffer(now) },
+            OPENROUTER_SOURCE_ID to { dto: SourceOffer, now: Long -> dto.toOffer(now, OPENROUTER_SOURCE_ID) },
         )
     }
     single<OfferRepository> {
