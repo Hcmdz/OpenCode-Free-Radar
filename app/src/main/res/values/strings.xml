@@ -73,4 +73,5 @@
         <item quantity="one">%1$d offer expired</item>
         <item quantity="other">%1$d offers expired</item>
     </plurals>
+    <string name="conflict_warning">Conflicting information between sources — verify before use.</string>
 </resources>

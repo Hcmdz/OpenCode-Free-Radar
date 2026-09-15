@@ -76,4 +76,5 @@
         <item quantity="many">%1$d d’offres expirées</item>
         <item quantity="other">%1$d offres expirées</item>
     </plurals>
+    <string name="conflict_warning">Informations contradictoires entre les sources — vérifiez avant usage.</string>
 </resources>
