@@ -53,9 +53,9 @@ with these keys (values stay on your machine, never committed):
 
 ```properties
 RELEASE_STORE_FILE=<path-to-your-keystore>
-RELEASE_STORE_[REDACTED:password]
-RELEASE_KEY_ALIAS=[REDACTED]
-RELEASE_KEY_[REDACTED:password]
+RELEASE_STORE_[RELEASE_STORE_PASSWORD]
+RELEASE_KEY_ALIAS=[ALIAS]
+RELEASE_KEY_[RELEASE_KEY_PASSWORD]
 ```
 
 Then point `keystoreFichier` in `app/build.gradle.kts` at your file and run:
