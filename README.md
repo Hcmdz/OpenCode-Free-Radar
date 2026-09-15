@@ -1,5 +1,11 @@
 # OpenCode Free Radar
 
+[![Android](https://img.shields.io/badge/Platform-Android-green.svg?logo=android)](https://www.android.com)
+[![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg?logo=kotlin)](https://kotlinlang.org)
+[![MinSDK](https://img.shields.io/badge/MinSDK-29-orange.svg)](#)
+[![TargetSDK](https://img.shields.io/badge/TargetSDK-36-blue.svg)](#)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 Native Android app that tracks AI models free to use with
 [OpenCode](https://opencode.ai) and notifies you when new free offers appear.
 
@@ -42,6 +48,33 @@ Run checks:
 ./gradlew :app:connectedDebugAndroidTest   # needs a running emulator
 ```
 
+## Testing
+
+- Unit tests (JUnit 5 + Turbine + AssertK): `./gradlew :app:testDebugUnitTest`
+- Static analysis: `./gradlew :app:lintDebug`
+- UI tests on emulator (Compose + orchestrator):
+  `./gradlew :app:connectedDebugAndroidTest`
+- CI runs unit tests, lint, and CodeQL on every push/PR to `main`.
+
+## Project structure
+
+```text
+app/src/main/java/com/opencode/freeradar/
+├── data/            # Room DAOs/migrations, repository, remote sources (Ktor)
+├── domain/          # Models, use cases (change detection, alerts), errors
+├── ui/              # Compose screens, ViewModels, components, theme, navigation
+├── worker/          # WorkManager daily sync (SyncWorker, SyncScheduler)
+├── notifications/   # Alert channels and gates
+└── di/              # Koin modules
+docs/sources/        # Per-source notes (models.dev, OpenRouter, Zen roster)
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and feature ideas use the
+issue templates; vulnerabilities follow [SECURITY.md](SECURITY.md). Please
+respect the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Release signing
 
 Release builds sign with a keystore that lives **outside** this repository.
@@ -71,7 +104,8 @@ Then point `keystoreFichier` in `app/build.gradle.kts` at your file and run:
 
 All data stays on device. The app fetches the public model catalog over
 HTTPS, stores it in a local Room database, and runs syncs in the background.
-No account, no analytics, no third-party tracking SDK.
+No account, no analytics, no third-party tracking SDK. See
+[SECURITY.md](SECURITY.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## License
 
