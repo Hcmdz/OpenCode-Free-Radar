@@ -11,7 +11,7 @@ import androidx.room3.RoomDatabase
         SyncRunEntity::class,
         SourceHealthEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class RadarDatabase : RoomDatabase() {

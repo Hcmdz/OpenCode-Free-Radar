@@ -38,5 +38,6 @@ data class OfferEntity(
     val retrievedAt: Long,
     val verifiedAt: Long,
     val confidence: String,
-    val favorite: Boolean = false
+    val favorite: Boolean,
+    val missedSyncs: Int = 0
 )
