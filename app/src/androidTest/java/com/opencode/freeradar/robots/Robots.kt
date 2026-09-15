@@ -59,6 +59,10 @@ class SettingsRobot(private val rule: RadarRule) {
         rule.onNodeWithTag("settings_screen").assertIsDisplayed()
     }
 
+    fun openSection(title: String): SettingsRobot = apply {
+        rule.onNodeWithText(title).performClick()
+    }
+
     fun tapDark(): SettingsRobot = apply {
         rule.onNodeWithText("DARK").performClick()
     }

@@ -42,10 +42,10 @@ class SettingsCollapseTest {
     @Test
     fun collapsingLanguageHidesItsOptions() {
         content()
-        rule.onNodeWithText("English").assertIsDisplayed()
-        rule.onNodeWithText("Language").performClick()
         rule.onNodeWithText("English").assertDoesNotExist()
         rule.onNodeWithText("Language").performClick()
         rule.onNodeWithText("English").assertIsDisplayed()
+        rule.onNodeWithText("Language").performClick()
+        rule.onNodeWithText("English").assertDoesNotExist()
     }
 }

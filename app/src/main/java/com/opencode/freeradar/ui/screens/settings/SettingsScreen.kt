@@ -232,7 +232,7 @@ private fun CollapsibleSection(
     @StringRes titleRes: Int,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
     val stateLabel = stringResource(
         if (expanded) R.string.state_expanded else R.string.state_collapsed
     )

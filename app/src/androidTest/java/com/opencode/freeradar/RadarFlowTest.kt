@@ -40,6 +40,7 @@ class RadarFlowTest {
 
         SettingsRobot(rule)
             .assertVisible()
+            .openSection("Appearance")
             .tapDark()
 
         Espresso.pressBack()
