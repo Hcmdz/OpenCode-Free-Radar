@@ -24,8 +24,11 @@ import com.opencode.freeradar.domain.usecase.crossCheck
 import com.opencode.freeradar.domain.usecase.detectChanges
 import com.opencode.freeradar.domain.usecase.planAbsence
 import java.time.Clock
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -74,7 +77,8 @@ class OfflineFirstOfferRepository(
                 error = null
             )
         )
-        return when (val fetched = offerSource.fetch()) {
+        return try {
+            when (val fetched = offerSource.fetch()) {
             is Result.Success -> {
                 val now = clock.millis()
                 val current = offers.snapshotBySource(source).map { it.toDomain() }
@@ -152,7 +156,18 @@ class OfflineFirstOfferRepository(
                     )
                 )
                 RefreshResult.Failed(fetched.error)
+                }
             }
+        } catch (e: CancellationException) {
+            // A cancelled sync must not leave an unfinished run row behind:
+            // observeLatestRun would surface the orphan as the latest sync.
+            // Suspend cleanup is skipped under cancellation, so record the
+            // failure in NonCancellable, then rethrow so the worker still
+            // dies instead of scheduling a zombie retry.
+            withContext(NonCancellable) {
+                runs.finishRun(runId, clock.millis(), SyncResult.FAILED.name, "cancelled")
+            }
+            throw e
         }
     }
 
