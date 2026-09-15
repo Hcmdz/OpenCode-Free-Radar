@@ -82,7 +82,14 @@ class OfflineFirstOfferRepository(
                 // a shared mapper here once laundered NVIDIA rows into
                 // opencode-data rows. The registry is wired in AppModule.
                 val mapOffer = mappers[source] ?: { dto: SourceOffer, at: Long -> dto.toOffer(at, source) }
-                val incoming = fetched.value.map { mapOffer(it, now) }
+                // Mappers are sync-owned (favorite=false): carry the user's
+                // flags over, or every refresh wipes them via REPLACE.
+                val favorites = current.filter { it.favorite }.map { it.remoteId }.toSet()
+                val incoming = fetched.value.map { dto ->
+                    mapOffer(dto, now).let { offer ->
+                        if (offer.remoteId in favorites) offer.copy(favorite = true) else offer
+                    }
+                }
                 if (incoming.isEmpty() && current.isNotEmpty()) {
                     // Empty catalog with cached offers means truncated fetch, never a wipe.
                     runs.finishRun(runId, clock.millis(), SyncResult.FAILED.name, "empty-catalog")
