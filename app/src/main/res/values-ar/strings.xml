@@ -43,6 +43,8 @@
     <string name="desc_settings">الإعدادات</string>
     <string name="desc_back">رجوع</string>
     <string name="desc_scroll_top">العودة للأعلى</string>
+    <string name="state_expanded">موسّع</string>
+    <string name="state_collapsed">مطوي</string>
     <string name="section_prices">الأسعار</string>
     <string name="section_quotas">الحصص</string>
     <string name="section_conditions">الشروط</string>

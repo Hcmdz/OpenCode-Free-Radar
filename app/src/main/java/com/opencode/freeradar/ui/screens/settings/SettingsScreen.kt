@@ -1,18 +1,25 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Translate
@@ -31,14 +38,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -140,73 +154,115 @@ fun SettingsScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CollapsibleSection(titleRes = R.string.settings_appearance) {
+                ThemeMode.entries.forEach { mode ->
+                    OptionRow(
+                        icon = themeIcon(mode),
+                        title = mode.name,
+                        selected = themeState.mode == mode,
+                        onClick = { onMode(mode) }
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.amoled_black)
+                    )
+                    Switch(checked = themeState.useBlackTheme, onCheckedChange = onBlack)
+                }
+            }
+            CollapsibleSection(titleRes = R.string.settings_language) {
+                LanguageOption(tag = "", labelRes = R.string.lang_system, selectedTag = localeTag, onLocale = onLocale)
+                LanguageOption(tag = "en", labelRes = R.string.lang_english, selectedTag = localeTag, onLocale = onLocale)
+                LanguageOption(tag = "fr", labelRes = R.string.lang_french, selectedTag = localeTag, onLocale = onLocale)
+                LanguageOption(tag = "ar", labelRes = R.string.lang_arabic, selectedTag = localeTag, onLocale = onLocale)
+            }
+            CollapsibleSection(titleRes = R.string.settings_notifications) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = null
+                    )
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.notif_enable)
+                    )
+                    Switch(
+                        modifier = Modifier.testTag("settings_notifications_switch"),
+                        checked = notifEnabled,
+                        onCheckedChange = onNotifToggle
+                    )
+                }
+                if (notifDenied) {
+                    Text(
+                        text = stringResource(R.string.notif_denied_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    TextButton(onClick = onOpenNotifSettings) {
+                        Text(text = stringResource(R.string.notif_open_settings))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One collapsible settings group. Expanded by default (first paint matches
+ * the previous always-open layout); collapse state is local UI state that
+ * survives rotation. Header meets the 48dp touch target and exposes heading
+ * + expanded state to screen readers (never color/icon alone).
+ */
+@Composable
+private fun CollapsibleSection(
+    @StringRes titleRes: Int,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(true) }
+    val stateLabel = stringResource(
+        if (expanded) R.string.state_expanded else R.string.state_collapsed
+    )
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClick = { expanded = !expanded })
+                .semantics(mergeDescendants = true) {
+                    heading()
+                    stateDescription = stateLabel
+                }
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = stringResource(R.string.settings_appearance),
+                modifier = Modifier.weight(1f),
+                text = stringResource(titleRes),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
-            ThemeMode.entries.forEach { mode ->
-                OptionRow(
-                    icon = themeIcon(mode),
-                    title = mode.name,
-                    selected = themeState.mode == mode,
-                    onClick = { onMode(mode) }
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.amoled_black)
-                )
-                Switch(checked = themeState.useBlackTheme, onCheckedChange = onBlack)
-            }
-            Text(
-                text = stringResource(R.string.settings_language),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+            Icon(
+                imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = null
             )
-            LanguageOption(tag = "", labelRes = R.string.lang_system, selectedTag = localeTag, onLocale = onLocale)
-            LanguageOption(tag = "en", labelRes = R.string.lang_english, selectedTag = localeTag, onLocale = onLocale)
-            LanguageOption(tag = "fr", labelRes = R.string.lang_french, selectedTag = localeTag, onLocale = onLocale)
-            LanguageOption(tag = "ar", labelRes = R.string.lang_arabic, selectedTag = localeTag, onLocale = onLocale)
-            Text(
-                text = stringResource(R.string.settings_notifications),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = null
-                )
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.notif_enable)
-                )
-                Switch(
-                    modifier = Modifier.testTag("settings_notifications_switch"),
-                    checked = notifEnabled,
-                    onCheckedChange = onNotifToggle
-                )
-            }
-            if (notifDenied) {
-                Text(
-                    text = stringResource(R.string.notif_denied_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-                TextButton(onClick = onOpenNotifSettings) {
-                    Text(text = stringResource(R.string.notif_open_settings))
-                }
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                content()
             }
         }
     }
