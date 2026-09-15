@@ -3,7 +3,9 @@ package com.opencode.freeradar.data.source.remote
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import com.opencode.freeradar.domain.error.Result
+import com.opencode.freeradar.domain.model.Confidence
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -57,11 +59,16 @@ class ModelsDevSourceTest {
     )
 
     @Test
-    fun `zero-price ghost absent from zen roster is dropped`() = runTest {
+    fun `zero-price ghost absent from zen roster is marked TO_VERIFY, not dropped`() = runTest {
         val result = ModelsDevSource(client()).fetch()
         assertThat(result is Result.Success).isEqualTo(true)
-        val ids = (result as Result.Success).value.map { "${it.providerId}/${it.modelId}" }.toSet()
-        assertThat(ids).isEqualTo(setOf("opencode/a-free", "opencode/paid", "bothub/b-free"))
+        val rows = (result as Result.Success).value
+        assertThat(rows.map { "${it.providerId}/${it.modelId}" }.toSet()).isEqualTo(
+            setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
+        )
+        assertThat(rows.first { it.modelId == "ghost-free" }.confidence)
+            .isEqualTo(Confidence.TO_VERIFY)
+        assertThat(rows.first { it.modelId == "a-free" }.confidence).isNull()
     }
 
     @Test

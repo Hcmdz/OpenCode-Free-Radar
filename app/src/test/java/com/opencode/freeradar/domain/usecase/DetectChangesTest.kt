@@ -16,6 +16,7 @@ class DetectChangesTest {
     private fun offer(
         remoteId: String = "p/m",
         freeStatus: FreeStatus = FreeStatus.FREE,
+        confidence: Confidence = Confidence.OFFICIAL,
         inputPrice: Double? = 0.0,
         outputPrice: Double? = 0.0,
         contextLength: Int? = 1000,
@@ -33,6 +34,7 @@ class DetectChangesTest {
         quotaPeriod = null,
         temporary = false,
         conditions = null,
+        confidence = confidence,
         contextLength = contextLength,
         maxOutputTokens = null,
         supportsTools = supportsTools,
@@ -44,7 +46,6 @@ class DetectChangesTest {
         sourceUrl = null,
         retrievedAt = 1_000L,
         verifiedAt = 1_000L,
-        confidence = Confidence.OFFICIAL,
         favorite = false
     )
 
@@ -155,6 +156,32 @@ class DetectChangesTest {
             )
             assertThat(types(events).contains(ChangeType.FREE_EXPIRED)).isEqualTo(false)
         }
+    }
+
+    @Test
+    fun `unverified newcomer emits nothing`() {
+        // A ghost (absent from the Zen roster) appears in the list but
+        // never rings the bell until the roster confirms it.
+        val events = detectChanges(
+            old = emptyList(),
+            new = listOf(
+                offer(freeStatus = FreeStatus.LIMITED, confidence = Confidence.TO_VERIFY)
+            ),
+            now = 2_000L
+        )
+        assertThat(events).hasSize(0)
+    }
+
+    @Test
+    fun `roster confirmation emits BECAME_FREE`() {
+        // TO_VERIFY + usable-free flipping to confirmed usable-free is a
+        // new deal (e.g. a Muse Spark-style trial confirmed on Zen).
+        val events = detectChanges(
+            old = listOf(offer(freeStatus = FreeStatus.LIMITED, confidence = Confidence.TO_VERIFY)),
+            new = listOf(offer(freeStatus = FreeStatus.LIMITED)),
+            now = 2_000L
+        )
+        assertThat(types(events)).isEqualTo(setOf(ChangeType.BECAME_FREE))
     }
 
     @Test

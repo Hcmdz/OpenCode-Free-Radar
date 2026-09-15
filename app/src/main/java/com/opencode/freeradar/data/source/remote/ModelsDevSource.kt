@@ -5,6 +5,7 @@ import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.error.safeCall
 import com.opencode.freeradar.domain.error.toSourceError
+import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.repository.OfferSource
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -40,13 +41,18 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
     /**
      * The opencode provider lists $0 rows Zen no longer serves (legacy
      * entries — 24 of 31 on 2026-09-15). The live Zen roster is the truth:
-     * ghosts are dropped so the absence pipeline retires them. A dead
-     * roster fails open — a Zen outage must never wipe the catalog.
+     * ghosts stay visible but marked TO_VERIFY — silent on arrival, and a
+     * roster confirmation later rings BECAME_FREE. A dead roster fails
+     * open — a Zen outage changes nothing.
      */
     private suspend fun dropZenGhosts(offers: List<SourceOffer>): List<SourceOffer> {
         val roster = zenRoster() ?: return offers
-        return offers.filter { offer ->
-            offer.providerId != ZEN_PROVIDER || !offer.isFree() || offer.modelId in roster
+        return offers.map { offer ->
+            if (offer.providerId == ZEN_PROVIDER && offer.isFree() && offer.modelId !in roster) {
+                offer.copy(confidence = Confidence.TO_VERIFY)
+            } else {
+                offer
+            }
         }
     }
 

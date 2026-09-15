@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.data.source.remote
 
+import com.opencode.freeradar.domain.model.Confidence
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -67,7 +68,12 @@ data class SourceOffer(
     val quota: String?,
     val conditions: String?,
     val officialUrl: String?,
-    val sourceUrl: String?
+    val sourceUrl: String?,
+    /**
+     * Sync-knowledge override (e.g. Zen-roster ghost marking). Null means
+     * "no override" — the mapper falls back to OFFICIAL. Never serialized.
+     */
+    val confidence: Confidence? = null
 )
 
 fun parseCatalog(json: String): List<SourceOffer> {

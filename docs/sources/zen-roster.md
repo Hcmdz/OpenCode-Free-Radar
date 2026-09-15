@@ -7,9 +7,12 @@ the rest are legacy entries ("retained for compatibility").
 
 ## Rule
 
-`ModelsDevSource` drops `$0` `opencode/*` rows absent from the live roster;
-the absence pipeline (`missedSyncs`, removal at ≥2, favorites never deleted)
-retires them. A dead roster fails open — a Zen outage never wipes the catalog.
+`ModelsDevSource` marks `$0` `opencode/*` rows absent from the live roster
+with confidence `TO_VERIFY` instead of dropping them: ghosts stay visible
+with a neutral chip but arrive silently (no `NEW_MODEL`), and a roster
+confirmation later rings `BECAME_FREE`. A dead roster fails open — a Zen
+outage changes nothing. No migration: confidence is a plain string column
+that already stores `TO_VERIFY`.
 
 ## Why not the name
 

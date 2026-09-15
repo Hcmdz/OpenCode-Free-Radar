@@ -47,7 +47,7 @@ fun SourceOffer.toOffer(now: Long, source: String = "opencode-data"): Offer {
         sourceUrl = sourceUrl,
         retrievedAt = now,
         verifiedAt = now,
-        confidence = Confidence.OFFICIAL,
+        confidence = confidence ?: Confidence.OFFICIAL,
         favorite = false
     )
 }

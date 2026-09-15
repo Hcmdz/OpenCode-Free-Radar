@@ -3,9 +3,17 @@ package com.opencode.freeradar.domain.usecase
 
 import com.opencode.freeradar.domain.model.ChangeEvent
 import com.opencode.freeradar.domain.model.ChangeType
+import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.model.isUsableFree
+
+/**
+ * Usable at $0 AND confirmed by a source. Unverified rows (e.g. absent
+ * from the Zen roster) are visible but never ring the bell on their own.
+ */
+private fun Offer.isConfirmedFree(): Boolean =
+    freeStatus.isUsableFree() && confidence != Confidence.TO_VERIFY
 
 fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEvent> {
     val oldById = old.associateBy { it.remoteId }
@@ -15,14 +23,18 @@ fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEve
     for ((id, current) in newById) {
         val previous = oldById[id]
         if (previous == null) {
-            // Status stamp for notification counting: only usable-free
-            // newcomers ring the free bell (legacy rows have null = counted).
-            events += ChangeEvent(id, ChangeType.NEW_MODEL, null, current.freeStatus.name, now)
+            // Unverified newcomers (e.g. Zen-roster ghosts) appear silently:
+            // no bell until a source confirms them. The status stamp drives
+            // notification counting (legacy rows have null = counted).
+            if (current.confidence != Confidence.TO_VERIFY) {
+                events += ChangeEvent(id, ChangeType.NEW_MODEL, null, current.freeStatus.name, now)
+            }
             continue
         }
-        if (!previous.freeStatus.isUsableFree() && current.freeStatus.isUsableFree()) {
-            // Becoming free-with-conditions alerts like becoming FREE (e.g. a
-            // Muse Spark-style limited trial): that is the app's purpose.
+        if (!previous.isConfirmedFree() && current.isConfirmedFree()) {
+            // Becoming confirmed usable-free alerts like becoming FREE: a
+            // price drop to $0 and a roster confirmation (e.g. a Muse
+            // Spark-style limited trial) are both new deals.
             events += ChangeEvent(id, ChangeType.BECAME_FREE, previous.freeStatus.name, current.freeStatus.name, now)
         }
         if (previous.freeStatus == FreeStatus.FREE &&

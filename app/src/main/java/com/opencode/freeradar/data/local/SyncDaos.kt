@@ -24,6 +24,12 @@ interface ChangeEventDao {
     @Query("SELECT COALESCE(MAX(id), 0) FROM change_event")
     suspend fun maxEventId(): Long
 
+    @Query(
+        "SELECT COUNT(*) FROM change_event WHERE offerRemoteId = :remoteId " +
+            "AND type = :type AND createdAt >= :since"
+    )
+    suspend fun countTypeSince(remoteId: String, type: String, since: Long): Int
+
     @Query("DELETE FROM change_event WHERE createdAt < :cutoff")
     suspend fun pruneOlderThan(cutoff: Long)
 }

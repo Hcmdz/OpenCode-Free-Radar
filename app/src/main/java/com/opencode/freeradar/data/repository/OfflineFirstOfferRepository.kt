@@ -128,6 +128,19 @@ class OfflineFirstOfferRepository(
                 if (plan.bump.isNotEmpty()) offers.bumpMissed(plan.bump)
                 val detected = detectChanges(current, incoming, now)
                     .filter { it.type != ChangeType.MODEL_REMOVED }
+                    .filterNot { event ->
+                        // Anti-flap: a $0 swing rings once per retention window.
+                        // The first BECAME_FREE stays in history as proof; later
+                        // swings re-alert only after it ages out with the prune
+                        // below, so the window is self-cleaning. One extra read
+                        // per BECAME_FREE — rare by construction.
+                        event.type == ChangeType.BECAME_FREE &&
+                            events.countTypeSince(
+                                event.offerRemoteId,
+                                ChangeType.BECAME_FREE.name,
+                                now - HISTORY_RETENTION_MILLIS
+                            ) > 0
+                    }
                 val removals = plan.remove.map { ChangeEvent(it, ChangeType.MODEL_REMOVED, null, null, now) }
                 offers.replaceSource(
                     incoming.map { it.toEntity() },
