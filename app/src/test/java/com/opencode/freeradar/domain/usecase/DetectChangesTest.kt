@@ -120,4 +120,24 @@ class DetectChangesTest {
         val events = detectChanges(old = listOf(offer()), new = listOf(offer()), now = 2_000L)
         assertThat(events).hasSize(0)
     }
+
+    @Test
+    fun `free to unknown never emits FREE_EXPIRED`() {
+        val events = detectChanges(
+            old = listOf(offer()),
+            new = listOf(offer(freeStatus = FreeStatus.UNKNOWN, inputPrice = null, outputPrice = null)),
+            now = 2_000L
+        )
+        assertThat(types(events).contains(ChangeType.FREE_EXPIRED)).isEqualTo(false)
+    }
+
+    @Test
+    fun `unknown to free emits BECAME_FREE`() {
+        val events = detectChanges(
+            old = listOf(offer(freeStatus = FreeStatus.UNKNOWN, inputPrice = null, outputPrice = null)),
+            new = listOf(offer()),
+            now = 2_000L
+        )
+        assertThat(types(events).contains(ChangeType.BECAME_FREE)).isEqualTo(true)
+    }
 }

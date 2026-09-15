@@ -20,7 +20,10 @@ fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEve
         if (previous.freeStatus != FreeStatus.FREE && current.freeStatus == FreeStatus.FREE) {
             events += ChangeEvent(id, ChangeType.BECAME_FREE, previous.freeStatus.name, current.freeStatus.name, now)
         }
-        if (previous.freeStatus == FreeStatus.FREE && current.freeStatus != FreeStatus.FREE) {
+        if (previous.freeStatus == FreeStatus.FREE && current.freeStatus != FreeStatus.FREE &&
+            current.freeStatus != FreeStatus.UNKNOWN
+        ) {
+            // Missing cost maps to UNKNOWN, never expiry (fail-closed per spec FR-002).
             events += ChangeEvent(id, ChangeType.FREE_EXPIRED, previous.freeStatus.name, current.freeStatus.name, now)
         }
         if (previous.inputPrice != current.inputPrice || previous.outputPrice != current.outputPrice) {
