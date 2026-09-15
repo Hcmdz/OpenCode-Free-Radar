@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.opencode.freeradar.MainActivity
 
@@ -29,8 +31,8 @@ class DashboardRobot(private val rule: RadarRule) {
         rule.onNodeWithTag("dashboard_settings").performClick()
     }
 
-    fun tapRefresh(): DashboardRobot = apply {
-        rule.onNodeWithTag("dashboard_refresh").performClick()
+    fun pullToRefresh(): DashboardRobot = apply {
+        rule.onNodeWithTag("dashboard_list").performTouchInput { swipeDown() }
     }
 
     fun selectAll(): DashboardRobot = apply {

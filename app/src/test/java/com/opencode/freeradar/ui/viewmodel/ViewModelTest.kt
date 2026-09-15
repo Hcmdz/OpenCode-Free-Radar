@@ -21,6 +21,7 @@ import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.SourceFilter
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,7 @@ class FakeOfferRepository : OfferRepository {
     val history = MutableStateFlow<List<ChangeEvent>>(emptyList())
     var refreshResult: RefreshResult = RefreshResult.Ok
     var refreshCalls = 0
+    var refreshGate: CompletableDeferred<Unit>? = null
     var lastCompatibleOnly: Boolean? = null
 
     override fun observeOffers(compatibleOnly: Boolean): Flow<List<Offer>> {
@@ -68,6 +70,7 @@ class FakeOfferRepository : OfferRepository {
 
     override suspend fun refreshAll(): RefreshResult {
         refreshCalls++
+        refreshGate?.await()
         return refreshResult
     }
 
@@ -303,6 +306,26 @@ class DashboardViewModelTest {
             assertThat(reset.filter).isEqualTo(OfferFilter.FREE)
             assertThat(reset.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
             assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+        }
+    }
+
+    @Test
+    fun `refresh raises and clears the refreshing flag`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val gate = CompletableDeferred<Unit>()
+        repo.refreshGate = gate
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.Refresh)
+            testScheduler.runCurrent()
+            assertThat(awaitItem().isRefreshing).isTrue()
+            gate.complete(Unit)
+            testScheduler.advanceUntilIdle()
+            assertThat(awaitItem().isRefreshing).isFalse()
         }
     }
 

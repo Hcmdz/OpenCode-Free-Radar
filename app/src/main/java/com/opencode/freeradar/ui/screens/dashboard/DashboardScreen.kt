@@ -2,6 +2,7 @@
 package com.opencode.freeradar.ui.screens.dashboard
 
 import android.text.format.DateUtils
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,19 +21,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,6 +85,10 @@ fun DashboardScreen(
     onAction: (DashboardAction) -> Unit,
     onOpenSettings: () -> Unit = {}
 ) {
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    // Visible past the first item only; Scaffold docks it bottom-end (right).
+    val showScrollTop = listState.firstVisibleItemIndex > 0
     Scaffold(
         modifier = Modifier.testTag("dashboard_screen"),
         topBar = {
@@ -106,14 +116,21 @@ fun DashboardScreen(
                             contentDescription = stringResource(R.string.desc_settings)
                         )
                     }
-                    Button(
-                        modifier = Modifier.testTag("dashboard_refresh"),
-                        onClick = { onAction(DashboardAction.Refresh) }
-                    ) {
-                        Text(stringResource(R.string.refresh_now))
-                    }
                 }
             )
+        },
+        floatingActionButton = {
+            AnimatedVisibility(visible = showScrollTop) {
+                SmallFloatingActionButton(
+                    onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                    modifier = Modifier.testTag("dashboard_scroll_top")
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowUp,
+                        contentDescription = stringResource(R.string.desc_scroll_top)
+                    )
+                }
+            }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
@@ -142,8 +159,13 @@ fun DashboardScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
-            when {
-                state.isLoading -> Box(
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { onAction(DashboardAction.Refresh) },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when {
+                    state.isLoading -> Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
@@ -175,6 +197,7 @@ fun DashboardScreen(
 
                 else -> LazyColumn(
                     modifier = Modifier.testTag("dashboard_list").fillMaxSize(),
+                    state = listState,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(state.offers, key = { it.remoteId }) { offer ->
@@ -183,6 +206,7 @@ fun DashboardScreen(
                             onClick = { onAction(DashboardAction.OpenOffer(offer.remoteId)) }
                         )
                     }
+                }
                 }
             }
         }

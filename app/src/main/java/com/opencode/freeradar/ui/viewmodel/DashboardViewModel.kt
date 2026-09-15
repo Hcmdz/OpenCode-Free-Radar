@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 
 data class DashboardUiState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val offers: List<OfferUi> = emptyList(),
     val filter: OfferFilter = OfferFilter.FREE,
     val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
@@ -58,6 +59,7 @@ class DashboardViewModel(
 
     private val filter = MutableStateFlow(OfferFilter.FREE)
     private val sourceFilter = MutableStateFlow(SourceFilter.ALL_SOURCES)
+    private val refreshing = MutableStateFlow(false)
     private val manualError = MutableStateFlow<UiText?>(null)
     private val events = Channel<DashboardEvent>(Channel.BUFFERED)
     val eventFlow = events.receiveAsFlow()
@@ -66,9 +68,14 @@ class DashboardViewModel(
     // filter in memory in under a millisecond — no per-option DAO roundtrips.
     private val offersFlow = repository.observeOffers(false)
 
-    private data class Prefs(val filter: OfferFilter, val source: SourceFilter, val error: UiText?)
+    private data class Prefs(
+        val filter: OfferFilter,
+        val source: SourceFilter,
+        val refreshing: Boolean,
+        val error: UiText?
+    )
 
-    private val prefsFlow = combine(filter, sourceFilter, manualError, ::Prefs)
+    private val prefsFlow = combine(filter, sourceFilter, refreshing, manualError, ::Prefs)
 
     val state = combine(
         offersFlow,
@@ -79,6 +86,7 @@ class DashboardViewModel(
             val counts = facetCounts(offers, prefs.filter, prefs.source)
             DashboardUiState(
                 isLoading = false,
+                isRefreshing = prefs.refreshing,
                 offers = offers
                     .filter { !prefs.filter.freeOnly() || it.freeStatus == FreeStatus.FREE }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
@@ -100,13 +108,18 @@ class DashboardViewModel(
     fun onAction(action: DashboardAction) {
         when (action) {
             DashboardAction.Refresh -> viewModelScope.launch {
-                val watermark = gate.beforeSync()
-                when (val result = repository.refreshAll()) {
-                    RefreshResult.Ok, is RefreshResult.Partial -> {
-                        manualError.value = null
-                        gate.afterSync(watermark)
+                refreshing.value = true
+                try {
+                    val watermark = gate.beforeSync()
+                    when (val result = repository.refreshAll()) {
+                        RefreshResult.Ok, is RefreshResult.Partial -> {
+                            manualError.value = null
+                            gate.afterSync(watermark)
+                        }
+                        is RefreshResult.Failed -> manualError.value = result.error.toUiText()
                     }
-                    is RefreshResult.Failed -> manualError.value = result.error.toUiText()
+                } finally {
+                    refreshing.value = false
                 }
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter

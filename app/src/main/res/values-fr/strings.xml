@@ -42,6 +42,7 @@
     <string name="settings_language">Langue</string>
     <string name="desc_settings">Paramètres</string>
     <string name="desc_back">Retour</string>
+    <string name="desc_scroll_top">Haut de page</string>
     <string name="section_prices">Tarifs</string>
     <string name="section_quotas">Quotas</string>
     <string name="section_conditions">Conditions</string>
