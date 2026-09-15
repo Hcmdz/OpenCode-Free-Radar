@@ -1,0 +1,60 @@
+# Models
+
+Deploy and scale models on your GPU infrastructure of choice with NVIDIA NIM inference microservices
+
+- [Active Speaker Detection](/qc69jvmznzxy/active-speaker-detection.md) — Detect and track speaker identities across video frames.
+- [alphafold2](/qc69jvmznzxy/alphafold2.md) — Predicts the 3D structure of a protein from its amino acid sequence.
+- [alphafold2-multimer](/qc69jvmznzxy/alphafold2-multimer.md) — Predicts the 3D structure of a protein from its amino acid sequence.
+- [Background Noise Removal](/qc69jvmznzxy/bnr.md) — Removes unwanted noises from audio improving speech intelligibility.
+- [bevformer](/qc69jvmznzxy/bevformer.md) — Advanced transformer for multi-frame bird's-eye-view 3D perception in autonomous driving.
+- [Boltz-2](/qc69jvmznzxy/boltz2.md) — Predict complex structures using Boltz-2.
+- [canary-1b-asr](/qc69jvmznzxy/canary-1b-asr.md) — Multi-lingual model supporting speech-to-text recognition and translation.
+- [chatterbox-multilingual-tts](/qc69jvmznzxy/chatterbox-multilingual-tts.md) — Natural and expressive voices in 23 languages. For voice agents and brand ambassadors.
+- [conformer-ctc-asr](/qc69jvmznzxy/conformer-ctc-asr.md) — Automatic speech recognition model that transcribes speech in lower case Spanish with record-setting accuracy and performance
+- [cosmos-transfer2.5-2b](/qc69jvmznzxy/cosmos-transfer2_5-2b.md) — Generates physics-aware video world states for physical AI development using text prompts and multiple spatial control inputs derived from real-world data or simulation.
+- [cosmos3-nano](/qc69jvmznzxy/cosmos3-nano.md) — Generates physics-aware videos from text prompts or an image prompt for physical AI development.
+- [cosmos3-nano-reasoner](/qc69jvmznzxy/cosmos3-nano-reasoner.md) — Vision language model that excels in understanding the physical world using structured reasoning on videos or images.
+- [cuopt](/qc69jvmznzxy/nvidia-cuopt.md) — World-record accuracy and performance for complex route optimization.
+- [deepseek-v4-flash-0731](/qc69jvmznzxy/deepseek-v4-flash-0731.md) — 284B MoE (13B active) model ideal for long-context workloads optimized for coding, chat, and agentic workflows
+- [diffdock](/qc69jvmznzxy/diffdock.md) — Predicts the 3D structure of how a molecule interacts with a protein.
+- [diffusiongemma-26b-a4b-it](/qc69jvmznzxy/diffusiongemma-26b-a4b-it.md) — Diffusion-based 26B parameter LLM enabling parallel token generation for real-time text apps
+- [evo2-40b](/qc69jvmznzxy/evo2-40b.md) — Evo 2 is a biological foundation model that is able to integrate information over long genomic sequences while retaining sensitivity to single-nucleotide changes.
+- [evo2-40b-forward](/qc69jvmznzxy/evo2-40b-forward.md) — Evo 2 is a biological foundation model that is able to integrate information over long genomic sequences while retaining sensitivity to single-nucleotide changes.
+- [evo2-7b-forward](/qc69jvmznzxy/evo2-7b-forward.md) — Evo 2 is a biological foundation model that is able to integrate information over long genomic sequences while retaining sensitivity to single-nucleotide changes.
+- [eyecontact](/qc69jvmznzxy/eyecontact.md) — Estimate gaze angles of a person in a video and redirect to make it frontal.
+- [fidelity](/qc69jvmznzxy/fidelity.md) — Run computational-fluid dynamics (CFD) simulations
+- [fluent](/qc69jvmznzxy/fluent.md) — Run computational-fluid dynamics (CFD) simulations
+- [FLUX.1-dev](/qc69jvmznzxy/flux_1-dev.md) — FLUX.1 is a state-of-the-art suite of image generation models
+- [FLUX.1-Kontext-dev](/qc69jvmznzxy/flux_1-kontext-dev.md) — FLUX.1 Kontext is a multimodal model that enables in-context image generation and editing.
+- [FLUX.1-schnell](/qc69jvmznzxy/flux_1-schnell.md) — FLUX.1-schnell is a distilled image generation model, producing high quality images at fast speeds
+- [flux.2-klein-4b](/qc69jvmznzxy/flux_2-klein-4b.md) — FLUX.2-klein-4B is a distilled image generation and editing model, producing outputs at lighting speed
+- [fourcastnet](/qc69jvmznzxy/fourcastnet.md) — FourCastNet predicts global atmospheric dynamics of various weather / climate variables.
+- [gemma-4-31b-it](/qc69jvmznzxy/gemma-4-31b-it.md) — Dense 31B model delivering frontier reasoning for coding, agentic workflows, and fine-tuning.
+- [genmol](/qc69jvmznzxy/genmol-generate.md) — Fragment-Based Molecular Generation by Discrete Diffusion.
+- [gpt-oss-20b](/qc69jvmznzxy/gpt-oss-20b.md) — Smaller Mixture of Experts (MoE) text-only LLM for efficient AI reasoning and math
+- [ising-calibration-1-35b-a3b](/qc69jvmznzxy/ising-calibration-1-35b-a3b.md) — Open VLM for quantum computer calibration chart understanding across a range of qubit modalities.
+- [ising-calibration-1.5-31b](/qc69jvmznzxy/ising-calibration-1.5-31b.md) — NVIDIA-Ising-Calibration-1.5 is a dense multimodal vision-language model built on Gemma 4 31B. It analyzes quantum computing calibration experiment plots and generates structured technical text.
+- [kimi-k3](/qc69jvmznzxy/kimi-k3.md) — ~2.8T hybrid KDA+MLA multimodal MoE for long-horizon coding, agentic tool use, and image understanding.
+- [laguna-xs-2.1](/qc69jvmznzxy/laguna-xs-2.1.md) — Efficient 33B MoE for local, long-horizon agentic coding and terminal tasks
+- [LipSync](/qc69jvmznzxy/lipsync.md) — Generative lip dubbing that syncs lips in a video to input audio.
+- [llama-3.1-nemoguard-8b-content-safety](/qc69jvmznzxy/llama-3_1-nemoguard-8b-content-safety.md) — Leading content safety model for enhancing the safety and moderation capabilities of LLMs
+- [llama-3.1-nemoguard-8b-topic-control](/qc69jvmznzxy/llama-3_1-nemoguard-8b-topic-control.md) — Topic control model to keep conversations focused on approved topics, avoiding inappropriate content.
+- [llama-3.1-nemotron-safety-guard-8b-v3](/qc69jvmznzxy/llama-3_1-nemotron-safety-guard-8b-v3.md) — Leading multilingual content safety model for enhancing the safety and moderation capabilities of LLMs
+- [llama-3.2-11b-vision-instruct](/qc69jvmznzxy/llama-3.2-11b-vision-instruct.md) — Cutting-edge vision-language model exceling in high-quality reasoning from images.
+- [llama-3.2-90b-vision-instruct](/qc69jvmznzxy/llama-3.2-90b-vision-instruct.md) — Cutting-edge vision-Language model exceling in high-quality reasoning from images.
+- [llama-guard-4-12b](/qc69jvmznzxy/llama-guard-4-12b.md) — Multi-modal model to classify safety for input prompts as well output responses.
+- [llama-nemotron-embed-vl-1b-v2](/qc69jvmznzxy/llama-nemotron-embed-vl-1b-v2.md) — Multimodal question-answer retrieval representing user queries as text and documents as images.
+- [llama-nemotron-rerank-vl-1b-v2](/qc69jvmznzxy/llama-nemotron-rerank-vl-1b-v2.md) — GPU-accelerated model optimized for providing a probability score that a given passage contains the information to answer a question.
+- [magpie-tts-multilingual](/qc69jvmznzxy/magpie-tts-multilingual.md) — Natural and expressive voices in multiple languages. For voice agents and brand ambassadors.
+- [magpie-tts-zeroshot](/qc69jvmznzxy/magpie-tts-zeroshot.md) — Expressive and engaging text-to-speech, generated from a short audio sample.
+- [megatron-1b-nmt](/qc69jvmznzxy/megatron-1b-nmt.md) — Enable smooth global interactions in 36 languages.
+- [mistral-nemotron](/qc69jvmznzxy/mistral-nemotron.md) — Built for agentic workflows, this model excels in coding, instruction following, and function calling
+- [molmim](/qc69jvmznzxy/molmim-generate.md) — MolMIM performs controlled generation, finding molecules with the right properties.
+- [msa-search](/qc69jvmznzxy/msa-search.md) — Generates a multiple sequence alignment from a query sequence and a protein sequence database search.
+- [muse-glimmer-30b](/qc69jvmznzxy/muse-glimmer-30b.md) — Muse Glimmer 30B is a multimodal reasoning model accepting text and images, with native tool-calling and separate reasoning output.
+- [nemoguard-jailbreak-detect](/qc69jvmznzxy/nemoguard-jailbreak-detect.md) — Industry leading jailbreak classification model for protection from adversarial attempts
+- [nemoretriever-ocr](/qc69jvmznzxy/nemoretriever-ocr.md) — Powerful OCR model for fast, accurate real-world image text extraction, layout, and structure analysis.
+- [nemotron-3-embed-1b](/qc69jvmznzxy/nemotron-3-embed-1b.md) — 1B embedding model for semantic search, retrieval, and RAG applications.
+- [nemotron-3-nano-omni-30b-a3b-reasoning](/qc69jvmznzxy/nemotron-3-nano-omni-30b-a3b-reasoning.md) — Nemotron 3 Nano Omni is an omni-modal reasoning model that understands images, video, speech, text.
+- [nemotron-3-super-120b-a12b](/qc69jvmznzxy/nemotron-3-super-120b-a12b.md) — Open, efficient hybrid Mamba-Transformer MoE with 1M context, excelling in agentic reasoning, coding, planning, tool calling, and more
+- [nemotron-3-ultra-550b-a55b](/qc69jvmznzxy/nemotron-3-ultra-550b-a55b.md) — Open, efficient hybrid Mamba-Transformer MoE with 1M context, excelling in agentic reasoning, coding, planning, tool calling, and more
