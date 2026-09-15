@@ -62,6 +62,19 @@ class OfflineFirstOfferRepository(
                 val now = clock.millis()
                 val current = offers.snapshotBySource(source).map { it.toDomain() }
                 val incoming = fetched.value.map { it.toOffer(now) }
+                if (incoming.isEmpty() && current.isNotEmpty()) {
+                    // Empty catalog with cached offers means truncated fetch, never a wipe.
+                    runs.finishRun(runId, clock.millis(), SyncResult.FAILED.name, "empty-catalog")
+                    health.upsert(
+                        SourceHealthEntity(
+                            source = source,
+                            state = HealthState.DEGRADED.name,
+                            checkedAt = clock.millis()
+                        )
+                    )
+                    return RefreshResult.Failed(SourceError.ParseFailed)
+                }
+                // ponytail: empty-only guard, ratio guard (<50% of cache) if partial truncations appear
                 val detected = detectChanges(current, incoming, now)
                 database.offerDao().replaceSourceWithEvents(
                     source,
