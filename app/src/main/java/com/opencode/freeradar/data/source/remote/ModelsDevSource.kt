@@ -10,6 +10,16 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
+private data class ZenIndex(val data: List<ZenModel> = emptyList())
+
+@Serializable
+private data class ZenModel(val id: String)
+
+private val zenJson = Json { ignoreUnknownKeys = true }
 
 class ModelsDevSource(private val client: HttpClient) : OfferSource {
     override val id: String = "opencode-data"
@@ -17,7 +27,7 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
     override suspend fun fetch(): Result<List<SourceOffer>, SourceError> {
         return when (val response = safeCall { client.get(CATALOG_URL).bodyAsText() }) {
             is Result.Success -> try {
-                Result.Success(parseCatalog(response.value))
+                Result.Success(dropZenGhosts(parseCatalog(response.value)))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -27,7 +37,40 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
         }
     }
 
+    /**
+     * The opencode provider lists $0 rows Zen no longer serves (legacy
+     * entries — 24 of 31 on 2026-09-15). The live Zen roster is the truth:
+     * ghosts are dropped so the absence pipeline retires them. A dead
+     * roster fails open — a Zen outage must never wipe the catalog.
+     */
+    private suspend fun dropZenGhosts(offers: List<SourceOffer>): List<SourceOffer> {
+        val roster = zenRoster() ?: return offers
+        return offers.filter { offer ->
+            offer.providerId != ZEN_PROVIDER || !offer.isFree() || offer.modelId in roster
+        }
+    }
+
+    private fun SourceOffer.isFree(): Boolean =
+        inputPrice == 0.0 && outputPrice == 0.0
+
+    private suspend fun zenRoster(): Set<String>? {
+        return when (val response = safeCall { client.get(ZEN_MODELS_URL).bodyAsText() }) {
+            is Result.Success -> try {
+                zenJson.decodeFromString<ZenIndex>(response.value).data.map { it.id }.toSet()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            is Result.Error -> null
+        }
+    }
+
     companion object {
         const val CATALOG_URL = "https://models.dev/api.json"
+
+        /** Documented public endpoint ("fetch the full list of available models"). */
+        const val ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models"
+        const val ZEN_PROVIDER = "opencode"
     }
 }
