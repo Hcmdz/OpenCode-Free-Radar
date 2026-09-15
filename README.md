@@ -14,8 +14,8 @@ by Anomaly Innovations, Inc.
 
 ## Features
 
-- Daily catalog sync from public model indexes (starting with models.dev)
-- Free / paid / unknown pricing status per model
+- Daily catalog sync from public model indexes (models.dev, OpenRouter, OpenCode Zen roster)
+- Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY), paid and expired offers filtered out
 - OpenCode compatibility flags (tool calling, vision, reasoning)
 - Price history and change log per model, stored on device
 - Favorites, filters, offline-first Room database
@@ -37,6 +37,8 @@ by Anomaly Innovations, Inc.
 Prerequisites: JDK 17 and the Android SDK with platform 37.
 
 ```bash
+git clone https://github.com/Hcmdz/OpenCode-Free-Radar.git
+cd OpenCode-Free-Radar
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug
 ```
