@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 
 class SummarizeEventsTest {
 
-    private fun event(type: ChangeType) =
-        ChangeEvent("p/m", type, null, null, 0L)
+    private fun event(type: ChangeType, afterJson: String? = null) =
+        ChangeEvent("p/m", type, null, afterJson, 0L)
 
     @Test
     fun `empty list yields no summary`() {
@@ -37,6 +37,25 @@ class SummarizeEventsTest {
             )
         )
         assertEquals(EventSummary(newFree = 3, expired = 0), summary)
+    }
+
+    @Test
+    fun `new paid model does not count as new free`() {
+        // A newcomer with a price tag must never ring the free bell.
+        assertNull(summarizeEvents(listOf(event(ChangeType.NEW_MODEL, "PAID"))))
+    }
+
+    @Test
+    fun `new limited model counts as new free`() {
+        val summary = summarizeEvents(listOf(event(ChangeType.NEW_MODEL, "LIMITED")))
+        assertEquals(EventSummary(newFree = 1, expired = 0), summary)
+    }
+
+    @Test
+    fun `legacy new model without status still counts`() {
+        // Fail open: rows recorded before the status stamp stay counted.
+        val summary = summarizeEvents(listOf(event(ChangeType.NEW_MODEL)))
+        assertEquals(EventSummary(newFree = 1, expired = 0), summary)
     }
 
     @Test
