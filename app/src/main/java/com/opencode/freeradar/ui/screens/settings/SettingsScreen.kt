@@ -3,6 +3,7 @@ package com.opencode.freeradar.ui.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,10 +19,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -60,8 +66,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings as SystemSettings
+import com.opencode.freeradar.BuildConfig
 import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AppLocalePrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
@@ -119,6 +127,14 @@ fun SettingsRoot(onBack: () -> Unit) {
                 }
             )
         },
+        onOpenLink = { url ->
+            context.startActivity(
+                Intent(
+                    if (url.startsWith("mailto:")) Intent.ACTION_SENDTO else Intent.ACTION_VIEW,
+                    Uri.parse(url)
+                )
+            )
+        },
         onBack = onBack
     )
 }
@@ -135,6 +151,7 @@ fun SettingsScreen(
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
     onOpenNotifSettings: () -> Unit,
+    onOpenLink: (String) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -217,6 +234,28 @@ fun SettingsScreen(
                     }
                 }
             }
+            CollapsibleSection(titleRes = R.string.settings_about) {
+                AboutRow(
+                    icon = Icons.Filled.Person,
+                    text = "${stringResource(R.string.about_developer)}: HcmDZ",
+                    onClick = null
+                )
+                AboutRow(
+                    icon = Icons.Filled.Email,
+                    text = "HcmDz.Dev@gmail.com",
+                    onClick = { onOpenLink("mailto:HcmDz.Dev@gmail.com") }
+                )
+                AboutRow(
+                    icon = Icons.Filled.Link,
+                    text = "github.com/Hcmdz/OpenCode-Free-Radar",
+                    onClick = { onOpenLink("https://github.com/Hcmdz/OpenCode-Free-Radar") }
+                )
+                AboutRow(
+                    icon = Icons.Filled.Info,
+                    text = "${stringResource(R.string.about_version)}: ${BuildConfig.VERSION_NAME}",
+                    onClick = null
+                )
+            }
         }
     }
 }
@@ -269,6 +308,29 @@ private fun CollapsibleSection(
 }
 
 @Composable
+private fun AboutRow(
+    icon: ImageVector,
+    text: String,
+    onClick: (() -> Unit)?
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Text(text = text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
 private fun themeIcon(mode: ThemeMode) = when (mode) {
     ThemeMode.SYSTEM -> Icons.Filled.BrightnessAuto
     ThemeMode.LIGHT -> Icons.Filled.LightMode
@@ -304,6 +366,7 @@ private fun SettingsPreview() {
             onLocale = {},
             onNotifToggle = {},
             onOpenNotifSettings = {},
+            onOpenLink = {},
             onBack = {}
         )
     }

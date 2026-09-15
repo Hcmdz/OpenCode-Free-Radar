@@ -20,7 +20,7 @@ class SettingsCollapseTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun content() {
+    private fun content(onOpenLink: (String) -> Unit = {}) {
         rule.setContent {
             AppThemePreview {
                 SettingsScreen(
@@ -33,6 +33,7 @@ class SettingsCollapseTest {
                     onLocale = {},
                     onNotifToggle = {},
                     onOpenNotifSettings = {},
+                    onOpenLink = onOpenLink,
                     onBack = {}
                 )
             }
@@ -47,5 +48,16 @@ class SettingsCollapseTest {
         rule.onNodeWithText("English").assertIsDisplayed()
         rule.onNodeWithText("Language").performClick()
         rule.onNodeWithText("English").assertDoesNotExist()
+    }
+
+    @Test
+    fun aboutSectionRevealsContactAndEmitsLink() {
+        val opened = mutableListOf<String>()
+        content(onOpenLink = opened::add)
+        rule.onNodeWithText("HcmDz.Dev@gmail.com").assertDoesNotExist()
+        rule.onNodeWithText("About").performClick()
+        rule.onNodeWithText("HcmDz.Dev@gmail.com").assertIsDisplayed()
+        rule.onNodeWithText("HcmDz.Dev@gmail.com").performClick()
+        rule.runOnIdle { assert(opened == listOf("mailto:HcmDz.Dev@gmail.com")) }
     }
 }
