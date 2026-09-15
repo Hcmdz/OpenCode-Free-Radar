@@ -29,7 +29,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.rememberSearchBarState
@@ -58,6 +59,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
@@ -377,7 +379,9 @@ private fun SearchInput(
     onFocusChange: (Boolean) -> Unit = {},
     onSubmit: () -> Unit = {}
 ) {
-    OutlinedTextField(
+    // Borderless: the SearchBar container already provides the docked shape
+    // and tonal background, so this field only draws text and icons.
+    TextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier
@@ -403,7 +407,15 @@ private fun SearchInput(
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
-        singleLine = true
+        singleLine = true,
+        shape = SearchBarDefaults.dockedShape,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
     )
 }
 
