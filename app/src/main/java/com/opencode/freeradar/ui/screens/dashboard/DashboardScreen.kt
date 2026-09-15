@@ -41,6 +41,7 @@ import com.opencode.freeradar.ui.components.ErrorBanner
 import com.opencode.freeradar.ui.components.OfferFilterChips
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
+import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferUi
@@ -213,6 +214,7 @@ private fun OfferCard(offer: OfferUi, onClick: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
+                StatusPill(text = offer.sourceLabel, tone = StatusTone.NEUTRAL)
                 offer.contextLength?.let {
                     AssistChip(onClick = {}, label = { Text("$it tokens") })
                 }
@@ -230,7 +232,7 @@ private fun DashboardListPreview() {
                 isLoading = false,
                 filter = OfferFilter.FREE_COMPATIBLE,
                 offers = listOf(
-                    OfferUi("p/m", "Model", "p", FreeStatus.FREE, 1_000_000, 1_000L)
+                    OfferUi("p/m", "Model", "p", FreeStatus.FREE, 1_000_000, 1_000L, "OpenCode")
                 )
             ),
             onAction = {}

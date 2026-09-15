@@ -10,8 +10,19 @@ data class OfferUi(
     val providerId: String,
     val freeStatus: FreeStatus,
     val contextLength: Int?,
-    val verifiedAt: Long
+    val verifiedAt: Long,
+    val sourceLabel: String
 )
+
+/**
+ * Display label for the catalog source. Proper nouns need no translation;
+ * unknown ids fall back to the raw id so future sources never render blank.
+ */
+fun sourceLabel(source: String): String = when (source) {
+    "opencode-data" -> "OpenCode"
+    "nvidia-build" -> "NVIDIA"
+    else -> source
+}
 
 fun Offer.toUi(): OfferUi = OfferUi(
     remoteId = remoteId,
@@ -19,5 +30,6 @@ fun Offer.toUi(): OfferUi = OfferUi(
     providerId = providerId,
     freeStatus = freeStatus,
     contextLength = contextLength,
-    verifiedAt = verifiedAt
+    verifiedAt = verifiedAt,
+    sourceLabel = sourceLabel(source)
 )
