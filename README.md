@@ -38,7 +38,7 @@ by Anomaly Innovations, Inc.
 - Single `:app` module, MVI with StateFlow, Navigation 3
 - Koin (DI), Room 3.0 (source of truth), Ktor (network)
 - DataStore (settings), WorkManager (daily sync)
-- JUnit 5 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E)
+- JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E)
 - minSdk 29, targetSdk 36, JDK 17, AGP 9.4.0
 
 ## Getting started
@@ -61,7 +61,7 @@ Run checks:
 
 ## Testing
 
-- Unit tests (JUnit 5 + Turbine + AssertK): `./gradlew :app:testDebugUnitTest`
+- Unit tests (JUnit 6 + Turbine + AssertK): `./gradlew :app:testDebugUnitTest`
 - Static analysis: `./gradlew :app:lintDebug`
 - UI tests on emulator (Compose + orchestrator):
   `./gradlew :app:connectedDebugAndroidTest`
