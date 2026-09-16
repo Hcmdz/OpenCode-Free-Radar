@@ -1,4 +1,3 @@
-import java.util.Properties
 import org.gradle.api.tasks.testing.Test
 
 apply(from = rootProject.file("versioning.gradle.kts"))
@@ -13,16 +12,6 @@ plugins {
 ksp {
     arg("room.schemaLocation", layout.projectDirectory.dir("schemas").asFile.path)
 }
-
-val keystoreFichier = file("/home/hicham/My Android Projects/My keystore/gradle.properties")
-// Public clones have no keystore: build stays configurable, release just ships unsigned.
-val keystorePresent = keystoreFichier.exists()
-val keystoreProperties = Properties().apply {
-    if (keystorePresent) keystoreFichier.inputStream().use { load(it) }
-}
-
-fun proprieteKeystore(nom: String): String =
-    keystoreProperties.getProperty(nom, "")
 
 android {
     namespace = "com.opencode.freeradar"
@@ -41,13 +30,16 @@ android {
 
     signingConfigs {
         create("release") {
-            // ponytail: file('') throws on clean clones, so storeFile is set only when a real path exists
-            val storePath = proprieteKeystore("RELEASE_STORE_FILE")
-            if (keystorePresent && storePath.isNotBlank()) storeFile = file(storePath)
-            storePassword = proprieteKeystore("RELEASE_STORE_PASSWORD")
-            keyAlias = proprieteKeystore("RELEASE_KEY_ALIAS")
-            keyPassword = proprieteKeystore("RELEASE_KEY_PASSWORD")
-            enableV3Signing = true
+            // Signing material comes from Gradle properties (e.g. ~/.gradle/gradle.properties),
+            // never from the repo. Empty on clones: release ships unsigned, build never breaks.
+            val storeFilePath = providers.gradleProperty("RELEASE_STORE_FILE").getOrElse("")
+            if (storeFilePath.isNotEmpty()) {
+                storeFile = file(storeFilePath)
+                storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
+                keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").getOrElse("")
+                keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
+                enableV3Signing = true
+            }
         }
     }
 
@@ -60,7 +52,7 @@ android {
                 "proguard-rules.pro"
             )
             val releaseSigning = signingConfigs.getByName("release")
-            if (keystorePresent) signingConfig = releaseSigning
+            if (releaseSigning.storeFile != null) signingConfig = releaseSigning
         }
     }
 
