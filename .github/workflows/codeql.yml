@@ -37,7 +37,10 @@ jobs:
         dependency-caching: true
 
     - name: Build Android project
-      run: ./gradlew :app:assembleDebug --no-daemon
+      # --no-build-cache: CodeQL traces compilation; cache hits (e.g. on
+      # docs-only pushes) compile nothing, so the extractor sees zero
+      # files and finalize fails with exit 32.
+      run: ./gradlew :app:assembleDebug --no-daemon --no-build-cache
       env:
         GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2048m"
 
