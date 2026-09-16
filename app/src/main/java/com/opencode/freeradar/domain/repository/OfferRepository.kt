@@ -16,7 +16,7 @@ interface OfferRepository {
     fun observeLastRun(source: String): Flow<SyncRun?>
     fun observeLatestRun(): Flow<SyncRun?>
     suspend fun refresh(source: String): RefreshResult
-    suspend fun refreshAll(): RefreshResult
+    suspend fun refreshAll(force: Boolean = false): RefreshResult
     suspend fun setFavorite(remoteId: String, favorite: Boolean)
     suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent>
     suspend fun latestEventId(): Long

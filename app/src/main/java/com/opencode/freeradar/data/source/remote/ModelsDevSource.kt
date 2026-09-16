@@ -6,7 +6,9 @@ import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.error.safeCall
 import com.opencode.freeradar.domain.error.toSourceError
 import com.opencode.freeradar.domain.model.Confidence
+import com.opencode.freeradar.domain.repository.FetchResult
 import com.opencode.freeradar.domain.repository.OfferSource
+import com.opencode.freeradar.util.sha256Hex
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -25,16 +27,23 @@ private val zenJson = Json { ignoreUnknownKeys = true }
 class ModelsDevSource(private val client: HttpClient) : OfferSource {
     override val id: String = "opencode-data"
 
-    override suspend fun fetch(): Result<List<SourceOffer>, SourceError> {
-        return when (val response = safeCall { client.get(CATALOG_URL).bodyAsText() }) {
-            is Result.Success -> try {
-                Result.Success(dropZenGhosts(parseCatalog(response.value)))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Result.Error(SourceError.ParseFailed)
-            }
-            is Result.Error -> Result.Error(response.error.toSourceError())
+    override suspend fun fetch(): Result<FetchResult, SourceError> {
+        val catalogBody = when (
+            val response = safeCall { client.get(CATALOG_URL).bodyAsText() }
+        ) {
+            is Result.Success -> response.value
+            is Result.Error -> return Result.Error(response.error.toSourceError())
+        }
+        return try {
+            val roster = zenRoster()
+            val offers = dropZenGhosts(parseCatalog(catalogBody), roster.first)
+            // Composite hash: the roster is a second input fetched every run.
+            val hash = sha256Hex(catalogBody + "\n" + (roster.second ?: ""))
+            Result.Success(FetchResult(offers, hash))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.Error(SourceError.ParseFailed)
         }
     }
 
@@ -45,8 +54,11 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
      * roster confirmation later rings BECAME_FREE. A dead roster fails
      * open — a Zen outage changes nothing.
      */
-    private suspend fun dropZenGhosts(offers: List<SourceOffer>): List<SourceOffer> {
-        val roster = zenRoster() ?: return offers
+    private suspend fun dropZenGhosts(
+        offers: List<SourceOffer>,
+        roster: Set<String>?
+    ): List<SourceOffer> {
+        if (roster == null) return offers
         return offers.map { offer ->
             if (offer.providerId == ZEN_PROVIDER && offer.isFree() && offer.modelId !in roster) {
                 offer.copy(confidence = Confidence.TO_VERIFY)
@@ -59,16 +71,17 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
     private fun SourceOffer.isFree(): Boolean =
         inputPrice == 0.0 && outputPrice == 0.0
 
-    private suspend fun zenRoster(): Set<String>? {
+    private suspend fun zenRoster(): Pair<Set<String>?, String?> {
         return when (val response = safeCall { client.get(ZEN_MODELS_URL).bodyAsText() }) {
             is Result.Success -> try {
-                zenJson.decodeFromString<ZenIndex>(response.value).data.map { it.id }.toSet()
+                zenJson.decodeFromString<ZenIndex>(response.value).data.map { it.id }.toSet() to
+                    response.value
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                null
+                null to null
             }
-            is Result.Error -> null
+            is Result.Error -> null to null
         }
     }
 

@@ -59,10 +59,19 @@ class ModelsDevSourceTest {
     )
 
     @Test
+    fun `body hash is stable for identical fetch and covers the roster`() = runTest {
+        val first = (ModelsDevSource(client()).fetch() as Result.Success).value
+        val second = (ModelsDevSource(client()).fetch() as Result.Success).value
+        assertThat(first.bodyHash).isEqualTo(second.bodyHash)
+        val deadRoster = (ModelsDevSource(client(HttpStatusCode.InternalServerError)).fetch() as Result.Success).value
+        assertThat(deadRoster.bodyHash == first.bodyHash).isEqualTo(false)
+    }
+
+    @Test
     fun `zero-price ghost absent from zen roster is marked TO_VERIFY, not dropped`() = runTest {
         val result = ModelsDevSource(client()).fetch()
         assertThat(result is Result.Success).isEqualTo(true)
-        val rows = (result as Result.Success).value
+        val rows = (result as Result.Success).value.offers
         assertThat(rows.map { "${it.providerId}/${it.modelId}" }.toSet()).isEqualTo(
             setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
         )
@@ -75,7 +84,7 @@ class ModelsDevSourceTest {
     fun `dead roster fails open and keeps every row`() = runTest {
         val result = ModelsDevSource(client(HttpStatusCode.InternalServerError)).fetch()
         assertThat(result is Result.Success).isEqualTo(true)
-        val ids = (result as Result.Success).value.map { "${it.providerId}/${it.modelId}" }.toSet()
+        val ids = (result as Result.Success).value.offers.map { "${it.providerId}/${it.modelId}" }.toSet()
         assertThat(ids).isEqualTo(
             setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
         )

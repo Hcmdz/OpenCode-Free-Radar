@@ -51,7 +51,7 @@ class SyncWorkerCancellationTest {
         override fun observeLastRun(source: String): Flow<SyncRun?> = emptyFlow()
         override fun observeLatestRun(): Flow<SyncRun?> = emptyFlow()
         override suspend fun refresh(source: String): RefreshResult = RefreshResult.Ok
-        override suspend fun refreshAll(): RefreshResult {
+        override suspend fun refreshAll(force: Boolean): RefreshResult {
             entered.complete(Unit)
             awaitCancellation()
         }

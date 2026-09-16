@@ -4,6 +4,7 @@ package com.opencode.freeradar.data.repository
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.local.SourceHealthEntity
 import com.opencode.freeradar.data.local.SyncRunEntity
+import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.source.remote.SourceOffer
 import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.domain.error.RefreshResult
@@ -36,7 +37,8 @@ class OfflineFirstOfferRepository(
     private val database: RadarDatabase,
     private val sources: Map<String, OfferSource>,
     private val mappers: Map<String, (SourceOffer, Long) -> Offer> = emptyMap(),
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    private val syncState: SyncStateStore? = null,
 ) : OfferRepository {
 
     private val offers = database.offerDao()
@@ -80,6 +82,20 @@ class OfflineFirstOfferRepository(
         return try {
             when (val fetched = offerSource.fetch()) {
             is Result.Success -> {
+                val body = fetched.value
+                if (isUnchanged(source, body.bodyHash)) {
+                    runs.finishRun(runId, clock.millis(), SyncResult.OK.name, "skipped-hash")
+                    health.upsert(
+                        SourceHealthEntity(
+                            source = source,
+                            state = HealthState.HEALTHY.name,
+                            checkedAt = clock.millis()
+                        )
+                    )
+                    return RefreshResult.Ok
+                }
+                body.bodyHash?.let { hash -> syncState?.recordHash(source, hash) }
+                val dtos = body.offers
                 val now = clock.millis()
                 val current = offers.snapshotBySource(source).map { it.toDomain() }
                 // Mapping is source-specific (S1 prices vs S2 LIMITED rule):
@@ -89,7 +105,7 @@ class OfflineFirstOfferRepository(
                 // Mappers are sync-owned (favorite=false): carry the user's
                 // flags over, or every refresh wipes them via REPLACE.
                 val favorites = current.filter { it.favorite }.map { it.remoteId }.toSet()
-                val incoming = fetched.value.map { dto ->
+                val incoming = dtos.map { dto ->
                     mapOffer(dto, now).let { offer ->
                         if (offer.remoteId in favorites) offer.copy(favorite = true) else offer
                     }
@@ -184,11 +200,46 @@ class OfflineFirstOfferRepository(
         }
     }
 
-    override suspend fun refreshAll(): RefreshResult = refreshMutex.withLock {
+    override suspend fun refreshAll(force: Boolean): RefreshResult = refreshMutex.withLock {
         // Deterministic order: map iteration follows DI registration.
-        val results = sources.keys.associateWith { refresh(it) }
+        // A fresh-enough source is skipped (recorded, not fetched): pull and
+        // worker share this gate, manual pulls bypass it with force.
+        val now = clock.millis()
+        val results = sources.keys.associateWith { source ->
+            if (!force && isFresh(source, now)) {
+                recordSkip(source, now)
+                RefreshResult.Ok
+            } else {
+                refresh(source)
+            }
+        }
         applyCrossCheck()
         return combineResults(results)
+    }
+
+    private suspend fun isUnchanged(source: String, incomingHash: String?): Boolean {
+        if (incomingHash == null) return false
+        val store = syncState ?: return false
+        return shouldSkipHash(store.bodyHash(source), incomingHash)
+    }
+
+    private suspend fun isFresh(source: String, now: Long): Boolean {
+        val last = runs.recentRuns(source, 1).firstOrNull() ?: return false
+        return shouldSkipFresh(last.result, last.completedAt, now)
+    }
+
+    private suspend fun recordSkip(source: String, now: Long) {
+        val runId = runs.insert(
+            SyncRunEntity(
+                source = source,
+                startedAt = now,
+                completedAt = null,
+                result = null,
+                error = null
+            )
+        )
+        runs.finishRun(runId, now, SyncResult.OK.name, "skipped-fresh")
+        runs.pruneKeepLast(source, MAX_SYNC_RUNS)
     }
 
     /**
@@ -227,6 +278,16 @@ class OfflineFirstOfferRepository(
     companion object {
         const val HISTORY_RETENTION_MILLIS = 90L * 24 * 60 * 60 * 1000
         const val MAX_SYNC_RUNS = 100
+        const val FRESHNESS_WINDOW_MILLIS = 6L * 60 * 60 * 1000
+
+        internal fun shouldSkipHash(storedHash: String?, incomingHash: String?): Boolean =
+            incomingHash != null && storedHash == incomingHash
+
+        internal fun shouldSkipFresh(result: String?, completedAt: Long?, now: Long): Boolean {
+            if (result != SyncResult.OK.name) return false
+            if (completedAt == null) return false
+            return now - completedAt < FRESHNESS_WINDOW_MILLIS
+        }
 
         /**
          * Pure aggregation over per-source results: all ok → Ok, mixed →

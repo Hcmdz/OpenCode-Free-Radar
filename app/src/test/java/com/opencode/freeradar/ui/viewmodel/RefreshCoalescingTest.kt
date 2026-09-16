@@ -44,7 +44,7 @@ private class GatedRefreshRepository : OfferRepository {
     override fun observeLatestRun(): Flow<SyncRun?> = noRun
     override suspend fun refresh(source: String): RefreshResult = RefreshResult.Ok
 
-    override suspend fun refreshAll(): RefreshResult {
+    override suspend fun refreshAll(force: Boolean): RefreshResult {
         val gate = CompletableDeferred<Unit>()
         synchronized(gates) { gates += gate }
         refreshCalls++

@@ -14,6 +14,7 @@ import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.domain.repository.FetchResult
 import com.opencode.freeradar.domain.repository.OfferSource
 import java.time.Clock
 import java.time.Instant
@@ -41,7 +42,7 @@ class CancelledRefreshRunTest {
 
     private class BlockingSource(val entered: CompletableDeferred<Unit>) : OfferSource {
         override val id: String = "s"
-        override suspend fun fetch(): Result<List<SourceOffer>, SourceError> {
+        override suspend fun fetch(): Result<FetchResult, SourceError> {
             entered.complete(Unit)
             awaitCancellation()
         }

@@ -5,6 +5,8 @@ import androidx.room3.Room
 import com.opencode.freeradar.data.local.MIGRATION_1_2
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
+import com.opencode.freeradar.data.local.SyncStatePrefs
+import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.local.UpdatePrefs
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
 import com.opencode.freeradar.data.source.openrouter.OPENROUTER_SOURCE_ID
@@ -38,7 +40,7 @@ val appModule = module {
     single { get<RadarDatabase>().changeEventDao() }
     single { get<RadarDatabase>().syncRunDao() }
     single { get<RadarDatabase>().sourceHealthDao() }
-    single { createHttpClient() }
+    single { createHttpClient(cacheDir = androidContext().cacheDir) }
     singleOf(::ModelsDevSource)
     singleOf(::OpenRouterSource)
     single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<OpenRouterSource>()) }
@@ -53,11 +55,13 @@ val appModule = module {
             get(),
             get<Set<OfferSource>>().associateBy { it.id },
             get(),
+            syncState = get(),
         )
     }
+    singleOf(::SyncStatePrefs) bind SyncStateStore::class
     single { NotificationPrefs(androidContext()) }
     single<UpdateCheckStore> { UpdatePrefs(androidContext()) }
-    single { UpdateManager(get(), get()) }
+    single { UpdateManager(createHttpClient(), get()) }
     single { OfferNotifier(androidContext()) }
     singleOf(::NotificationGate) bind SyncNotifier::class
 }

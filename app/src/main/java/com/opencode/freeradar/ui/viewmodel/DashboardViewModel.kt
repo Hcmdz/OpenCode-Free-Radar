@@ -152,7 +152,7 @@ class DashboardViewModel(
                 refreshing.value = true
                 try {
                     val watermark = gate.beforeSync()
-                    when (val result = repository.refreshAll()) {
+                    when (val result = repository.refreshAll(force = true)) {
                         RefreshResult.Ok, is RefreshResult.Partial -> {
                             manualError.value = null
                             gate.afterSync(watermark)

@@ -14,6 +14,7 @@ import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.domain.repository.FetchResult
 import com.opencode.freeradar.domain.repository.OfferSource
 import java.time.Clock
 import java.time.Instant
@@ -37,10 +38,11 @@ class FlapSuppressionTest {
 
     private class FakeSource(var price: Double) : OfferSource {
         override val id: String = "s"
-        override suspend fun fetch(): Result<List<SourceOffer>, SourceError> =
+        override suspend fun fetch(): Result<FetchResult, SourceError> =
             Result.Success(
-                listOf(
-                    SourceOffer(
+                FetchResult(
+                    listOf(
+                        SourceOffer(
                         providerId = "s",
                         modelId = "m",
                         name = "M",
@@ -56,8 +58,10 @@ class FlapSuppressionTest {
                         officialUrl = null,
                         sourceUrl = null
                     )
-                )
+                ),
+                bodyHash = null,
             )
+        )
     }
 
     private lateinit var database: RadarDatabase

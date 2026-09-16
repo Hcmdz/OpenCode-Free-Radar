@@ -68,7 +68,7 @@ class FakeOfferRepository : OfferRepository {
         return refreshResult
     }
 
-    override suspend fun refreshAll(): RefreshResult {
+    override suspend fun refreshAll(force: Boolean): RefreshResult {
         refreshCalls++
         refreshGate?.await()
         return refreshResult
