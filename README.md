@@ -25,7 +25,7 @@ by Anomaly Innovations, Inc.
 
 ## Tech stack
 
-- Kotlin 2.4.20, Jetpack Compose + Material 3 Expressive
+- Kotlin 2.4.10, Jetpack Compose + Material 3 Expressive
 - Single `:app` module, MVI with StateFlow, Navigation 3
 - Koin (DI), Room 3.0 (source of truth), Ktor (network)
 - DataStore (settings), WorkManager (daily sync)
