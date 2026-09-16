@@ -34,7 +34,7 @@ android {
             if (storeFilePath.isNotEmpty()) {
                 storeFile = file(storeFilePath)
                 storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
-                keyAlias = "HcmDz"
+                keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").getOrElse("")
                 keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
                 enableV3Signing = true
             }
