@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
+    implementation(libs.lifecycle.viewmodel.navigation3)
     implementation(libs.coroutines.core)
     implementation(libs.datastore.preferences)
     implementation(libs.material.kolor)
