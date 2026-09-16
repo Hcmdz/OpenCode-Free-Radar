@@ -114,6 +114,11 @@ https://hcmdz.github.io/OpenCode-Free-Radar/privacy/ and terms:
 https://hcmdz.github.io/OpenCode-Free-Radar/terms/ — see also
 [SECURITY.md](SECURITY.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
+## Legal
+
+- [Terms of Service](https://hcmdz.github.io/OpenCode-Free-Radar/terms/)
+- [Privacy Policy](https://hcmdz.github.io/OpenCode-Free-Radar/privacy/)
+
 ## License
 
 Copyright holders are listed in the git history.
