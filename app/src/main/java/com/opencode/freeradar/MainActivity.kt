@@ -2,6 +2,7 @@
 package com.opencode.freeradar
 
 import android.app.LocaleManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
@@ -28,6 +29,8 @@ import androidx.lifecycle.lifecycleScope
 import com.opencode.freeradar.data.local.AppLocalePrefs
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.ui.navigation.AppNavHost
+import com.opencode.freeradar.ui.navigation.NewModels
+import com.opencode.freeradar.notifications.OfferNotifier
 import com.opencode.freeradar.ui.theme.AppTheme
 import com.opencode.freeradar.ui.theme.ThemePrefs
 import com.opencode.freeradar.ui.theme.ThemeState
@@ -42,9 +45,17 @@ class MainActivity : ComponentActivity() {
 
     private var pendingUpdate by mutableStateOf<UpdateManager.UpdateInfo?>(null)
     private var updateDownloadProgress by mutableFloatStateOf(-1f)
+    private var pendingNotifKey by mutableStateOf<NewModels?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.toNewModelsKey()?.let { pendingNotifKey = it }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingNotifKey = intent?.toNewModelsKey()
         enableEdgeToEdge()
         window.isNavigationBarContrastEnforced = false
         lifecycleScope.launch {
@@ -105,7 +116,7 @@ class MainActivity : ComponentActivity() {
             }
             AppTheme(state = themeState) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavHost()
+                    AppNavHost(deepLink = pendingNotifKey)
                 }
                 val update = pendingUpdate
                 if (update != null) {
@@ -141,5 +152,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun Intent.toNewModelsKey(): NewModels? {
+        val newIds = getStringArrayListExtra(OfferNotifier.EXTRA_NEW_IDS).orEmpty()
+        val expiredIds = getStringArrayListExtra(OfferNotifier.EXTRA_EXPIRED_IDS).orEmpty()
+        return if (newIds.isEmpty() && expiredIds.isEmpty()) null
+        else NewModels(newIds.toList(), expiredIds.toList())
     }
 }

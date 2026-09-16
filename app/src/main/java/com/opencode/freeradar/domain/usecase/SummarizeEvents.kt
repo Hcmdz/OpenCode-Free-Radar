@@ -19,7 +19,13 @@ val V1_NOTIFY_TYPES = setOf(
  * stamp, recorded before stamping) and unreadable stamps fail open and
  * still count — never silently drop a possible deal.
  */
-private fun ChangeEvent.countsAsNewFree(): Boolean = when (type) {
+/** Snapshot of the offer ids behind a notification: ids frozen, content live. */
+data class NotifiedIds(val newIds: List<String>, val expiredIds: List<String>)
+
+/** Binder ceiling: extras never carry more than this per section. */
+const val MAX_NOTIFIED_IDS = 50
+
+internal fun ChangeEvent.countsAsNewFree(): Boolean = when (type) {
     ChangeType.BECAME_FREE -> true
     ChangeType.NEW_MODEL -> {
         val stamp = afterJson
@@ -41,4 +47,21 @@ fun summarizeEvents(events: List<ChangeEvent>): EventSummary? {
         }
     }
     return if (newFree == 0 && expired == 0) null else EventSummary(newFree, expired)
+}
+
+fun notifiedIds(events: List<ChangeEvent>): NotifiedIds {
+    val newIds = events
+        .filter {
+            (it.type == ChangeType.NEW_MODEL || it.type == ChangeType.BECAME_FREE) &&
+                it.countsAsNewFree()
+        }
+        .map { it.offerRemoteId }
+        .distinct()
+        .take(MAX_NOTIFIED_IDS)
+    val expiredIds = events
+        .filter { it.type == ChangeType.FREE_EXPIRED }
+        .map { it.offerRemoteId }
+        .distinct()
+        .take(MAX_NOTIFIED_IDS)
+    return NotifiedIds(newIds, expiredIds)
 }

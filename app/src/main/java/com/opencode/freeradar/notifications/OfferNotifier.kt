@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.opencode.freeradar.MainActivity
 import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.usecase.EventSummary
+import com.opencode.freeradar.domain.usecase.NotifiedIds
 
 class OfferNotifier(private val context: Context) {
 
@@ -42,11 +43,13 @@ class OfferNotifier(private val context: Context) {
 
     // Guarded by canPost() above (lint cannot see through the helper).
     @SuppressLint("MissingPermission")
-    fun post(summary: EventSummary) {
+    fun post(summary: EventSummary, ids: NotifiedIds, names: Map<String, String>) {
         if (!canPost()) return
         ensureChannel()
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putStringArrayListExtra(EXTRA_NEW_IDS, ArrayList(ids.newIds))
+            putStringArrayListExtra(EXTRA_EXPIRED_IDS, ArrayList(ids.expiredIds))
         }
         val pending = PendingIntent.getActivity(
             context, 0, intent,
@@ -56,11 +59,24 @@ class OfferNotifier(private val context: Context) {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.notif_title))
             .setContentText(summaryText(summary))
+            .setStyle(inboxStyle(ids, names))
             .setContentIntent(pending)
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
     }
+
+    private fun inboxStyle(ids: NotifiedIds, names: Map<String, String>): NotificationCompat.InboxStyle {
+        val style = NotificationCompat.InboxStyle()
+        val lines = ids.newIds.take(MAX_INBOX_LINES)
+        lines.forEach { style.addLine(displayName(it, names)) }
+        val overflow = ids.newIds.size - lines.size
+        if (overflow > 0) style.setSummaryText("+$overflow")
+        return style
+    }
+
+    private fun displayName(remoteId: String, names: Map<String, String>): String =
+        names[remoteId] ?: remoteId.substringAfter('/', remoteId)
 
     internal fun summaryText(summary: EventSummary): String {
         val parts = mutableListOf<String>()
@@ -80,5 +96,8 @@ class OfferNotifier(private val context: Context) {
     companion object {
         const val CHANNEL_ID = "offer_events"
         const val NOTIFICATION_ID = 1001
+        const val EXTRA_NEW_IDS = "com.opencode.freeradar.extra.NEW_IDS"
+        const val EXTRA_EXPIRED_IDS = "com.opencode.freeradar.extra.EXPIRED_IDS"
+        const val MAX_INBOX_LINES = 5
     }
 }

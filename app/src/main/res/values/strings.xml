@@ -117,4 +117,8 @@
         <item quantity="one">%1$d offer expired</item>
         <item quantity="other">%1$d offers expired</item>
     </plurals>
+    <string name="new_models_title">New models</string>
+    <string name="new_models_new_section">New free models</string>
+    <string name="new_models_expired_section">Expired offers</string>
+    <string name="new_models_gone">These models are no longer in the catalog.</string>
 </resources>

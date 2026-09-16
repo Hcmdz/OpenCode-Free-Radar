@@ -121,4 +121,8 @@
         <item quantity="many">%1$d d’offres expirées</item>
         <item quantity="other">%1$d offres expirées</item>
     </plurals>
+    <string name="new_models_title">Nouveaux modèles</string>
+    <string name="new_models_new_section">Nouveaux modèles gratuits</string>
+    <string name="new_models_expired_section">Offres expirées</string>
+    <string name="new_models_gone">Ces modèles ne sont plus au catalogue.</string>
 </resources>

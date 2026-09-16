@@ -12,3 +12,6 @@ data class Details(val offerId: String) : NavKey
 
 @Serializable
 data object Settings : NavKey
+
+@Serializable
+data class NewModels(val newIds: List<String>, val expiredIds: List<String>) : NavKey

@@ -136,4 +136,8 @@
         <item quantity="many">%1$d عرضًا منتهيًا</item>
         <item quantity="other">%1$d عرض منتهٍ</item>
     </plurals>
+    <string name="new_models_title">نماذج جديدة</string>
+    <string name="new_models_new_section">نماذج مجانية جديدة</string>
+    <string name="new_models_expired_section">عروض منتهية</string>
+    <string name="new_models_gone">لم تعد هذه النماذج في الكتالوج.</string>
 </resources>

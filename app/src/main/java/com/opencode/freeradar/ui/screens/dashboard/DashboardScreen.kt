@@ -76,6 +76,7 @@ import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.ui.components.ErrorBanner
 import com.opencode.freeradar.ui.components.FilterBar
+import com.opencode.freeradar.ui.components.OfferCard
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
@@ -553,53 +554,6 @@ private fun OfflineBanner(lastSyncAt: Long?) {
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-
-@Composable
-private fun OfferCard(offer: OfferUi, onClick: () -> Unit, onToggleFavorite: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("offer_card"),
-        shape = MaterialTheme.shapes.extraLarge,
-        onClick = onClick
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(text = offer.name, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = offer.providerId,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
-                StatusPill(text = sourceLabel(offer.source), tone = StatusTone.NEUTRAL)
-                if (offer.unverified) {
-                    StatusPill(text = stringResource(R.string.status_unverified), tone = StatusTone.NEUTRAL)
-                }
-                offer.contextLength?.let {
-                    AssistChip(onClick = {}, label = { Text("$it tokens") })
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                IconButton(
-                    modifier = Modifier.testTag("offer_favorite"),
-                    onClick = onToggleFavorite
-                ) {
-                    Icon(
-                        imageVector = if (offer.favorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                        contentDescription = stringResource(
-                            if (offer.favorite) R.string.desc_unfavorite else R.string.desc_favorite
-                        ),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Preview(showBackground = true)
