@@ -87,11 +87,10 @@ to `~/.gradle/gradle.properties` (outside any repo, values never committed):
 ```properties
 RELEASE_STORE_FILE=<path-to-your-keystore>
 RELEASE_STORE_[RELEASE_STORE_PASSWORD]
-RELEASE_KEY_ALIAS=[ALIAS]
 RELEASE_KEY_[RELEASE_KEY_PASSWORD]
 ```
 
-Then run:
+The key alias is fixed (`HcmDz`, shared keystore). Then run:
 
 ```bash
 ./gradlew :app:assembleRelease
