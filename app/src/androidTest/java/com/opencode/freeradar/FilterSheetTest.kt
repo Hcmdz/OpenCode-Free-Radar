@@ -3,6 +3,7 @@ package com.opencode.freeradar
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -46,6 +47,7 @@ class FilterSheetTest {
         val selected = mutableListOf<SourceFilter>()
         content(onSelectSource = selected::add)
         rule.onNodeWithText("Filters").performClick()
+        rule.onNodeWithTag("filter_sheet").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").performClick()
         rule.runOnIdle { assert(selected == listOf(SourceFilter.OPENCODE)) }

@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.opencode.freeradar.ui.theme.AppThemePreview
@@ -42,7 +43,7 @@ fun ErrorBanner(
     onAction: (() -> Unit)? = null
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.testTag("error_banner").fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer
@@ -58,7 +59,10 @@ fun ErrorBanner(
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             if (actionLabel != null && onAction != null) {
-                TextButton(onClick = onAction) {
+                TextButton(
+                    onClick = onAction,
+                    modifier = Modifier.testTag("error_banner_action")
+                ) {
                     Text(
                         text = actionLabel,
                         color = MaterialTheme.colorScheme.onErrorContainer
