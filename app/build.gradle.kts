@@ -30,13 +30,11 @@ android {
 
     signingConfigs {
         create("release") {
-            // Signing material comes from Gradle properties (e.g. ~/.gradle/gradle.properties),
-            // never from the repo. Empty on clones: release ships unsigned, build never breaks.
             val storeFilePath = providers.gradleProperty("RELEASE_STORE_FILE").getOrElse("")
             if (storeFilePath.isNotEmpty()) {
                 storeFile = file(storeFilePath)
                 storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
-                keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").getOrElse("")
+                keyAlias = "HcmDz"
                 keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
                 enableV3Signing = true
             }
