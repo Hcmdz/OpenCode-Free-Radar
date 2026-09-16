@@ -23,6 +23,14 @@ by Anomaly Innovations, Inc.
 - English, French, and Arabic UI with RTL layout support
 - Material 3 dynamic color with dark and high-contrast themes
 
+## Screenshots
+
+| Light — free filter | Dark — free filter |
+|---|---|
+| <img src="screenshots/dashboard-light-free.jpg" width="270" alt="Dashboard in light mode with free filter"> | <img src="screenshots/dashboard-dark-free.jpg" width="270" alt="Dashboard in dark mode with free filter"> |
+| Light — all models | Dark — offers list |
+| <img src="screenshots/dashboard-light-all.jpg" width="270" alt="Dashboard in light mode showing all models"> | <img src="screenshots/dashboard-dark-offers.jpg" width="270" alt="Dashboard in dark mode showing offers"> |
+
 ## Tech stack
 
 - Kotlin 2.4.10, Jetpack Compose + Material 3 Expressive
