@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - OpenCode Free Radar</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { background: #1a1a2e; color: white; padding: 40px 20px; text-align: center; }
+        header h1 { font-size: 28px; margin-bottom: 8px; }
+        header p { opacity: 0.8; font-size: 14px; }
+        nav { background: #16213e; padding: 12px 20px; }
+        nav ul { list-style: none; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        nav a { color: #a8d8ea; text-decoration: none; font-size: 13px; }
+        nav a:hover { color: white; }
+        main { background: white; padding: 40px 30px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h2 { color: #1a1a2e; margin: 30px 0 12px; font-size: 20px; border-bottom: 2px solid #e8e8e8; padding-bottom: 8px; }
+        h2:first-child { margin-top: 0; }
+        p, li { font-size: 15px; color: #444; margin-bottom: 10px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        .highlight { background: #f0f7ff; padding: 16px; border-radius: 6px; border-left: 4px solid #1a73e8; margin: 16px 0; }
+        .highlight p { margin-bottom: 0; }
+        footer { text-align: center; padding: 30px; color: #888; font-size: 13px; }
+        footer a { color: #1a73e8; text-decoration: none; }
+        a { color: #1a73e8; }
+        @media (max-width: 600px) { main { padding: 20px 16px; } header { padding: 30px 16px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Privacy Policy</h1>
+        <p>Last updated: September 16, 2026 &middot; for App: OpenCode Free Radar</p>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="#summary">Summary</a></li>
+            <li><a href="#data-stored">Data Stored</a></li>
+            <li><a href="#network">Network</a></li>
+            <li><a href="#permissions">Permissions</a></li>
+            <li><a href="#third-party">Third-Party</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#rights">Your Rights</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+    <main>
+        <div class="container">
+            <section id="summary">
+                <h2>Summary</h2>
+                <div class="highlight">
+                    <p><strong>OpenCode Free Radar collects nothing about you.</strong> There are no accounts, no analytics, no ads, and no tracking. The app reads public model listings, keeps your favorites and settings on your device, and never sends personal data anywhere.</p>
+                </div>
+            </section>
+
+            <section id="data-stored">
+                <h2>Data Stored on Your Device</h2>
+                <p>OpenCode Free Radar stores the following data locally in app-private storage on your device:</p>
+                <ul>
+                    <li><strong>Cached model offers</strong> &mdash; public listings (names, providers, prices, capabilities) kept for offline use</li>
+                    <li><strong>Favorites</strong> &mdash; the models you starred</li>
+                    <li><strong>Recent searches</strong> &mdash; your last few search queries, for suggestions</li>
+                    <li><strong>Settings</strong> &mdash; language, theme, filters, and notification preferences</li>
+                </ul>
+                <p>None of this data leaves your device. There is no account to link it to and no server that receives it.</p>
+            </section>
+
+            <section id="network">
+                <h2>Network Access</h2>
+                <p>To keep the catalog up to date, the app fetches <strong>public</strong> model listings over HTTPS from:</p>
+                <ul>
+                    <li>models.dev (open model catalog)</li>
+                    <li>OpenRouter (public model index)</li>
+                    <li>opencode.ai Zen model roster</li>
+                </ul>
+                <p>These requests contain no account, no identifier, and no personal data &mdash; anyone on the internet can fetch the same public listings. Refreshes run in the background while the app is installed.</p>
+            </section>
+
+            <section id="permissions">
+                <h2>Permissions</h2>
+                <p>OpenCode Free Radar requests the following permissions:</p>
+                <ul>
+                    <li><strong>Internet</strong> &mdash; to fetch the public model catalogs</li>
+                    <li><strong>Access Network State</strong> &mdash; lets the background sync scheduler wait for connectivity (contributed by libraries)</li>
+                    <li><strong>Post Notifications</strong> &mdash; to alert you about newly free models, only if you enable alerts</li>
+                </ul>
+                <p>The app does not request access to your camera, microphone, contacts, location, or any other sensitive data.</p>
+            </section>
+
+            <section id="third-party">
+                <h2>Third-Party Services</h2>
+                <p>No third-party SDKs, analytics, advertising, or tracking services are integrated in OpenCode Free Radar. The public catalogs listed above are data sources, not services that process your data. Code libraries bundled with the app are listed in <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/blob/main/THIRD_PARTY.md" target="_blank">THIRD_PARTY.md</a>. The developer operates no server.</p>
+            </section>
+
+            <section id="security">
+                <h2>Security</h2>
+                <ul>
+                    <li>All catalog traffic is HTTPS-only; cleartext (HTTP) traffic is blocked</li>
+                    <li>All data stays in app-private storage on your device</li>
+                    <li>App backup is disabled, so app data cannot be extracted via ADB backup</li>
+                    <li>Release builds are minified and strip all log calls</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>No Analytics or Tracking</h2>
+                <p>OpenCode Free Radar does not include analytics, advertising, crash-reporting, or telemetry SDKs. The developer does not receive information about how you use the app.</p>
+            </section>
+
+            <section id="rights">
+                <h2>Your Rights</h2>
+                <p>You have full control over your data:</p>
+                <ul>
+                    <li><strong>Access</strong> &mdash; everything the app stores is visible within the app</li>
+                    <li><strong>Deletion</strong> &mdash; remove favorites and queries in the app, or uninstall the app to wipe all data at once</li>
+                </ul>
+                <p>Since everything is stored locally with no account, the developer has no access to your data and cannot manage it on your behalf.</p>
+            </section>
+
+            <section>
+                <h2>Children</h2>
+                <p>The app is not directed at children under 13, and the developer does not operate any service that collects personal information from children.</p>
+            </section>
+
+            <section>
+                <h2>Changes to This Policy</h2>
+                <p>This policy may be updated from time to time. The latest version will be published on this page.</p>
+            </section>
+
+            <section id="contact">
+                <h2>Contact</h2>
+                <p>For privacy questions about OpenCode Free Radar, use the <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/issues" target="_blank">GitHub project</a> or email <a href="mailto:[REDACTED]">[REDACTED]</a>.</p>
+            </section>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2026 HcmDZ &middot; <a href="https://github.com/Hcmdz/OpenCode-Free-Radar" target="_blank">OpenCode Free Radar</a></p>
+    </footer>
+</body>
+</html>
