@@ -102,7 +102,8 @@ Then run:
 All data stays on device. The app fetches the public model catalog over
 HTTPS, stores it in a local Room database, and runs syncs in the background.
 No account, no analytics, no third-party tracking SDK. Full policy:
-https://hcmdz.github.io/OpenCode-Free-Radar/privacy/ — see also
+https://hcmdz.github.io/OpenCode-Free-Radar/privacy/ and terms:
+https://hcmdz.github.io/OpenCode-Free-Radar/terms/ — see also
 [SECURITY.md](SECURITY.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## License
