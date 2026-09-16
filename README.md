@@ -79,15 +79,10 @@ respect the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Release signing
 
-Release builds sign with a keystore that lives **outside** this repository.
-Without it, every task still configures and debug builds work fine, but the
-release output ships unsigned. To sign releases, create a properties file at:
-
-```text
-<your-keystore-dir>/gradle.properties
-```
-
-with these keys (values stay on your machine, never committed):
+Release builds sign with your own keystore, which lives **outside** this
+repository. Without it, every task still configures and debug builds work
+fine, but the release output ships unsigned. To sign releases, add these keys
+to `~/.gradle/gradle.properties` (outside any repo, values never committed):
 
 ```properties
 RELEASE_STORE_FILE=<path-to-your-keystore>
@@ -96,7 +91,7 @@ RELEASE_KEY_ALIAS=[ALIAS]
 RELEASE_KEY_[RELEASE_KEY_PASSWORD]
 ```
 
-Then point `keystoreFichier` in `app/build.gradle.kts` at your file and run:
+Then run:
 
 ```bash
 ./gradlew :app:assembleRelease
