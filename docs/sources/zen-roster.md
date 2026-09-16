@@ -18,3 +18,12 @@ that already stores `TO_VERIFY`.
 
 "Free" in the model name proves nothing: 24 of the 31 `$0` rows carry it
 but are not served. Roster membership is the only live signal.
+
+## TEMPORARY status for `opencode` $0 rows (2026-09-17)
+
+Their docs (https://opencode.ai/docs/zen/ pricing section) state every
+free model is "available for a limited time", so `CatalogMapper` maps
+`opencode` `$0` rows to TEMPORARY instead of LIMITED (~32 rows on
+2026-09-17; dated `conditions` still win as TRIAL). Ghosts keep
+TO_VERIFY and stay silent; roster-confirmed rows keep ringing.
+Pill tone is WARNING either way — labeling honesty, not a bell change.

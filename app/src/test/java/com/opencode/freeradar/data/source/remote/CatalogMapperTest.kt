@@ -73,12 +73,17 @@ class CatalogMapperTest {
     @Test
     fun `account-gated gateway maps to LIMITED, never FREE`() {
         // Live proof (official docs 2026-09-15): gitlab needs Premium/
-        // Ultimate + Duo/credits; opencode Zen needs account + billing
-        // and its "Free" models are limited-time trials.
+        // Ultimate + Duo/credits.
         assertThat(offer(providerId = "gitlab").toOffer(now = 1_000L).freeStatus)
             .isEqualTo(FreeStatus.LIMITED)
+    }
+
+    @Test
+    fun `opencode zero rows map to TEMPORARY, never FREE`() {
+        // Zen docs 2026-09-17: every free model is "available for a
+        // limited time" (https://opencode.ai/docs/zen/).
         assertThat(offer(providerId = "opencode").toOffer(now = 1_000L).freeStatus)
-            .isEqualTo(FreeStatus.LIMITED)
+            .isEqualTo(FreeStatus.TEMPORARY)
     }
 
     @Test
