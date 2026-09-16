@@ -20,6 +20,7 @@ by Anomaly Innovations, Inc.
 - Price history and change log per model, stored on device
 - Favorites, filters, offline-first Room database
 - Daily background sync via WorkManager, alerts on new freebies
+- In-app updates via GitHub Releases (daily check, SHA-256 verified download)
 - English, French, and Arabic UI with RTL layout support
 - Material 3 dynamic color with dark and high-contrast themes
 
