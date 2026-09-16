@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -254,6 +256,16 @@ fun SettingsScreen(
                     icon = Icons.Filled.Link,
                     text = "github.com/Hcmdz/OpenCode-Free-Radar",
                     onClick = { onOpenLink("https://github.com/Hcmdz/OpenCode-Free-Radar") }
+                )
+                AboutRow(
+                    icon = Icons.Filled.PrivacyTip,
+                    text = stringResource(R.string.about_privacy),
+                    onClick = { onOpenLink("https://hcmdz.github.io/OpenCode-Free-Radar/privacy/") }
+                )
+                AboutRow(
+                    icon = Icons.Filled.Description,
+                    text = stringResource(R.string.about_terms),
+                    onClick = { onOpenLink("https://hcmdz.github.io/OpenCode-Free-Radar/terms/") }
                 )
                 AboutRow(
                     icon = Icons.Filled.Info,

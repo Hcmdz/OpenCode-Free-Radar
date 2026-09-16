@@ -53,6 +53,8 @@
     <string name="state_collapsed">Collapsed</string>
     <string name="settings_about">About</string>
     <string name="about_developer">Developer</string>
+    <string name="about_privacy">Privacy Policy</string>
+    <string name="about_terms">Terms of Service</string>
     <string name="about_version">Version</string>
     <string name="section_prices">Prices</string>
     <string name="section_quotas">Quotas</string>

@@ -54,10 +54,25 @@ class SettingsCollapseTest {
     fun aboutSectionRevealsContactAndEmitsLink() {
         val opened = mutableListOf<String>()
         content(onOpenLink = opened::add)
-        rule.onNodeWithText("HcmDz.Dev@gmail.com").assertDoesNotExist()
+        rule.onNodeWithText("[REDACTED]").assertDoesNotExist()
         rule.onNodeWithText("About").performClick()
-        rule.onNodeWithText("HcmDz.Dev@gmail.com").assertIsDisplayed()
-        rule.onNodeWithText("HcmDz.Dev@gmail.com").performClick()
-        rule.runOnIdle { assert(opened == listOf("mailto:HcmDz.Dev@gmail.com")) }
+        rule.onNodeWithText("[REDACTED]").assertIsDisplayed()
+        rule.onNodeWithText("[REDACTED]").performClick()
+        rule.runOnIdle { assert(opened == listOf("mailto:[REDACTED]")) }
+    }
+
+    @Test
+    fun aboutSectionOpensPrivacyAndTermsLinks() {
+        val opened = mutableListOf<String>()
+        content(onOpenLink = opened::add)
+        rule.onNodeWithText("About").performClick()
+        rule.onNodeWithText("Privacy Policy").performClick()
+        rule.onNodeWithText("Terms of Service").performClick()
+        rule.runOnIdle {
+            assert(opened == listOf(
+                "https://hcmdz.github.io/OpenCode-Free-Radar/privacy/",
+                "https://hcmdz.github.io/OpenCode-Free-Radar/terms/"
+            ))
+        }
     }
 }

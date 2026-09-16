@@ -52,6 +52,8 @@
     <string name="state_collapsed">Replié</string>
     <string name="settings_about">À propos</string>
     <string name="about_developer">Développeur</string>
+    <string name="about_privacy">Politique de confidentialité</string>
+    <string name="about_terms">Conditions d\'utilisation</string>
     <string name="about_version">Version</string>
     <string name="section_prices">Tarifs</string>
     <string name="section_quotas">Quotas</string>
