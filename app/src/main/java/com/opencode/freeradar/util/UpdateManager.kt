@@ -3,6 +3,9 @@ package com.opencode.freeradar.util
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -114,6 +117,7 @@ class UpdateManager(
         expectedSha256: String? = null,
         onProgress: (Float) -> Unit = {},
     ): File? = withContext(Dispatchers.IO) {
+        if (!isAllowedDownloadUrl(url)) return@withContext null
         try {
             val updateDir = File(appContext.cacheDir, "updates").apply { mkdirs() }
             updateDir.listFiles()?.forEach { it.delete() }
@@ -159,6 +163,17 @@ class UpdateManager(
 
     fun installApk(context: Context, apkFile: File) {
         if (!apkFile.exists()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !context.packageManager.canRequestPackageInstalls()
+        ) {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:${context.packageName}")
+                ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+            )
+            return
+        }
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
@@ -169,6 +184,13 @@ class UpdateManager(
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
         context.startActivity(intent)
+    }
+
+    internal fun isAllowedDownloadUrl(url: String): Boolean {
+        if (!url.lowercase().startsWith("https://")) return false
+        val host = runCatching { java.net.URI(url).host }.getOrNull()?.lowercase() ?: return false
+        if (host in ALLOWED_DOWNLOAD_HOSTS) return true
+        return ALLOWED_DOWNLOAD_SUFFIXES.any { host.endsWith(it) }
     }
 
     fun isVersionNewer(current: String, remote: String): Boolean {
@@ -189,5 +211,12 @@ class UpdateManager(
         const val USER_AGENT = "OFR-Android"
         const val CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000L
         val SHA_PATTERN = Regex("SHA-256:\\s*([a-fA-F0-9]{64})")
+        val ALLOWED_DOWNLOAD_HOSTS = setOf(
+            "github.com",
+            "api.github.com",
+            "objects.githubusercontent.com",
+            "release-assets.githubusercontent.com"
+        )
+        val ALLOWED_DOWNLOAD_SUFFIXES = listOf(".githubusercontent.com")
     }
 }
