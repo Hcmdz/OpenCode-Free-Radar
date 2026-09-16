@@ -19,7 +19,7 @@ import com.opencode.freeradar.ui.screens.settings.SettingsRoot
 fun AppNavHost(deepLink: NewModels? = null) {
     val backStack = rememberNavBackStack(*(listOf(Dashboard) + listOfNotNull(deepLink)).toTypedArray())
     LaunchedEffect(deepLink) {
-        if (deepLink != null && backStack.lastOrNull() != deepLink) backStack.add(deepLink)
+        if (deepLink != null && deepLink !in backStack) backStack.add(deepLink)
     }
     NavDisplay(
         backStack = backStack,

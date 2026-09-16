@@ -34,7 +34,7 @@ class NewModelsTest {
 
     private var scenario: ActivityScenario<MainActivity>? = null
 
-    private fun entity(remoteId: String, name: String) = OfferEntity(
+    private fun entity(remoteId: String, name: String, officialUrl: String? = null) = OfferEntity(
         remoteId = remoteId,
         providerId = "t",
         modelId = remoteId.substringAfter('/'),
@@ -52,7 +52,7 @@ class NewModelsTest {
         supportsVision = false,
         supportsStructuredOutput = false,
         openCodeCompatible = true,
-        officialUrl = null,
+        officialUrl = officialUrl,
         source = "test",
         sourceUrl = null,
         retrievedAt = 1_000L,
@@ -78,7 +78,10 @@ class NewModelsTest {
             .build()
         runBlocking {
             db.offerDao().upsertAll(
-                listOf(entity("t/a", "Model A"), entity("t/b", "Model B"))
+                listOf(
+                    entity("t/a", "Model A", "https://example.com/a"),
+                    entity("t/b", "Model B")
+                )
             )
         }
         db.close()
@@ -128,11 +131,44 @@ class NewModelsTest {
             }
         }
         compose.onNodeWithTag("details_screen").assertIsDisplayed()
+        compose.onNodeWithTag("details_open").assertIsDisplayed()
     }
 
     @Test
-    fun cardSurvivesRecreation() {
+    fun detailsSurvivesRecreationWithoutDuplicate() {
         launchWithIds(listOf("t/a"), emptyList())
+        compose.waitUntil(8000) {
+            try {
+                compose.onNodeWithTag("new_models_screen").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+        compose.onNodeWithText("Model A").performClick()
+        compose.waitUntil(8000) {
+            try {
+                compose.onNodeWithTag("details_screen").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+        scenario?.recreate()
+        compose.waitUntil(8000) {
+            try {
+                compose.onNodeWithTag("details_screen").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+        compose.onNodeWithTag("details_screen").assertIsDisplayed()
+        compose.onNodeWithTag("new_models_screen").assertDoesNotExist()
+    }
+
+    @Test
+    fun cardSurvivesRecreation() {        launchWithIds(listOf("t/a"), emptyList())
         compose.waitUntil(8000) {
             try {
                 compose.onNodeWithTag("new_models_screen").assertIsDisplayed()

@@ -157,6 +157,10 @@ class MainActivity : ComponentActivity() {
     private fun Intent.toNewModelsKey(): NewModels? {
         val newIds = getStringArrayListExtra(OfferNotifier.EXTRA_NEW_IDS).orEmpty()
         val expiredIds = getStringArrayListExtra(OfferNotifier.EXTRA_EXPIRED_IDS).orEmpty()
+        // Consume: recreation replays the same intent, and the restored
+        // Nav3 back stack already holds the key — re-adding would duplicate it.
+        removeExtra(OfferNotifier.EXTRA_NEW_IDS)
+        removeExtra(OfferNotifier.EXTRA_EXPIRED_IDS)
         return if (newIds.isEmpty() && expiredIds.isEmpty()) null
         else NewModels(newIds.toList(), expiredIds.toList())
     }
