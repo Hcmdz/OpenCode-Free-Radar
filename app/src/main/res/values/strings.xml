@@ -56,6 +56,15 @@
     <string name="about_privacy">Privacy Policy</string>
     <string name="about_terms">Terms of Service</string>
     <string name="about_version">Version</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_up_to_date">Up to date</string>
+    <string name="update_check_failed">Check failed — tap to retry</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_available_title">Update available</string>
+    <string name="update_available_body">Version %1$s is available.\n\n%2$s</string>
+    <string name="update_download">Download</string>
+    <string name="update_later">Later</string>
     <string name="section_prices">Prices</string>
     <string name="section_quotas">Quotas</string>
     <string name="section_conditions">Conditions</string>

@@ -55,6 +55,15 @@
     <string name="about_privacy">سياسة الخصوصية</string>
     <string name="about_terms">شروط الاستخدام</string>
     <string name="about_version">الإصدار</string>
+    <string name="update_check">التحقق من وجود تحديثات</string>
+    <string name="update_checking">جارٍ التحقق…</string>
+    <string name="update_up_to_date">محدّث</string>
+    <string name="update_check_failed">فشل التحقق — انقر لإعادة المحاولة</string>
+    <string name="update_downloading">جارٍ التنزيل… %1$d%%</string>
+    <string name="update_available_title">يتوفر تحديث</string>
+    <string name="update_available_body">الإصدار %1$s متوفر.\n\n%2$s</string>
+    <string name="update_download">تنزيل</string>
+    <string name="update_later">لاحقًا</string>
     <string name="section_prices">الأسعار</string>
     <string name="section_quotas">الحصص</string>
     <string name="section_conditions">الشروط</string>

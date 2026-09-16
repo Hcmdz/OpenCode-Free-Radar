@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +43,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,6 +79,9 @@ import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AppLocalePrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.ui.components.OptionRow
+import com.opencode.freeradar.ui.components.UpdateDialog
+import com.opencode.freeradar.util.UpdateManager
+import org.koin.compose.koinInject
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.theme.ThemeMode
 import com.opencode.freeradar.ui.theme.ThemePrefs
@@ -99,6 +105,31 @@ fun SettingsRoot(onBack: () -> Unit) {
     ) { granted ->
         notifDenied = !granted
         scope.launch { notifPrefs.setEnabled(granted) }
+    }
+    val updateManager: UpdateManager = koinInject()
+    var updateRowRes by remember { mutableIntStateOf(R.string.update_check) }
+    var updateInfo by remember { mutableStateOf<UpdateManager.UpdateInfo?>(null) }
+    var showUpdateDialog by rememberSaveable { mutableStateOf(false) }
+    var updateProgress by remember { mutableFloatStateOf(-1f) }
+    fun launchUpdateCheck() {
+        scope.launch {
+            updateRowRes = R.string.update_checking
+            when (val result = updateManager.checkForUpdate(BuildConfig.VERSION_NAME)) {
+                is UpdateManager.UpdateResult.Found -> {
+                    updateInfo = result.info
+                    showUpdateDialog = true
+                    updateManager.recordCheck()
+                    updateRowRes = R.string.update_check
+                }
+                is UpdateManager.UpdateResult.UpToDate -> {
+                    updateManager.recordCheck()
+                    updateRowRes = R.string.update_up_to_date
+                }
+                is UpdateManager.UpdateResult.Error -> {
+                    updateRowRes = R.string.update_check_failed
+                }
+            }
+        }
     }
     SettingsScreen(
         themeState = themeState,
@@ -137,8 +168,45 @@ fun SettingsRoot(onBack: () -> Unit) {
                 )
             )
         },
+        updateRowText = stringResource(updateRowRes),
+        onCheckUpdate = { launchUpdateCheck() },
         onBack = onBack
     )
+    val info = updateInfo
+    if (showUpdateDialog && info != null) {
+        UpdateDialog(
+            info = info,
+            downloadProgress = updateProgress,
+            onDownload = {
+                updateProgress = 0f
+                val job = scope.launch {
+                    val file = updateManager.downloadApk(
+                        appContext,
+                        info.downloadUrl,
+                        info.fileName,
+                        info.sha256
+                    ) { progress ->
+                        updateProgress = progress
+                    }
+                    if (file != null) {
+                        updateManager.installApk(appContext, file)
+                        updateRowRes = R.string.update_up_to_date
+                    } else {
+                        updateRowRes = R.string.update_check_failed
+                    }
+                    showUpdateDialog = false
+                    updateProgress = -1f
+                    updateManager.downloadJob = null
+                }
+                updateManager.downloadJob = job
+            },
+            onDismiss = {
+                updateManager.cancelDownload()
+                showUpdateDialog = false
+                updateProgress = -1f
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,6 +222,8 @@ fun SettingsScreen(
     onNotifToggle: (Boolean) -> Unit,
     onOpenNotifSettings: () -> Unit,
     onOpenLink: (String) -> Unit,
+    updateRowText: String,
+    onCheckUpdate: () -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -272,6 +342,11 @@ fun SettingsScreen(
                     text = "${stringResource(R.string.about_version)}: ${BuildConfig.VERSION_NAME}",
                     onClick = null
                 )
+                AboutRow(
+                    icon = Icons.Filled.SystemUpdate,
+                    text = updateRowText,
+                    onClick = onCheckUpdate
+                )
             }
         }
     }
@@ -384,6 +459,8 @@ private fun SettingsPreview() {
             onNotifToggle = {},
             onOpenNotifSettings = {},
             onOpenLink = {},
+            updateRowText = "Check for updates",
+            onCheckUpdate = {},
             onBack = {}
         )
     }

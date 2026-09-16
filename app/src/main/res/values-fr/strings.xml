@@ -55,6 +55,15 @@
     <string name="about_privacy">Politique de confidentialité</string>
     <string name="about_terms">Conditions d\'utilisation</string>
     <string name="about_version">Version</string>
+    <string name="update_check">Vérifier les mises à jour</string>
+    <string name="update_checking">Vérification…</string>
+    <string name="update_up_to_date">À jour</string>
+    <string name="update_check_failed">Échec — toucher pour réessayer</string>
+    <string name="update_downloading">Téléchargement… %1$d%%</string>
+    <string name="update_available_title">Mise à jour disponible</string>
+    <string name="update_available_body">Version %1$s disponible.\n\n%2$s</string>
+    <string name="update_download">Télécharger</string>
+    <string name="update_later">Plus tard</string>
     <string name="section_prices">Tarifs</string>
     <string name="section_quotas">Quotas</string>
     <string name="section_conditions">Conditions</string>

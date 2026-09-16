@@ -20,7 +20,7 @@ class SettingsCollapseTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun content(onOpenLink: (String) -> Unit = {}) {
+    private fun content(onOpenLink: (String) -> Unit = {}, onCheckUpdate: () -> Unit = {}) {
         rule.setContent {
             AppThemePreview {
                 SettingsScreen(
@@ -34,6 +34,8 @@ class SettingsCollapseTest {
                     onNotifToggle = {},
                     onOpenNotifSettings = {},
                     onOpenLink = onOpenLink,
+                    updateRowText = "Check for updates",
+                    onCheckUpdate = onCheckUpdate,
                     onBack = {}
                 )
             }
@@ -74,5 +76,16 @@ class SettingsCollapseTest {
                 "https://hcmdz.github.io/OpenCode-Free-Radar/terms/"
             ))
         }
+    }
+
+    @Test
+    fun aboutSectionRevealsUpdateRowAndEmitsCheck() {
+        var checks = 0
+        content(onCheckUpdate = { checks++ })
+        rule.onNodeWithText("Check for updates").assertDoesNotExist()
+        rule.onNodeWithText("About").performClick()
+        rule.onNodeWithText("Check for updates").assertIsDisplayed()
+        rule.onNodeWithText("Check for updates").performClick()
+        rule.runOnIdle { assert(checks == 1) }
     }
 }

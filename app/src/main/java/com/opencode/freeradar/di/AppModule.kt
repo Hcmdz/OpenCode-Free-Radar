@@ -5,6 +5,7 @@ import androidx.room3.Room
 import com.opencode.freeradar.data.local.MIGRATION_1_2
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
+import com.opencode.freeradar.data.local.UpdatePrefs
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
 import com.opencode.freeradar.data.source.openrouter.OPENROUTER_SOURCE_ID
 import com.opencode.freeradar.data.source.openrouter.OpenRouterSource
@@ -14,6 +15,8 @@ import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.data.source.remote.createHttpClient
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.util.UpdateCheckStore
+import com.opencode.freeradar.util.UpdateManager
 import com.opencode.freeradar.domain.repository.OfferSource
 import com.opencode.freeradar.notifications.NotificationGate
 import com.opencode.freeradar.notifications.OfferNotifier
@@ -53,6 +56,8 @@ val appModule = module {
         )
     }
     single { NotificationPrefs(androidContext()) }
+    single<UpdateCheckStore> { UpdatePrefs(androidContext()) }
+    single { UpdateManager(get(), get()) }
     single { OfferNotifier(androidContext()) }
     singleOf(::NotificationGate) bind SyncNotifier::class
 }
