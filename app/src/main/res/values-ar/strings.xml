@@ -35,6 +35,8 @@
     <string name="offline_banner">غير متصل — البيانات بتاريخ %1$s</string>
     <string name="empty_offers_title">لا عروض بعد</string>
     <string name="empty_offers_hint">انقر تحديث الآن بمجرد الاتصال.</string>
+    <string name="no_match_title">لا توجد نماذج مطابقة</string>
+    <string name="no_match_hint">جرّب بحثًا مختلفًا أو أعد تعيين المرشحات.</string>
     <string name="error_no_internet">لا يوجد اتصال بالإنترنت.</string>
     <string name="error_timeout">انتهت مهلة الطلب.</string>
     <string name="error_server">فشل الخادم. حاول لاحقًا.</string>
@@ -97,6 +99,13 @@
         <item quantity="other">%1$d نموذج</item>
     </plurals>
     <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_sync">المزامنة</string>
+    <string name="sync_wifi_only">المزامنة عبر Wi-Fi فقط</string>
+    <string name="sync_wifi_benefit">تجاهل التنزيلات التلقائية على بيانات الهاتف. التحديث اليدوي يطلب دائمًا.</string>
+    <string name="metered_title">المزامنة عبر بيانات الهاتف؟</string>
+    <string name="metered_message">الكتالوج كبير ويتطلب اتصالاً. المتابعة ستستخدم بيانات هاتفك.</string>
+    <string name="metered_sync_once">مزامنة</string>
+    <string name="metered_never_warn">عدم التحذير مجددًا</string>
     <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة والمنتهية</string>
     <string name="notif_benefit">احصل على تنبيه عند ظهور عرض مجاني جديد أو انخفاض سعر إلى 0.</string>
     <string name="notif_denied_hint">الإشعارات محظورة. فعّلها في إعدادات النظام لتلقي التنبيهات.</string>
@@ -110,6 +119,14 @@
         <item quantity="few">%1$d عروض مجانية جديدة</item>
         <item quantity="many">%1$d عرضًا مجانيًا جديدًا</item>
         <item quantity="other">%1$d عرض مجاني جديد</item>
+    </plurals>
+    <plurals name="pill_new_free">
+        <item quantity="zero">لا جديد مجاني</item>
+        <item quantity="one">جديد مجاني واحد</item>
+        <item quantity="two">جديدان مجانيان</item>
+        <item quantity="few">%1$d جدد مجانيين</item>
+        <item quantity="many">%1$d جديدًا مجانيًا</item>
+        <item quantity="other">%1$d جديد مجاني</item>
     </plurals>
     <plurals name="notif_expired">
         <item quantity="zero">لا عروض منتهية</item>

@@ -5,6 +5,8 @@ import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.local.SourceHealthEntity
 import com.opencode.freeradar.data.local.SyncRunEntity
 import com.opencode.freeradar.data.local.SyncStateStore
+import com.opencode.freeradar.data.local.SyncSettings
+import com.opencode.freeradar.util.NetworkMonitor
 import com.opencode.freeradar.data.source.remote.SourceOffer
 import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.domain.error.RefreshResult
@@ -39,6 +41,8 @@ class OfflineFirstOfferRepository(
     private val mappers: Map<String, (SourceOffer, Long) -> Offer> = emptyMap(),
     private val clock: Clock = Clock.systemUTC(),
     private val syncState: SyncStateStore? = null,
+    private val syncPrefs: SyncSettings? = null,
+    private val network: NetworkMonitor? = null,
 ) : OfferRepository {
 
     private val offers = database.offerDao()
@@ -207,7 +211,10 @@ class OfflineFirstOfferRepository(
         val now = clock.millis()
         val results = sources.keys.associateWith { source ->
             if (!force && isFresh(source, now)) {
-                recordSkip(source, now)
+                recordSkip(source, now, "skipped-fresh")
+                RefreshResult.Ok
+            } else if (!force && isWifiBlocked()) {
+                recordSkip(source, now, "skipped-metered")
                 RefreshResult.Ok
             } else {
                 refresh(source)
@@ -228,7 +235,12 @@ class OfflineFirstOfferRepository(
         return shouldSkipFresh(last.result, last.completedAt, now)
     }
 
-    private suspend fun recordSkip(source: String, now: Long) {
+    private suspend fun isWifiBlocked(): Boolean {
+        if (syncPrefs?.wifiOnly() != true) return false
+        return network?.isMetered() == true
+    }
+
+    private suspend fun recordSkip(source: String, now: Long, reason: String) {
         val runId = runs.insert(
             SyncRunEntity(
                 source = source,
@@ -238,7 +250,7 @@ class OfflineFirstOfferRepository(
                 error = null
             )
         )
-        runs.finishRun(runId, now, SyncResult.OK.name, "skipped-fresh")
+        runs.finishRun(runId, now, SyncResult.OK.name, reason)
         runs.pruneKeepLast(source, MAX_SYNC_RUNS)
     }
 

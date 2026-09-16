@@ -5,6 +5,8 @@ import androidx.room3.Room
 import com.opencode.freeradar.data.local.MIGRATION_1_2
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
+import com.opencode.freeradar.data.local.SyncPrefs
+import com.opencode.freeradar.data.local.SyncSettings
 import com.opencode.freeradar.data.local.SyncStatePrefs
 import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.local.UpdatePrefs
@@ -17,6 +19,8 @@ import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.data.source.remote.createHttpClient
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.util.AndroidNetworkMonitor
+import com.opencode.freeradar.util.NetworkMonitor
 import com.opencode.freeradar.util.UpdateCheckStore
 import com.opencode.freeradar.util.UpdateManager
 import com.opencode.freeradar.domain.repository.OfferSource
@@ -56,9 +60,13 @@ val appModule = module {
             get<Set<OfferSource>>().associateBy { it.id },
             get(),
             syncState = get(),
+            syncPrefs = get(),
+            network = get(),
         )
     }
     singleOf(::SyncStatePrefs) bind SyncStateStore::class
+    singleOf(::SyncPrefs) bind SyncSettings::class
+    single<NetworkMonitor> { AndroidNetworkMonitor(androidContext()) }
     single { NotificationPrefs(androidContext()) }
     single<UpdateCheckStore> { UpdatePrefs(androidContext()) }
     single { UpdateManager(createHttpClient(), get()) }

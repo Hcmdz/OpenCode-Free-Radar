@@ -36,6 +36,8 @@
     <string name="offline_banner">Offline — showing data from %1$s</string>
     <string name="empty_offers_title">No offers yet</string>
     <string name="empty_offers_hint">Tap Refresh now once online.</string>
+    <string name="no_match_title">No matching models</string>
+    <string name="no_match_hint">Try a different search or reset the filters.</string>
     <string name="error_no_internet">No internet connection.</string>
     <string name="error_timeout">The request timed out.</string>
     <string name="error_server">The server failed. Try again later.</string>
@@ -90,6 +92,13 @@
         <item quantity="other">%1$d models</item>
     </plurals>
     <string name="settings_notifications">Notifications</string>
+    <string name="settings_sync">Sync</string>
+    <string name="sync_wifi_only">Wi-Fi only sync</string>
+    <string name="sync_wifi_benefit">Skip automatic downloads on mobile data. Manual refresh always asks first.</string>
+    <string name="metered_title">Sync over mobile data?</string>
+    <string name="metered_message">The catalog is large and a connection is required. Syncing now will use mobile data.</string>
+    <string name="metered_sync_once">Sync once</string>
+    <string name="metered_never_warn">Don\'t warn again</string>
     <string name="notif_enable">Alert me about new and expired free offers</string>
     <string name="notif_benefit">Get alerted when a new free model appears or a price drops to $0.</string>
     <string name="notif_denied_hint">Notifications are blocked. Enable them in system settings to receive alerts.</string>
@@ -99,6 +108,10 @@
     <plurals name="notif_new_free">
         <item quantity="one">%1$d new free offer</item>
         <item quantity="other">%1$d new free offers</item>
+    </plurals>
+    <plurals name="pill_new_free">
+        <item quantity="one">%1$d new freebie</item>
+        <item quantity="other">%1$d new freebies</item>
     </plurals>
     <plurals name="notif_expired">
         <item quantity="one">%1$d offer expired</item>

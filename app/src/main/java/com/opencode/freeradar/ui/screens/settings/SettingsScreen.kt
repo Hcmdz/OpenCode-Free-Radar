@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,6 +79,7 @@ import com.opencode.freeradar.BuildConfig
 import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AppLocalePrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
+import com.opencode.freeradar.data.local.SyncPrefs
 import com.opencode.freeradar.ui.components.OptionRow
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.util.UpdateManager
@@ -95,10 +97,12 @@ fun SettingsRoot(onBack: () -> Unit) {
     val themePrefs = remember { ThemePrefs(appContext) }
     val localePrefs = remember { AppLocalePrefs(appContext) }
     val notifPrefs = remember { NotificationPrefs(appContext) }
+    val syncPrefs = remember { SyncPrefs(appContext) }
     val themeState by themePrefs.state.collectAsStateWithLifecycle(initialValue = ThemeState())
     val scope = rememberCoroutineScope()
     val localeTag by localePrefs.tag.collectAsStateWithLifecycle(initialValue = "")
     val notifEnabled by notifPrefs.enabled.collectAsStateWithLifecycle(initialValue = false)
+    val wifiOnly by syncPrefs.wifiOnlyFlow.collectAsStateWithLifecycle(initialValue = true)
     var notifDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -136,6 +140,7 @@ fun SettingsRoot(onBack: () -> Unit) {
         localeTag = localeTag,
         notifEnabled = notifEnabled,
         notifDenied = notifDenied,
+        wifiOnly = wifiOnly,
         onMode = { scope.launch { themePrefs.setMode(it) } },
         onBlack = { scope.launch { themePrefs.setBlackTheme(it) } },
         onLocale = { scope.launch { localePrefs.setTag(it) } },
@@ -153,6 +158,7 @@ fun SettingsRoot(onBack: () -> Unit) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         },
+        onWifiOnlyToggle = { scope.launch { syncPrefs.setWifiOnly(it) } },
         onOpenNotifSettings = {
             context.startActivity(
                 Intent(SystemSettings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -216,10 +222,12 @@ fun SettingsScreen(
     localeTag: String,
     notifEnabled: Boolean,
     notifDenied: Boolean,
+    wifiOnly: Boolean,
     onMode: (ThemeMode) -> Unit,
     onBlack: (Boolean) -> Unit,
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
+    onWifiOnlyToggle: (Boolean) -> Unit,
     onOpenNotifSettings: () -> Unit,
     onOpenLink: (String) -> Unit,
     updateRowText: String,
@@ -310,6 +318,31 @@ fun SettingsScreen(
                         Text(text = stringResource(R.string.notif_open_settings))
                     }
                 }
+            }
+            CollapsibleSection(titleRes = R.string.settings_sync) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Sync,
+                        contentDescription = null
+                    )
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.sync_wifi_only)
+                    )
+                    Switch(
+                        modifier = Modifier.testTag("settings_sync_switch"),
+                        checked = wifiOnly,
+                        onCheckedChange = onWifiOnlyToggle
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.sync_wifi_benefit),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             CollapsibleSection(titleRes = R.string.settings_about) {
                 AboutRow(
@@ -453,10 +486,12 @@ private fun SettingsPreview() {
             localeTag = "",
             notifEnabled = false,
             notifDenied = false,
+            wifiOnly = true,
             onMode = {},
             onBlack = {},
             onLocale = {},
             onNotifToggle = {},
+            onWifiOnlyToggle = {},
             onOpenNotifSettings = {},
             onOpenLink = {},
             updateRowText = "Check for updates",

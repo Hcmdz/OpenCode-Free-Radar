@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -241,26 +243,52 @@ fun DashboardScreen(
                     CircularProgressIndicator()
                 }
 
-                state.offers.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                state.offers.isEmpty() -> when {
+                    state.isRefreshing && state.lastSyncAt == null -> Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = stringResource(R.string.empty_offers_title),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.empty_offers_hint),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        PrimaryPillButton(
-                            text = stringResource(R.string.refresh_now),
-                            onClick = { onAction(DashboardAction.Refresh) }
-                        )
+                        CircularProgressIndicator()
+                    }
+                    state.isBaseEmpty -> Box(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.empty_offers_title),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.empty_offers_hint),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            PrimaryPillButton(
+                                text = stringResource(R.string.refresh_now),
+                                onClick = { onAction(DashboardAction.Refresh) }
+                            )
+                        }
+                    }
+                    else -> Box(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_match_title),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.no_match_hint),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
 
@@ -283,6 +311,37 @@ fun DashboardScreen(
                 }
             }
         }
+            // New freebies landed while browsing: a pill, never a jump.
+            // Tapping acknowledges and scrolls to the top.
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                AnimatedVisibility(visible = state.pendingNew > 0 && state.offers.isNotEmpty()) {
+                AssistChip(
+                    onClick = {
+                        onAction(DashboardAction.AckPendingNew)
+                        scope.launch { listState.animateScrollToItem(0) }
+                    },
+                    label = {
+                        Text(
+                            pluralStringResource(
+                                R.plurals.pill_new_free,
+                                state.pendingNew,
+                                state.pendingNew
+                            )
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowUpward,
+                            contentDescription = null
+                        )
+                    },
+                    modifier = Modifier.testTag("new_freebies_pill")
+                )
+                }
+            }
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -334,6 +393,38 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+    if (state.meteredWarning) {
+        AlertDialog(
+            onDismissRequest = { onAction(DashboardAction.MeteredLater) },
+            title = { Text(text = stringResource(R.string.metered_title)) },
+            text = { Text(text = stringResource(R.string.metered_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = { onAction(DashboardAction.MeteredSyncOnce) },
+                    modifier = Modifier.testTag("metered_sync_once")
+                ) {
+                    Text(text = stringResource(R.string.metered_sync_once))
+                }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = { onAction(DashboardAction.MeteredLater) },
+                        modifier = Modifier.testTag("metered_later")
+                    ) {
+                        Text(text = stringResource(R.string.update_later))
+                    }
+                    TextButton(
+                        onClick = { onAction(DashboardAction.MeteredNeverWarn) },
+                        modifier = Modifier.testTag("metered_never_warn")
+                    ) {
+                        Text(text = stringResource(R.string.metered_never_warn))
+                    }
+                }
+            },
+            modifier = Modifier.testTag("metered_dialog")
+        )
     }
 }
 

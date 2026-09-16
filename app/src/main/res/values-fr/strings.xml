@@ -35,6 +35,8 @@
     <string name="offline_banner">Hors ligne — données du %1$s</string>
     <string name="empty_offers_title">Aucune offre pour l’instant</string>
     <string name="empty_offers_hint">Touchez Actualiser une fois en ligne.</string>
+    <string name="no_match_title">Aucun modèle correspondant</string>
+    <string name="no_match_hint">Essayez une autre recherche ou réinitialisez les filtres.</string>
     <string name="error_no_internet">Pas de connexion internet.</string>
     <string name="error_timeout">La requête a expiré.</string>
     <string name="error_server">Le serveur a échoué. Réessayez plus tard.</string>
@@ -91,6 +93,13 @@
         <item quantity="other">%1$d modèles</item>
     </plurals>
     <string name="settings_notifications">Notifications</string>
+    <string name="settings_sync">Synchronisation</string>
+    <string name="sync_wifi_only">Synchro Wi-Fi uniquement</string>
+    <string name="sync_wifi_benefit">Ignore les téléchargements auto sur données mobiles. L’actualisation manuelle demande toujours.</string>
+    <string name="metered_title">Synchro sur données mobiles ?</string>
+    <string name="metered_message">Le catalogue est volumineux et une connexion est requise. Continuer utilisera vos données mobiles.</string>
+    <string name="metered_sync_once">Synchroniser</string>
+    <string name="metered_never_warn">Ne plus avertir</string>
     <string name="notif_enable">M’alerter des nouvelles offres gratuites et expirations</string>
     <string name="notif_benefit">Soyez alerté dès qu’une offre gratuite apparaît ou qu’un prix tombe à 0.</string>
     <string name="notif_denied_hint">Notifications bloquées. Activez-les dans les paramètres système pour recevoir des alertes.</string>
@@ -101,6 +110,11 @@
         <item quantity="one">%1$d nouvelle offre gratuite</item>
         <item quantity="many">%1$d de nouvelles offres gratuites</item>
         <item quantity="other">%1$d nouvelles offres gratuites</item>
+    </plurals>
+    <plurals name="pill_new_free">
+        <item quantity="one">%1$d nouveauté gratuite</item>
+        <item quantity="many">%1$d de nouveautés gratuites</item>
+        <item quantity="other">%1$d nouveautés gratuites</item>
     </plurals>
     <plurals name="notif_expired">
         <item quantity="one">%1$d offre expirée</item>

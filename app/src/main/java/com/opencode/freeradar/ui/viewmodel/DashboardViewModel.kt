@@ -3,7 +3,9 @@ package com.opencode.freeradar.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.opencode.freeradar.data.local.SyncSettings
 import com.opencode.freeradar.domain.error.RefreshResult
+import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.model.HealthState
 import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
@@ -18,12 +20,18 @@ import com.opencode.freeradar.ui.model.facetCounts
 import com.opencode.freeradar.ui.model.freeOnly
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
+import com.opencode.freeradar.util.NetworkMonitor
 import java.util.Locale
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,7 +49,10 @@ data class DashboardUiState(
     val showResetFilters: Boolean = false,
     val offline: Boolean = false,
     val lastSyncAt: Long? = null,
-    val error: UiText? = null
+    val error: UiText? = null,
+    val isBaseEmpty: Boolean = true,
+    val meteredWarning: Boolean = false,
+    val pendingNew: Int = 0
 )
 
 sealed interface DashboardAction {
@@ -54,6 +65,10 @@ sealed interface DashboardAction {
     data class ToggleFavorite(val remoteId: String, val favorite: Boolean) : DashboardAction
     data class Search(val query: String) : DashboardAction
     data object DismissError : DashboardAction
+    data object MeteredSyncOnce : DashboardAction
+    data object MeteredNeverWarn : DashboardAction
+    data object MeteredLater : DashboardAction
+    data object AckPendingNew : DashboardAction
 }
 
 sealed interface DashboardEvent {
@@ -62,7 +77,9 @@ sealed interface DashboardEvent {
 
 class DashboardViewModel(
     private val repository: OfferRepository,
-    private val gate: SyncNotifier
+    private val gate: SyncNotifier,
+    private val syncSettings: SyncSettings? = null,
+    private val network: NetworkMonitor? = null,
 ) : ViewModel() {
 
     companion object {
@@ -75,12 +92,41 @@ class DashboardViewModel(
     private val manualError = MutableStateFlow<UiText?>(null)
     private val query = MutableStateFlow("")
     private val recents = MutableStateFlow<List<String>>(emptyList())
+    private val meteredWarning = MutableStateFlow(false)
+    private val seenEventBaseline = MutableStateFlow<Long?>(null)
     private val events = Channel<DashboardEvent>(Channel.BUFFERED)
     val eventFlow = events.receiveAsFlow()
 
+    // Declared before init: the init launches below read it, and an
+    // undispatched Main.immediate start can reach the read before any
+    // suspension point yields.
     // Full list once: facet counts need every option's base, and 8k rows
     // filter in memory in under a millisecond — no per-option DAO roundtrips.
     private val offersFlow = repository.observeOffers(false)
+
+    init {
+        // First install shows an empty catalog: fetch once automatically
+        // instead of waiting for a tap. Once-only even on failure (the error
+        // screen takes over); the daily worker owns later syncs.
+        viewModelScope.launch {
+            val prefs = syncSettings ?: return@launch
+            if (prefs.firstSyncDone()) return@launch
+            if (offersFlow.first().isNotEmpty()) {
+                prefs.setFirstSyncDone()
+                return@launch
+            }
+            prefs.setFirstSyncDone()
+            if (autoSyncAllowed()) doRefresh(force = true)
+        }
+        viewModelScope.launch {
+            seenEventBaseline.value = repository.latestEventId()
+        }
+    }
+
+    private suspend fun autoSyncAllowed(): Boolean {
+        if (syncSettings?.wifiOnly() != true) return true
+        return network?.isMetered() != true
+    }
 
     private data class Prefs(
         val filter: OfferFilter,
@@ -113,7 +159,17 @@ class DashboardViewModel(
         repository.observeLatestRun()
     ) { offers, health, lastRun -> Triple(offers, health, lastRun) }
 
-    val state = combine(tripleFlow, prefsFlow, filterQuery) { triple, prefs, activeQuery ->
+    private val pendingNew: Flow<Int> = seenEventBaseline.flatMapLatest { baseline ->
+        if (baseline == null) flowOf(0)
+        else {
+            repository.observeLatestRun().map {
+                repository.eventsSince(baseline, listOf(ChangeType.BECAME_FREE.name)).size
+            }
+        }
+    }
+
+    val state = combine(tripleFlow, prefsFlow, filterQuery, meteredWarning, pendingNew) {
+            triple, prefs, activeQuery, warning, pending ->
         val (offers, health, lastRun) = triple
             val counts = facetCounts(offers, prefs.filter, prefs.source)
             DashboardUiState(
@@ -135,33 +191,45 @@ class DashboardViewModel(
                     prefs.source != SourceFilter.ALL_SOURCES,
                 offline = health.any { it.state == HealthState.UNAVAILABLE },
                 lastSyncAt = lastRun?.completedAt ?: lastRun?.startedAt,
-                error = prefs.error
+                error = prefs.error,
+                isBaseEmpty = offers.isEmpty(),
+                meteredWarning = warning,
+                pendingNew = pending
             )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
 
+    private suspend fun doRefresh(force: Boolean) {
+        // A second pull while the spinner is up would start a second
+        // full sync: double watermark, double afterSync, and the first
+        // finisher drops the flag while work is still in flight.
+        // Launches run sequentially on Main with no suspension between
+        // the check and the set, so this coalesces to the running sync.
+        if (refreshing.value) return
+        refreshing.value = true
+        try {
+            val watermark = gate.beforeSync()
+            when (val result = repository.refreshAll(force = force)) {
+                RefreshResult.Ok, is RefreshResult.Partial -> {
+                    manualError.value = null
+                    gate.afterSync(watermark)
+                }
+                is RefreshResult.Failed -> manualError.value = result.error.toUiText()
+            }
+        } finally {
+            refreshing.value = false
+        }
+    }
+
     fun onAction(action: DashboardAction) {
         when (action) {
             DashboardAction.Refresh -> viewModelScope.launch {
-                // A second pull while the spinner is up would start a second
-                // full sync: double watermark, double afterSync, and the first
-                // finisher drops the flag while work is still in flight.
-                // Launches run sequentially on Main with no suspension between
-                // the check and the set, so this coalesces to the running sync.
                 if (refreshing.value) return@launch
-                refreshing.value = true
-                try {
-                    val watermark = gate.beforeSync()
-                    when (val result = repository.refreshAll(force = true)) {
-                        RefreshResult.Ok, is RefreshResult.Partial -> {
-                            manualError.value = null
-                            gate.afterSync(watermark)
-                        }
-                        is RefreshResult.Failed -> manualError.value = result.error.toUiText()
-                    }
-                } finally {
-                    refreshing.value = false
+                if (network?.isMetered() == true && syncSettings?.warnOnMetered() != false) {
+                    meteredWarning.value = true
+                    return@launch
                 }
+                doRefresh(force = true)
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter
             is DashboardAction.SelectSource -> sourceFilter.value = action.source
@@ -178,10 +246,25 @@ class DashboardViewModel(
                         .take(MAX_RECENTS)
                 }
             }
-            is DashboardAction.ToggleFavorite -> viewModelScope.launch {
+    is DashboardAction.ToggleFavorite -> viewModelScope.launch {
                 repository.setFavorite(action.remoteId, action.favorite)
             }
-            DashboardAction.DismissError -> manualError.value = null
+    DashboardAction.DismissError -> manualError.value = null
+    DashboardAction.MeteredSyncOnce -> viewModelScope.launch {
+        meteredWarning.value = false
+        doRefresh(force = true)
+    }
+    DashboardAction.MeteredNeverWarn -> viewModelScope.launch {
+        syncSettings?.setWarnOnMetered(false)
+        meteredWarning.value = false
+        doRefresh(force = true)
+    }
+    DashboardAction.MeteredLater -> {
+        meteredWarning.value = false
+    }
+    DashboardAction.AckPendingNew -> viewModelScope.launch {
+        seenEventBaseline.value = repository.latestEventId()
+    }
         }
     }
 }
