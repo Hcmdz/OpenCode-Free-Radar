@@ -79,6 +79,11 @@
     <string name="label_output">Max output</string>
     <string name="label_tools">Tool calling</string>
     <string name="label_vision">Vision</string>
+    <string name="label_structured">Structured output</string>
+    <string name="details_open">Open official page</string>
+    <string name="history_new_model">New model detected</string>
+    <string name="history_became_free">Became free</string>
+    <string name="history_expired">Free offer expired</string>
     <string name="value_yes">Yes</string>
     <string name="value_no">No</string>
     <string name="value_unknown">Unknown</string>

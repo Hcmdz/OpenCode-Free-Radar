@@ -78,6 +78,11 @@
     <string name="label_output">أقصى إخراج</string>
     <string name="label_tools">استدعاء الأدوات</string>
     <string name="label_vision">الرؤية</string>
+    <string name="label_structured">إخراج منظم</string>
+    <string name="details_open">فتح الصفحة الرسمية</string>
+    <string name="history_new_model">تم رصد نموذج جديد</string>
+    <string name="history_became_free">أصبح مجانيًا</string>
+    <string name="history_expired">انتهى العرض المجاني</string>
     <string name="value_yes">نعم</string>
     <string name="value_no">لا</string>
     <string name="value_unknown">غير معروف</string>

@@ -78,6 +78,11 @@
     <string name="label_output">Sortie max</string>
     <string name="label_tools">Appel d’outils</string>
     <string name="label_vision">Vision</string>
+    <string name="label_structured">Sortie structurée</string>
+    <string name="details_open">Ouvrir la page officielle</string>
+    <string name="history_new_model">Nouveau modèle détecté</string>
+    <string name="history_became_free">Devenu gratuit</string>
+    <string name="history_expired">Offre gratuite expirée</string>
     <string name="value_yes">Oui</string>
     <string name="value_no">Non</string>
     <string name="value_unknown">Inconnu</string>
