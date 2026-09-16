@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCode Free Radar — Free AI Models for OpenCode</title>
+    <meta name="description" content="OpenCode Free Radar — Android app that tracks AI models free to use with OpenCode and notifies you when new free offers appear.">
+    <meta name="author" content="HcmDZ">
+    <link rel="canonical" href="https://hcmdz.github.io/OpenCode-Free-Radar/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="OpenCode Free Radar — Free AI Models for OpenCode">
+    <meta property="og:description" content="Track AI models free to use with OpenCode. Usable-free statuses, favorites, offline-first, alerts on new freebies.">
+    <meta property="og:url" content="https://hcmdz.github.io/OpenCode-Free-Radar/">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { background: #1a1a2e; color: white; padding: 48px 20px; text-align: center; }
+        header h1 { font-size: 32px; margin-bottom: 8px; }
+        header .lede { opacity: 0.85; font-size: 16px; max-width: 640px; margin: 12px auto 0; }
+        .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+        .chips span { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; padding: 4px 14px; font-size: 13px; }
+        nav.links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+        nav.links a { background: #1a73e8; color: white; text-decoration: none; font-size: 14px; border-radius: 999px; padding: 8px 20px; }
+        nav.links a.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.5); }
+        main section { background: white; padding: 32px 28px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h2 { color: #1a1a2e; margin: 0 0 16px; font-size: 22px; border-bottom: 2px solid #e8e8e8; padding-bottom: 8px; }
+        p, li { font-size: 15px; color: #444; margin-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .card { background: #f8f9fa; border-radius: 8px; padding: 18px; }
+        .card h3 { font-size: 16px; color: #1a1a2e; margin-bottom: 6px; }
+        .card p { font-size: 14px; margin-bottom: 0; }
+        .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        figure { margin: 0; text-align: center; }
+        figure img { width: 100%; max-width: 270px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+        figcaption { font-size: 13px; color: #666; margin-top: 8px; }
+        .readme-row { text-align: center; margin-top: 20px; }
+        .readme-row a { display: inline-block; background: #1a1a2e; color: white; text-decoration: none; border-radius: 999px; padding: 10px 26px; font-size: 14px; }
+        footer { text-align: center; padding: 30px; color: #888; font-size: 13px; }
+        footer a { color: #1a73e8; text-decoration: none; }
+        a { color: #1a73e8; }
+        @media (max-width: 600px) { header { padding: 36px 16px; } main section { padding: 24px 16px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OpenCode Free Radar</h1>
+        <div class="chips" aria-label="Platforms">
+            <span>Android</span>
+            <span>Kotlin</span>
+            <span>MinSDK 29</span>
+            <span>TargetSDK 36</span>
+        </div>
+        <p class="lede">Native Android app that tracks AI models free to use with OpenCode and notifies you when new free offers appear.</p>
+        <nav class="links" aria-label="OpenCode Free Radar links">
+            <a href="https://github.com/Hcmdz/OpenCode-Free-Radar" target="_blank" rel="noopener">GitHub</a>
+            <a class="secondary" href="https://hcmdz.github.io/OpenCode-Free-Radar/privacy/" target="_blank" rel="noopener">Privacy</a>
+            <a class="secondary" href="https://hcmdz.github.io/OpenCode-Free-Radar/terms/" target="_blank" rel="noopener">Terms</a>
+        </nav>
+    </header>
+    <main class="container">
+        <section>
+            <h2>Why It Exists</h2>
+            <p>Free AI model offers appear and disappear constantly across providers, and checking them by hand is tedious. OpenCode Free Radar watches the public catalogs for you — usable-free statuses, favorites, and alerts — so you never miss a model you can run with OpenCode for free.</p>
+        </section>
+        <section>
+            <h2>Features</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Catalog Sync</h3>
+                    <p>Daily sync from public indexes: models.dev, OpenRouter, and the OpenCode Zen roster.</p>
+                </div>
+                <div class="card">
+                    <h3>Usable-Free Statuses</h3>
+                    <p>Every model flagged FREE, LIMITED, TRIAL, or TEMPORARY; paid and expired offers filtered out.</p>
+                </div>
+                <div class="card">
+                    <h3>OpenCode Compatibility</h3>
+                    <p>Tool calling, vision, and reasoning flags per model.</p>
+                </div>
+                <div class="card">
+                    <h3>Offline-First</h3>
+                    <p>Room database, favorites, filters, and per-model price history — all on device.</p>
+                </div>
+                <div class="card">
+                    <h3>Freebie Alerts</h3>
+                    <p>Background sync with notifications when new free offers appear.</p>
+                </div>
+                <div class="card">
+                    <h3>Material You</h3>
+                    <p>Dynamic color, edge-to-edge layout, dark and high-contrast themes, English/French/Arabic with RTL.</p>
+                </div>
+            </div>
+            <div class="readme-row">
+                <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/blob/main/README.md" target="_blank" rel="noopener">View full README →</a>
+            </div>
+        </section>
+        <section>
+            <h2>Screenshots</h2>
+            <div class="shots">
+                <figure>
+                    <img src="https://raw.githubusercontent.com/Hcmdz/OpenCode-Free-Radar/main/screenshots/dashboard-light-free.jpg" alt="Dashboard in light mode with free filter" loading="lazy" decoding="async">
+                    <figcaption>Light — free filter</figcaption>
+                </figure>
+                <figure>
+                    <img src="https://raw.githubusercontent.com/Hcmdz/OpenCode-Free-Radar/main/screenshots/dashboard-dark-free.jpg" alt="Dashboard in dark mode with free filter" loading="lazy" decoding="async">
+                    <figcaption>Dark — free filter</figcaption>
+                </figure>
+                <figure>
+                    <img src="https://raw.githubusercontent.com/Hcmdz/OpenCode-Free-Radar/main/screenshots/dashboard-light-all.jpg" alt="Dashboard in light mode showing all models" loading="lazy" decoding="async">
+                    <figcaption>Light — all models</figcaption>
+                </figure>
+                <figure>
+                    <img src="https://raw.githubusercontent.com/Hcmdz/OpenCode-Free-Radar/main/screenshots/dashboard-dark-offers.jpg" alt="Dashboard in dark mode showing offers" loading="lazy" decoding="async">
+                    <figcaption>Dark — offers list</figcaption>
+                </figure>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>Made with care by <a href="https://github.com/Hcmdz" target="_blank" rel="noopener">HcmDZ</a> &middot; Unofficial community project, not affiliated with OpenCode</p>
+    </footer>
+</body>
+</html>
