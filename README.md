@@ -37,6 +37,8 @@ by Anomaly Innovations, Inc.
 | <img src="screenshots/dashboard-light-free.jpg" width="270" alt="Dashboard in light mode with free filter"> | <img src="screenshots/dashboard-dark-free.jpg" width="270" alt="Dashboard in dark mode with free filter"> |
 | Light — all models | Dark — offers list |
 | <img src="screenshots/dashboard-light-all.jpg" width="270" alt="Dashboard in light mode showing all models"> | <img src="screenshots/dashboard-dark-offers.jpg" width="270" alt="Dashboard in dark mode showing offers"> |
+| Settings | Filter sheet |
+| <img src="screenshots/settings.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
 
 ## Tech stack
 
