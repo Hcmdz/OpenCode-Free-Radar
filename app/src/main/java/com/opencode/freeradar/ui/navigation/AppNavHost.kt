@@ -14,9 +14,11 @@ import com.opencode.freeradar.ui.screens.dashboard.DashboardRoot
 import com.opencode.freeradar.ui.screens.details.DetailsRoot
 import com.opencode.freeradar.ui.screens.newmodels.NewModelsRoot
 import com.opencode.freeradar.ui.screens.settings.SettingsRoot
+import com.opencode.freeradar.ui.system.ImmersiveEffect
 
 @Composable
 fun AppNavHost(deepLink: NewModels? = null) {
+    ImmersiveEffect()
     val backStack = rememberNavBackStack(*(listOf(Dashboard) + listOfNotNull(deepLink)).toTypedArray())
     LaunchedEffect(deepLink) {
         if (deepLink != null && deepLink !in backStack) backStack.add(deepLink)
