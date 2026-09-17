@@ -12,6 +12,10 @@ Native Android app that tracks AI models free to use with
 Unofficial community project — not affiliated with, endorsed, or sponsored
 by Anomaly Innovations, Inc.
 
+- **Package**: `com.opencode.freeradar`
+- **Version**: 0.2.0
+- **Author**: HcmDZ &lt;HcmDz.Dev@gmail.com&gt;
+
 ## Features
 
 - Daily catalog sync from public model indexes (models.dev, OpenRouter, OpenCode Zen roster)
