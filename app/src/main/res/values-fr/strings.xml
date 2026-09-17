@@ -9,7 +9,7 @@
     <string name="lang_english">Anglais</string>
     <string name="lang_french">Français</string>
     <string name="lang_arabic">Arabe</string>
-    <string name="dashboard_title">Modèles gratuits</string>
+    <string name="dashboard_title">Modèles</string>
     <string name="details_title">Détails de l’offre</string>
     <string name="compatible_only">Compatibles OpenCode uniquement</string>
     <string name="free_only">Offres gratuites uniquement</string>

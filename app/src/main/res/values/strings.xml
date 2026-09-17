@@ -10,7 +10,7 @@
     <string name="lang_english">English</string>
     <string name="lang_french">Français</string>
     <string name="lang_arabic">العربية</string>
-    <string name="dashboard_title">Free models</string>
+    <string name="dashboard_title">Models</string>
     <string name="details_title">Offer details</string>
     <string name="compatible_only">OpenCode compatible only</string>
     <string name="free_only">Free offers only</string>

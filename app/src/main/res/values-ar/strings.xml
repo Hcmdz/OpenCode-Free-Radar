@@ -9,7 +9,7 @@
     <string name="lang_english">الإنجليزية</string>
     <string name="lang_french">الفرنسية</string>
     <string name="lang_arabic">العربية</string>
-    <string name="dashboard_title">نماذج مجانية</string>
+    <string name="dashboard_title">نماذج</string>
     <string name="details_title">تفاصيل العرض</string>
     <string name="compatible_only">المتوافق مع OpenCode فقط</string>
     <string name="free_only">العروض المجانية فقط</string>
