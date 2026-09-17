@@ -60,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +74,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -156,6 +160,10 @@ fun DashboardScreen(
                     )
                 },
                 subtitle = {
+                    // Read inside this restartable scope: each tick
+                    // recomposes the subtitle alone, never the list.
+                    val now by remember { minuteTicker() }
+                        .collectAsStateWithLifecycle(initialValue = System.currentTimeMillis())
                     val countRes = when (state.filter) {
                         OfferFilter.ALL, OfferFilter.COMPATIBLE -> R.plurals.models_count
                         OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE,
@@ -169,7 +177,7 @@ fun DashboardScreen(
                     val age = state.lastSyncAt?.let {
                         DateUtils.getRelativeTimeSpanString(
                             it,
-                            System.currentTimeMillis(),
+                            now,
                             DateUtils.MINUTE_IN_MILLIS
                         ).toString()
                     }
@@ -649,6 +657,14 @@ private fun LoadingSkeleton(modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+/** Wall clock refreshed every minute for relative-time labels. */
+private fun minuteTicker(): Flow<Long> = flow {
+    while (true) {
+        emit(System.currentTimeMillis())
+        delay(60_000)
     }
 }
 
