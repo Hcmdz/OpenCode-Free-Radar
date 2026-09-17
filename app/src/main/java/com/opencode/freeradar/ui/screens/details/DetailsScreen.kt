@@ -58,6 +58,7 @@ import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
+import com.opencode.freeradar.ui.model.compactCount
 import com.opencode.freeradar.ui.model.sourceLabel
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.viewmodel.DetailsUiState
@@ -152,8 +153,8 @@ fun DetailsScreen(
                 InfoCard(titleRes = R.string.section_prices) {
                     Text(priceLine(offer.inputPrice, offer.outputPrice, unknown()))
                     Text(
-                        "${stringResource(R.string.label_context)}: ${offer.contextLength ?: unknown()}  •  " +
-                            "${stringResource(R.string.label_output)}: ${offer.maxOutputTokens ?: unknown()}"
+                        "${stringResource(R.string.label_context)}: ${offer.contextLength?.compactCount() ?: unknown()}  •  " +
+                            "${stringResource(R.string.label_output)}: ${offer.maxOutputTokens?.compactCount() ?: unknown()}"
                     )
                 }
             }

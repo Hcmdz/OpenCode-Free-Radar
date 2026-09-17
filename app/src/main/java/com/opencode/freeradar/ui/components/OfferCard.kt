@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.opencode.freeradar.R
 import com.opencode.freeradar.ui.model.OfferUi
+import com.opencode.freeradar.ui.model.compactCount
 import com.opencode.freeradar.ui.model.sourceLabel
 
 @Composable
@@ -52,7 +53,7 @@ fun OfferCard(offer: OfferUi, onClick: () -> Unit, onToggleFavorite: () -> Unit)
                     StatusPill(text = stringResource(R.string.status_unverified), tone = StatusTone.NEUTRAL)
                 }
                 offer.contextLength?.let {
-                    StatusPill(text = "$it tokens", tone = StatusTone.NEUTRAL)
+                    StatusPill(text = "${it.compactCount()} tokens", tone = StatusTone.NEUTRAL)
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
