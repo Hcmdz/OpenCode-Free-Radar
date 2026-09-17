@@ -23,6 +23,7 @@
     <string name="filter_title">عوامل التصفية</string>
     <string name="conflict_warning">الحالة تحتاج إلى تحقق — تأكد قبل الاستخدام.</string>
     <string name="status_unverified">غير مؤكد</string>
+    <string name="status_cross_checked">موثّق · مصدران</string>
     <string name="desc_favorite">تتبع هذا العرض</string>
     <string name="desc_unfavorite">إلغاء تتبع هذا العرض</string>
     <string name="search_hint">ابحث في النماذج أو المزودين</string>

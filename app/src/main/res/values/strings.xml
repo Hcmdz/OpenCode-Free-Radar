@@ -24,6 +24,7 @@
     <string name="filter_title">Filters</string>
     <string name="conflict_warning">Status to verify — confirm before use.</string>
     <string name="status_unverified">Unverified</string>
+    <string name="status_cross_checked">Verified · 2 sources</string>
     <string name="desc_favorite">Follow this offer</string>
     <string name="desc_unfavorite">Unfollow this offer</string>
     <string name="search_hint">Search models or providers</string>

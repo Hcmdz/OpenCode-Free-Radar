@@ -23,6 +23,7 @@
     <string name="filter_title">Filtres</string>
     <string name="conflict_warning">Statut à vérifier — confirmez avant usage.</string>
     <string name="status_unverified">Non vérifié</string>
+    <string name="status_cross_checked">Vérifié · 2 sources</string>
     <string name="desc_favorite">Suivre cette offre</string>
     <string name="desc_unfavorite">Ne plus suivre cette offre</string>
     <string name="search_hint">Rechercher modèles ou providers</string>

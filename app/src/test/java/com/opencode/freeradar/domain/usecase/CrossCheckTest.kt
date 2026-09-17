@@ -67,10 +67,98 @@ class CrossCheckTest {
     }
 
     @Test
-    fun `missing pin side yields nothing`() {
-        val result = crossCheck(listOf(offer("s1/m:free")), listOf(pin))
+    fun `usable-free group agreement confirms both sides`() {
+        val result = crossCheck(
+            listOf(
+                offer("s1/m:free", FreeStatus.FREE),
+                offer("s3/m:free", FreeStatus.TRIAL)
+            ),
+            listOf(pin)
+        )
+        assertThat(result.confirmed).isEqualTo(setOf("s1/m:free", "s3/m:free"))
+        assertThat(result.conflicts).hasSize(0)
+    }
+
+    @Test
+    fun `unknown side skips the pin`() {
+        val result = crossCheck(
+            listOf(
+                offer("s1/m:free", FreeStatus.FREE),
+                offer("s3/m:free", FreeStatus.UNKNOWN)
+            ),
+            listOf(pin)
+        )
         assertThat(result.confirmed).hasSize(0)
         assertThat(result.conflicts).hasSize(0)
+    }
+
+    @Test
+    fun `stale side skips the pin`() {
+        val result = crossCheck(
+            listOf(offer("s1/m:free"), offer("s3/m:free")),
+            listOf(pin),
+            isFresh = { it.remoteId == "s1/m:free" }
+        )
+        assertThat(result.confirmed).hasSize(0)
+        assertThat(result.conflicts).hasSize(0)
+    }
+
+    @Test
+    fun `excluded rows are never confirmed but still conflict`() {
+        val agreed = crossCheck(
+            listOf(offer("s1/m:free"), offer("s3/m:free")),
+            listOf(pin),
+            excludedFromConfirm = setOf("s1/m:free")
+        )
+        assertThat(agreed.confirmed).hasSize(0)
+        assertThat(agreed.conflicts).hasSize(0)
+
+        val disagreed = crossCheck(
+            listOf(
+                offer("s1/m:free", FreeStatus.FREE),
+                offer("s3/m:free", FreeStatus.PAID)
+            ),
+            listOf(pin),
+            excludedFromConfirm = setOf("s1/m:free")
+        )
+        assertThat(disagreed.confirmed).hasSize(0)
+        assertThat(disagreed.conflicts).isEqualTo(setOf("s1/m:free", "s3/m:free"))
+    }
+
+    @Test
+    fun `lone usable-free survivor is demoted`() {
+        val result = crossCheck(listOf(offer("s1/m:free")), listOf(pin))
+        assertThat(result.confirmed).hasSize(0)
+        assertThat(result.conflicts).isEqualTo(setOf("s1/m:free"))
+    }
+
+    @Test
+    fun `lone paid survivor is ignored`() {
+        val result = crossCheck(
+            listOf(offer("s1/m:free", FreeStatus.PAID)),
+            listOf(pin)
+        )
+        assertThat(result.confirmed).hasSize(0)
+        assertThat(result.conflicts).hasSize(0)
+    }
+
+    @Test
+    fun `missing pin side yields nothing`() {
+        val result = crossCheck(emptyList(), listOf(pin))
+        assertThat(result.confirmed).hasSize(0)
+        assertThat(result.conflicts).hasSize(0)
+    }
+
+    @Test
+    fun `pins are well formed`() {
+        for (pin in OVERLAP_PINS) {
+            assertThat(pin.firstRemoteId.isNotBlank()).isEqualTo(true)
+            assertThat(pin.secondRemoteId.isNotBlank()).isEqualTo(true)
+            assertThat(pin.firstRemoteId).isEqualTo(pin.firstRemoteId.trim())
+            assertThat(pin.secondRemoteId).isEqualTo(pin.secondRemoteId.trim())
+            assertThat(pin.firstRemoteId == pin.secondRemoteId).isEqualTo(false)
+            assertThat(pin.reason.isNotBlank()).isEqualTo(true)
+        }
     }
 
     @Test

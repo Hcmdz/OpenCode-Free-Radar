@@ -44,3 +44,26 @@ Known free-tier shape (doc-level, not per-model observed): ~20 RPM and
 `missedSyncs` counter (Room v2): present → 0; missing on success → +1, kept;
 MODEL_REMOVED + delete at ≥2 consecutive absences (favorites never deleted);
 failed fetch → nothing; >50% shrink → FAILED (`shrunk-catalog`), no mutation.
+
+## Cross-source check vs models.dev (S1)
+
+After every `refreshAll`, pinned same-model pairs are compared
+(`crossCheck` in `domain/usecase`, pins in `OVERLAP_PINS` — static, reviewed,
+exact `remoteId` match, never fuzzy):
+
+- both sides usable-free (`FREE`, `LIMITED`, `TRIAL`, `TEMPORARY` — group
+  agreement, e.g. `FREE` vs `TRIAL` with an `expiration_date`) → both rows
+  `CROSS_CHECKED` (Details shows "Verified · 2 sources");
+- usable-free vs `PAID`/`EXPIRED` → both rows `TO_VERIFY` (silent, no bell);
+- `UNKNOWN` on either side → pin skipped (missing data is not a disagreement);
+- pin with only one side present → a usable-free survivor is demoted to
+  `TO_VERIFY` (delisted elsewhere stays unconfirmed);
+- a side whose source has no real fetch inside the 6h freshness window is
+  skipped (`skipped-metered` proves nothing, `FAILED` runs are passed over,
+  `skipped-hash`/`skipped-fresh` attest); stale pins fail open;
+- Zen-roster ghosts are never promoted by a pin (roster wins), but a
+  disagreement still demotes them.
+
+`updateConfidence` touches only the confidence column: confidence is not
+freshness (`verifiedAt` is left untouched so list ordering by verification
+age does not move on a cross-check).

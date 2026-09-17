@@ -255,6 +255,12 @@ private fun HeroCard(offer: Offer) {
                         tone = StatusTone.NEUTRAL
                     )
                 }
+                if (offer.confidence == Confidence.CROSS_CHECKED) {
+                    StatusPill(
+                        text = stringResource(R.string.status_cross_checked),
+                        tone = StatusTone.GOOD
+                    )
+                }
             }
             Text(
                 text = priceLine(offer.inputPrice, offer.outputPrice, stringResource(R.string.value_unknown)),

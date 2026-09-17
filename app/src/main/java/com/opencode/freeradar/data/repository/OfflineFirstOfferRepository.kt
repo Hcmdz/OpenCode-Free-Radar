@@ -4,6 +4,8 @@ package com.opencode.freeradar.data.repository
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.local.SourceHealthEntity
 import com.opencode.freeradar.data.local.SyncRunEntity
+import com.opencode.freeradar.data.source.remote.ModelsDevSource
+import com.opencode.freeradar.domain.usecase.OVERLAP_PINS
 import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.local.SyncSettings
 import com.opencode.freeradar.util.NetworkMonitor
@@ -255,12 +257,27 @@ class OfflineFirstOfferRepository(
     }
 
     /**
-     * Pinned cross-source comparison after every run: agreement raises both
-     * rows to CROSS_CHECKED, disagreement drops both to TO_VERIFY (never
-     * overwrites user state — confidence is sync-owned, favorites are not).
+     * Pinned cross-source comparison after every run, gated per pin on fetch
+     * recency (a stale side skips its pin instead of confirming or conflicting
+     * across mismatched time windows). Agreement raises both rows to
+     * CROSS_CHECKED, disagreement drops both to TO_VERIFY, a lone usable-free
+     * survivor of a broken pin is demoted too. Zen-roster ghosts are never
+     * promoted by a pin. Confidence is sync-owned (favorites are not), and the
+     * update intentionally leaves verifiedAt untouched: confidence is not
+     * freshness (see docs/sources/openrouter.md).
      */
     private suspend fun applyCrossCheck() {
-        val result = crossCheck(offers.snapshotAll().map { it.toDomain() })
+        val now = clock.millis()
+        val all = offers.snapshotAll().map { it.toDomain() }
+        val freshSources = sources.keys.filter { source ->
+            isSourceFresh(runs.recentRuns(source, FRESH_RUN_LOOKBACK), now)
+        }.toSet()
+        val ghosts = all.filter {
+            it.source == MODELS_DEV_SOURCE_ID &&
+                it.providerId == ModelsDevSource.ZEN_PROVIDER &&
+                it.confidence == Confidence.TO_VERIFY
+        }.map { it.remoteId }.toSet()
+        val result = crossCheck(all, OVERLAP_PINS, ghosts) { offer -> offer.source in freshSources }
         if (result.confirmed.isNotEmpty()) {
             offers.updateConfidence(result.confirmed.toList(), Confidence.CROSS_CHECKED.name)
         }
@@ -291,6 +308,26 @@ class OfflineFirstOfferRepository(
         const val HISTORY_RETENTION_MILLIS = 90L * 24 * 60 * 60 * 1000
         const val MAX_SYNC_RUNS = 100
         const val FRESHNESS_WINDOW_MILLIS = 6L * 60 * 60 * 1000
+        private const val FRESH_RUN_LOOKBACK = 20
+        private const val MODELS_DEV_SOURCE_ID = "opencode-data"
+
+        /**
+         * Newest-first run scan for fetch recency: failed and unfinished runs
+         * carry no signal and are skipped over, `skipped-metered` runs prove
+         * nothing (no fetch happened), every other OK run (real fetch,
+         * `skipped-hash`, `skipped-fresh`) attests freshness at its completion
+         * time. No attesting run inside the window means stale.
+         */
+        internal fun isSourceFresh(runs: List<SyncRunEntity>, now: Long): Boolean {
+            for (run in runs) {
+                if (run.result == SyncResult.FAILED.name) continue
+                if (run.result != SyncResult.OK.name) continue
+                if (run.error == "skipped-metered") continue
+                val at = run.completedAt ?: continue
+                return now - at < FRESHNESS_WINDOW_MILLIS
+            }
+            return false
+        }
 
         internal fun shouldSkipHash(storedHash: String?, incomingHash: String?): Boolean =
             incomingHash != null && storedHash == incomingHash

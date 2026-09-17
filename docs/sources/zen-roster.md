@@ -27,3 +27,10 @@ free model is "available for a limited time", so `CatalogMapper` maps
 2026-09-17; dated `conditions` still win as TRIAL). Ghosts keep
 TO_VERIFY and stay silent; roster-confirmed rows keep ringing.
 Pill tone is WARNING either way — labeling honesty, not a bell change.
+
+## Articulation with the S1↔S3 cross-check
+
+Roster wins over pins: a ghost (`TO_VERIFY` set by `dropZenGhosts`) is
+excluded from `confirmed` — a same-model agreement with the OpenRouter twin
+never promotes it. A disagreement still leaves it `TO_VERIFY` (idempotent),
+and a later roster confirmation rings `BECAME_FREE` as before.
