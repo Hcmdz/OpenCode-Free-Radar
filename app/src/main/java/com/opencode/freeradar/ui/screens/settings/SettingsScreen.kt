@@ -31,7 +31,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -78,6 +80,7 @@ import android.provider.Settings as SystemSettings
 import com.opencode.freeradar.BuildConfig
 import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AppLocalePrefs
+import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.SyncPrefs
 import com.opencode.freeradar.ui.components.OptionRow
@@ -98,11 +101,18 @@ fun SettingsRoot(onBack: () -> Unit) {
     val localePrefs = remember { AppLocalePrefs(appContext) }
     val notifPrefs = remember { NotificationPrefs(appContext) }
     val syncPrefs = remember { SyncPrefs(appContext) }
+    val fabPrefs = remember { FilterFabPrefs(appContext) }
     val themeState by themePrefs.state.collectAsStateWithLifecycle(initialValue = ThemeState())
     val scope = rememberCoroutineScope()
     val localeTag by localePrefs.tag.collectAsStateWithLifecycle(initialValue = "")
     val notifEnabled by notifPrefs.enabled.collectAsStateWithLifecycle(initialValue = false)
     val wifiOnly by syncPrefs.wifiOnlyFlow.collectAsStateWithLifecycle(initialValue = true)
+    val peekDelayMs by fabPrefs.peekDelayMillis.collectAsStateWithLifecycle(
+        initialValue = FilterFabPrefs.DEFAULT_DELAY_MILLIS
+    )
+    val peekSliverDp by fabPrefs.peekSliverDp.collectAsStateWithLifecycle(
+        initialValue = FilterFabPrefs.DEFAULT_SLIVER_DP
+    )
     var notifDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -141,6 +151,8 @@ fun SettingsRoot(onBack: () -> Unit) {
         notifEnabled = notifEnabled,
         notifDenied = notifDenied,
         wifiOnly = wifiOnly,
+        peekDelayMs = peekDelayMs,
+        peekSliverDp = peekSliverDp,
         onMode = { scope.launch { themePrefs.setMode(it) } },
         onBlack = { scope.launch { themePrefs.setBlackTheme(it) } },
         onLocale = { scope.launch { localePrefs.setTag(it) } },
@@ -159,6 +171,8 @@ fun SettingsRoot(onBack: () -> Unit) {
             }
         },
         onWifiOnlyToggle = { scope.launch { syncPrefs.setWifiOnly(it) } },
+        onPeekDelay = { scope.launch { fabPrefs.setPeekDelayMillis(it) } },
+        onPeekSliver = { scope.launch { fabPrefs.setPeekSliverDp(it) } },
         onOpenNotifSettings = {
             context.startActivity(
                 Intent(SystemSettings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -223,11 +237,15 @@ fun SettingsScreen(
     notifEnabled: Boolean,
     notifDenied: Boolean,
     wifiOnly: Boolean,
+    peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
+    peekSliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP,
     onMode: (ThemeMode) -> Unit,
     onBlack: (Boolean) -> Unit,
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
     onWifiOnlyToggle: (Boolean) -> Unit,
+    onPeekDelay: (Long) -> Unit = {},
+    onPeekSliver: (Int) -> Unit = {},
     onOpenNotifSettings: () -> Unit,
     onOpenLink: (String) -> Unit,
     updateRowText: String,
@@ -342,6 +360,59 @@ fun SettingsScreen(
                     text = stringResource(R.string.sync_wifi_benefit),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            CollapsibleSection(titleRes = R.string.settings_filter_button) {
+                Text(
+                    text = stringResource(R.string.filter_peek_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.filter_hide_delay),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                PeekDelayOption(
+                    delayMs = 3_000L,
+                    labelRes = R.string.filter_delay_3s,
+                    selectedDelayMs = peekDelayMs,
+                    onSelect = onPeekDelay
+                )
+                PeekDelayOption(
+                    delayMs = 5_000L,
+                    labelRes = R.string.filter_delay_5s,
+                    selectedDelayMs = peekDelayMs,
+                    onSelect = onPeekDelay
+                )
+                PeekDelayOption(
+                    delayMs = 8_000L,
+                    labelRes = R.string.filter_delay_8s,
+                    selectedDelayMs = peekDelayMs,
+                    onSelect = onPeekDelay
+                )
+                Text(
+                    text = stringResource(R.string.filter_edge_size),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                PeekSliverOption(
+                    sliverDp = 16,
+                    labelRes = R.string.filter_sliver_16dp,
+                    selectedSliverDp = peekSliverDp,
+                    onSelect = onPeekSliver
+                )
+                PeekSliverOption(
+                    sliverDp = 24,
+                    labelRes = R.string.filter_sliver_24dp,
+                    selectedSliverDp = peekSliverDp,
+                    onSelect = onPeekSliver
+                )
+                PeekSliverOption(
+                    sliverDp = 32,
+                    labelRes = R.string.filter_sliver_32dp,
+                    selectedSliverDp = peekSliverDp,
+                    onSelect = onPeekSliver
                 )
             }
             CollapsibleSection(titleRes = R.string.settings_about) {
@@ -474,6 +545,36 @@ private fun LanguageOption(
         title = stringResource(labelRes),
         selected = tag == selectedTag,
         onClick = { onLocale(tag) }
+    )
+}
+
+@Composable
+private fun PeekDelayOption(
+    delayMs: Long,
+    labelRes: Int,
+    selectedDelayMs: Long,
+    onSelect: (Long) -> Unit
+) {
+    OptionRow(
+        icon = Icons.Filled.Timer,
+        title = stringResource(labelRes),
+        selected = delayMs == selectedDelayMs,
+        onClick = { onSelect(delayMs) }
+    )
+}
+
+@Composable
+private fun PeekSliverOption(
+    sliverDp: Int,
+    labelRes: Int,
+    selectedSliverDp: Int,
+    onSelect: (Int) -> Unit
+) {
+    OptionRow(
+        icon = Icons.Filled.Visibility,
+        title = stringResource(labelRes),
+        selected = sliverDp == selectedSliverDp,
+        onClick = { onSelect(sliverDp) }
     )
 }
 

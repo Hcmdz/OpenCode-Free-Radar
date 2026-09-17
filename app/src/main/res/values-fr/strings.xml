@@ -24,6 +24,16 @@
     <string name="conflict_warning">Statut à vérifier — confirmez avant usage.</string>
     <string name="status_unverified">Non vérifié</string>
     <string name="status_cross_checked">Vérifié · 2 sources</string>
+    <string name="settings_filter_button">Bouton de filtre</string>
+    <string name="filter_peek_hint">Après inactivité, le bouton de filtre glisse vers le bord de l’écran en laissant un bord visible. Touchez-le pour le ramener et ouvrir les filtres.</string>
+    <string name="filter_hide_delay">Masquer après</string>
+    <string name="filter_delay_3s">3 s</string>
+    <string name="filter_delay_5s">5 s</string>
+    <string name="filter_delay_8s">8 s</string>
+    <string name="filter_edge_size">Bord visible</string>
+    <string name="filter_sliver_16dp">16 dp</string>
+    <string name="filter_sliver_24dp">24 dp</string>
+    <string name="filter_sliver_32dp">32 dp</string>
     <string name="desc_favorite">Suivre cette offre</string>
     <string name="desc_unfavorite">Ne plus suivre cette offre</string>
     <string name="search_hint">Rechercher modèles ou providers</string>

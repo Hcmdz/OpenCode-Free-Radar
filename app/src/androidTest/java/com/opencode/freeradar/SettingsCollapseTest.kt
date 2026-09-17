@@ -90,4 +90,14 @@ class SettingsCollapseTest {
         rule.onNodeWithText("Check for updates").performClick()
         rule.runOnIdle { assert(checks == 1) }
     }
+
+    @Test
+    fun filterButtonSectionOffersDelayAndSliver() {
+        content()
+        rule.onNodeWithText("Filter button").performClick()
+        rule.onNodeWithText("5 s").performClick()
+        rule.onNodeWithText("24 dp").performClick()
+        rule.onNodeWithText("Filter button").performClick()
+        rule.onNodeWithText("5 s").assertDoesNotExist()
+    }
 }

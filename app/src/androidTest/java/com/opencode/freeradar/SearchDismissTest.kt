@@ -59,6 +59,9 @@ class SearchDismissTest {
                         query = query.value,
                         recentSearches = recents
                     ),
+                    // Auto-advance would burn the 5 s FAB peek delay on first
+                    // idle; the peek path is covered by FilterFabPeekTest.
+                    filterAutoPeek = false,
                     onAction = {
                         actions += it
                         if (it is DashboardAction.Search) query.value = it.query
@@ -146,10 +149,16 @@ class SearchDismissTest {
     @Test
     fun draggingFilterFabKeepsItUsable() {
         val query = mutableStateOf("")
-        setScreen(query, mutableListOf())
+        val actions = mutableListOf<DashboardAction>()
+        setScreen(query, actions)
         rule.onNodeWithTag("dashboard_filter").performTouchInput { swipeUp() }
         // Drag repositions inside the container: still visible, still opening.
         rule.onNodeWithTag("dashboard_filter").assertIsDisplayed()
+        // Advance first: with a manual clock the swipe's up event flushes
+        // only on clock progress; a tap injected before that collides with
+        // the still-open gesture and vanishes.
+        rule.mainClock.advanceTimeBy(500)
+        rule.waitForIdle()
         rule.onNodeWithTag("dashboard_filter").performClick()
         rule.onNodeWithTag("filter_option_all").assertIsDisplayed()
     }

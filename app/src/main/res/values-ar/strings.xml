@@ -24,6 +24,16 @@
     <string name="conflict_warning">الحالة تحتاج إلى تحقق — تأكد قبل الاستخدام.</string>
     <string name="status_unverified">غير مؤكد</string>
     <string name="status_cross_checked">موثّق · مصدران</string>
+    <string name="settings_filter_button">زر الترشيح</string>
+    <string name="filter_peek_hint">عند عدم الاستخدام، ينزلق زر الترشيح إلى حافة الشاشة تاركًا حافة مرئية. المسه لإعادته وفتح المرشحات.</string>
+    <string name="filter_hide_delay">إخفاء بعد</string>
+    <string name="filter_delay_3s">3 ث</string>
+    <string name="filter_delay_5s">5 ث</string>
+    <string name="filter_delay_8s">8 ث</string>
+    <string name="filter_edge_size">الحافة المرئية</string>
+    <string name="filter_sliver_16dp">16 dp</string>
+    <string name="filter_sliver_24dp">24 dp</string>
+    <string name="filter_sliver_32dp">32 dp</string>
     <string name="desc_favorite">تتبع هذا العرض</string>
     <string name="desc_unfavorite">إلغاء تتبع هذا العرض</string>
     <string name="search_hint">ابحث في النماذج أو المزودين</string>

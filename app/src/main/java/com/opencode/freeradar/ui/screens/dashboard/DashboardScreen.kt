@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.ui.screens.dashboard
 
+import android.content.Context
 import android.text.format.DateUtils
+import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -58,6 +60,7 @@ import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -69,6 +72,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -95,6 +99,7 @@ import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
+import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.ui.components.activeSummary
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferSort
@@ -123,7 +128,21 @@ fun DashboardRoot(
             }
         }
     }
-    DashboardScreen(state = state, onAction = viewModel::onAction, onOpenSettings = onOpenSettings)
+    val appContext = LocalContext.current.applicationContext
+    val fabPrefs = remember { FilterFabPrefs(appContext) }
+    val peekDelayMs by fabPrefs.peekDelayMillis.collectAsStateWithLifecycle(
+        initialValue = FilterFabPrefs.DEFAULT_DELAY_MILLIS
+    )
+    val peekSliverDp by fabPrefs.peekSliverDp.collectAsStateWithLifecycle(
+        initialValue = FilterFabPrefs.DEFAULT_SLIVER_DP
+    )
+    DashboardScreen(
+        state = state,
+        onAction = viewModel::onAction,
+        onOpenSettings = onOpenSettings,
+        peekDelayMs = peekDelayMs,
+        peekSliverDp = peekSliverDp
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,25 +150,64 @@ fun DashboardRoot(
 fun DashboardScreen(
     state: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
-    onOpenSettings: () -> Unit = {}
+    onOpenSettings: () -> Unit = {},
+    filterAutoPeek: Boolean = true,
+    peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
+    peekSliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
     var sheetOpen by remember { mutableStateOf(false) }
+    // Filter FAB edge-peek: every user interaction pokes the timer; after
+    // [peekDelayMs] of screen-wide silence with the sheet closed, the FAB
+    // slides to the nearest edge leaving a sliver visible — never fully
+    // gone, always grabbable. Pure UI state (like sheetOpen); rotation
+    // resets to unpeeked, which is sane.
+    var peeked by remember { mutableStateOf(false) }
+    var pokeTick by remember { mutableIntStateOf(0) }
+    var fabDragging by remember { mutableStateOf(false) }
+    fun poke() {
+        peeked = false
+        pokeTick++
+    }
+    // TalkBack explore-by-touch produces no taps: auto-hide would strand
+    // those users without filters, so it stays off for them.
+    val context = LocalContext.current
+    val touchExploration = remember {
+        (context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager)
+            .isTouchExplorationEnabled
+    }
+    LaunchedEffect(pokeTick, fabDragging, sheetOpen, peekDelayMs) {
+        // Never peek mid-drag, and never while the sheet covers the screen:
+        // a peeked FAB behind the modal is unreachable until dismiss.
+        // TalkBack explore-by-touch produces no taps: peeking would strand
+        // those users with a sliver, so it stays off for them.
+        if (filterAutoPeek && !fabDragging && !sheetOpen && !touchExploration) {
+            delay(peekDelayMs)
+            peeked = true
+        }
+    }
     // ponytail: single dismiss path for back-press, tap-outside and filter taps.
     val dismissSearch = {
         searchExpanded = false
         focusManager.clearFocus()
+        poke()
     }
     BackHandler(enabled = searchExpanded) {
         dismissSearch()
     }
     // Scrolling the list folds the panel; the typed query lives in the
     // ViewModel and survives. Also covers the scroll-top FAB animation.
+    // Settling re-pokes: a scroll that outlasts the peek delay brings the FAB back.
     LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress) dismissSearch()
+        if (listState.isScrollInProgress) dismissSearch() else poke()
+    }
+    // Every emitted action is a user gesture: single poke point for all of them.
+    fun userAction(action: DashboardAction) {
+        poke()
+        onAction(action)
     }
     // Visible past the first item only; Scaffold docks it bottom-end (right).
     val showScrollTop = listState.firstVisibleItemIndex > 0
@@ -256,7 +314,7 @@ fun DashboardScreen(
                 statusCounts = state.statusCounts,
                 onSelectFilter = {
                     dismissSearch()
-                    onAction(DashboardAction.SelectFilter(it))
+                    userAction(DashboardAction.SelectFilter(it))
                 }
             )
             if (state.filter == OfferFilter.FREE &&
@@ -292,13 +350,13 @@ fun DashboardScreen(
                 ErrorBanner(
                     message = error.text(),
                     actionLabel = stringResource(R.string.retry),
-                    onAction = { onAction(DashboardAction.Refresh) },
+                    onAction = { userAction(DashboardAction.Refresh) },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
-                onRefresh = { onAction(DashboardAction.Refresh) },
+                onRefresh = { userAction(DashboardAction.Refresh) },
                 modifier = Modifier.fillMaxSize()
             ) {
                 when {
@@ -331,7 +389,7 @@ fun DashboardScreen(
                             )
                             PrimaryPillButton(
                                 text = stringResource(R.string.refresh_now),
-                                onClick = { onAction(DashboardAction.Refresh) }
+                                onClick = { userAction(DashboardAction.Refresh) }
                             )
                         }
                     }
@@ -353,7 +411,7 @@ fun DashboardScreen(
                             )
                             PrimaryPillButton(
                                 text = stringResource(R.string.reset_filters),
-                                onClick = { onAction(DashboardAction.ClearSearchAndFilters) },
+                                onClick = { userAction(DashboardAction.ClearSearchAndFilters) },
                                 modifier = Modifier.testTag("dashboard_no_match_reset")
                             )
                         }
@@ -369,9 +427,9 @@ fun DashboardScreen(
                     items(state.offers, key = { it.remoteId }) { offer ->
                         OfferCard(
                             offer = offer,
-                            onClick = { onAction(DashboardAction.OpenOffer(offer.remoteId)) },
+                            onClick = { userAction(DashboardAction.OpenOffer(offer.remoteId)) },
                             onToggleFavorite = {
-                                onAction(DashboardAction.ToggleFavorite(offer.remoteId, !offer.favorite))
+                                userAction(DashboardAction.ToggleFavorite(offer.remoteId, !offer.favorite))
                             }
                         )
                     }
@@ -388,7 +446,7 @@ fun DashboardScreen(
                 AnimatedVisibility(visible = state.pendingNew > 0 && state.offers.isNotEmpty()) {
                 AssistChip(
                     onClick = {
-                        onAction(DashboardAction.AckPendingNew)
+                        userAction(DashboardAction.AckPendingNew)
                         scope.launch { listState.animateScrollToItem(0) }
                     },
                     label = {
@@ -424,12 +482,12 @@ fun DashboardScreen(
                         recents = state.recentSearches,
                         providers = state.sourceCounts,
                         onRecent = {
-                            onAction(DashboardAction.Search(it))
+                            userAction(DashboardAction.Search(it))
                             searchExpanded = false
                             focusManager.clearFocus()
                         },
                         onProvider = {
-                            onAction(DashboardAction.SelectSource(it))
+                            userAction(DashboardAction.SelectSource(it))
                             searchExpanded = false
                             focusManager.clearFocus()
                         },
@@ -450,10 +508,15 @@ fun DashboardScreen(
                 ) {
                     SearchInput(
                         query = state.query,
-                        onQueryChange = { onAction(DashboardAction.Search(it)) },
-                        onFocusChange = { focused -> if (focused) searchExpanded = true },
+                        onQueryChange = { userAction(DashboardAction.Search(it)) },
+                        onFocusChange = { focused ->
+                            if (focused) {
+                                searchExpanded = true
+                                poke()
+                            }
+                        },
                         onSubmit = {
-                            onAction(DashboardAction.SubmitSearch(state.query))
+                            userAction(DashboardAction.SubmitSearch(state.query))
                             searchExpanded = false
                             focusManager.clearFocus()
                         }
@@ -480,7 +543,11 @@ fun DashboardScreen(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .testTag("dashboard_filter"),
-                bottomPadding = OverlayDockReserve + 16.dp
+                bottomPadding = OverlayDockReserve + 16.dp,
+                peeked = peeked,
+                sliverDp = peekSliverDp,
+                onUserInteraction = { poke() },
+                onDraggingChange = { fabDragging = it }
             )
             FilterSheet(
                 visible = sheetOpen,
@@ -491,30 +558,30 @@ fun DashboardScreen(
                 showReset = state.showResetFilters,
                 onSelectFilter = {
                     dismissSearch()
-                    onAction(DashboardAction.SelectFilter(it))
+                    userAction(DashboardAction.SelectFilter(it))
                 },
                 onSelectSource = {
                     dismissSearch()
-                    onAction(DashboardAction.SelectSource(it))
+                    userAction(DashboardAction.SelectSource(it))
                 },
                 onReset = {
                     dismissSearch()
-                    onAction(DashboardAction.ResetFilters)
+                    userAction(DashboardAction.ResetFilters)
                 },
-                onDismiss = { sheetOpen = false },
+                onDismiss = { sheetOpen = false; poke() },
                 sort = state.sort,
-                onSelectSort = { onAction(DashboardAction.SelectSort(it)) }
+                onSelectSort = { userAction(DashboardAction.SelectSort(it)) }
             )
         }
     }
     if (state.meteredWarning) {
         AlertDialog(
-            onDismissRequest = { onAction(DashboardAction.MeteredLater) },
+            onDismissRequest = { userAction(DashboardAction.MeteredLater) },
             title = { Text(text = stringResource(R.string.metered_title)) },
             text = { Text(text = stringResource(R.string.metered_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = { onAction(DashboardAction.MeteredSyncOnce) },
+                    onClick = { userAction(DashboardAction.MeteredSyncOnce) },
                     modifier = Modifier.testTag("metered_sync_once")
                 ) {
                     Text(text = stringResource(R.string.metered_sync_once))
@@ -523,13 +590,13 @@ fun DashboardScreen(
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
-                        onClick = { onAction(DashboardAction.MeteredLater) },
+                        onClick = { userAction(DashboardAction.MeteredLater) },
                         modifier = Modifier.testTag("metered_later")
                     ) {
                         Text(text = stringResource(R.string.update_later))
                     }
                     TextButton(
-                        onClick = { onAction(DashboardAction.MeteredNeverWarn) },
+                        onClick = { userAction(DashboardAction.MeteredNeverWarn) },
                         modifier = Modifier.testTag("metered_never_warn")
                     ) {
                         Text(text = stringResource(R.string.metered_never_warn))

@@ -71,4 +71,60 @@ class FilterFabTest {
         assertThat(saver.restore(emptyList<Int>())).isEqualTo(IntOffset.Zero)
         assertThat(saver.restore(listOf(5))).isEqualTo(IntOffset(5, 0))
     }
+
+    @Test
+    fun `right side snaps to anchor`() {
+        assertThat(snappedOffset(IntOffset(-100, -200), container, fab, padEnd, padBottom))
+            .isEqualTo(IntOffset(0, -200))
+    }
+
+    @Test
+    fun `left side snaps to margin`() {
+        // Anchor left = 1000 - 160 - 32 = 808; left margin target x = 32 - 808.
+        assertThat(snappedOffset(IntOffset(-700, -200), container, fab, padEnd, padBottom))
+            .isEqualTo(IntOffset(32 - 808, -200))
+    }
+
+    @Test
+    fun `snap keeps y clamped on screen`() {
+        assertThat(snappedOffset(IntOffset(-100, -5000), container, fab, padEnd, padBottom))
+            .isEqualTo(IntOffset(0, -(1600 - 96 - 224)))
+    }
+
+    @Test
+    fun `right peek leaves exact sliver`() {
+        // Right edge at containerW - sliver: x = fabW + padEnd - sliver.
+        assertThat(peekTarget(IntOffset.Zero, container, fab, padEnd, padBottom, 48))
+            .isEqualTo(IntOffset(160 + 32 - 48, 0))
+    }
+
+    @Test
+    fun `left peek leaves exact sliver`() {
+        // Left edge at -(fabW - sliver): x = padEnd + sliver - containerW.
+        val docked = IntOffset(32 - 808, -200)
+        assertThat(peekTarget(docked, container, fab, padEnd, padBottom, 48))
+            .isEqualTo(IntOffset(32 + 48 - 1000, -200))
+    }
+
+    @Test
+    fun `peek keeps docked y`() {
+        assertThat(peekTarget(IntOffset(0, -300), container, fab, padEnd, padBottom, 48).y)
+            .isEqualTo(-300)
+    }
+
+    @Test
+    fun `peek fails open when unmeasured`() {
+        val docked = IntOffset(-100, -100)
+        assertThat(peekTarget(docked, IntSize.Zero, fab, padEnd, padBottom, 48))
+            .isEqualTo(docked)
+        assertThat(snappedOffset(docked, container, IntSize.Zero, padEnd, padBottom))
+            .isEqualTo(docked)
+    }
+
+    @Test
+    fun `negative sliver keeps docked position`() {
+        val docked = IntOffset(-100, -100)
+        assertThat(peekTarget(docked, container, fab, padEnd, padBottom, -1))
+            .isEqualTo(docked)
+    }
 }
