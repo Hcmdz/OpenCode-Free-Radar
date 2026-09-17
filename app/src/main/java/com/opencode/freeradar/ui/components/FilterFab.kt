@@ -9,14 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,7 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -180,30 +179,9 @@ fun FilterFab(
         animationSpec = tween(PEEK_ANIM_MILLIS)
     )
     val displayedOffset = if (programmaticTarget == null) dockedOffset else animatedOffset
-    ExtendedFloatingActionButton(
-        text = {
-            Text(
-                text = summary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 200.dp)
-            )
-        },
-        icon = {
-            Box(contentAlignment = Alignment.TopEnd) {
-                Icon(imageVector = Icons.Filled.Tune, contentDescription = null)
-                if (active) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.tertiary,
-                                shape = CircleShape
-                            )
-                    )
-                }
-            }
-        },
+    // Icon-only small FAB: the summary text is gone from the screen, so the
+    // localized summary becomes the TalkBack label (one node: label + tap).
+    SmallFloatingActionButton(
         onClick = {
             onUserInteraction()
             onOpen()
@@ -211,6 +189,7 @@ fun FilterFab(
         // Offset first so hit-testing follows the drawn position; fresh keys
         // or the drag closure goes stale on resize.
         modifier = modifier
+            .semantics { contentDescription = summary }
             .padding(end = endPadding, bottom = bottomPadding)
             .offset { displayedOffset }
             .onSizeChanged { fabSize = it }
@@ -256,5 +235,19 @@ fun FilterFab(
                     }
                 )
             }
-    )
+    ) {
+        Box(contentAlignment = Alignment.TopEnd) {
+            Icon(imageVector = Icons.Filled.Tune, contentDescription = null)
+            if (active) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.tertiary,
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+    }
 }
