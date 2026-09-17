@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.opencode.freeradar.ui.components.FilterBar
+import com.opencode.freeradar.ui.components.FilterChipsRow
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.theme.AppThemePreview
@@ -59,5 +60,22 @@ class FilterSheetTest {
         rule.onNodeWithText("Filters").performClick()
         rule.onNodeWithText("Free (1)").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
+    }
+
+    @Test
+    fun chipsSelectStatusWithoutSheet() {
+        val selected = mutableListOf<OfferFilter>()
+        rule.setContent {
+            AppThemePreview {
+                FilterChipsRow(
+                    filter = OfferFilter.FREE,
+                    statusCounts = OfferFilter.entries.associateWith { 1 },
+                    onSelectFilter = selected::add
+                )
+            }
+        }
+        rule.onNodeWithTag("dashboard_chip_free").assertIsDisplayed()
+        rule.onNodeWithTag("dashboard_chip_all").performClick()
+        rule.runOnIdle { assert(selected == listOf(OfferFilter.ALL)) }
     }
 }

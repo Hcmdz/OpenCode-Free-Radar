@@ -85,6 +85,7 @@ import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.ui.components.ErrorBanner
 import com.opencode.freeradar.ui.components.FilterBar
+import com.opencode.freeradar.ui.components.FilterChipsRow
 import com.opencode.freeradar.ui.components.OfferCard
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
@@ -263,6 +264,14 @@ fun DashboardScreen(
                     .testTag("dashboard_filter")
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            FilterChipsRow(
+                filter = state.filter,
+                statusCounts = state.statusCounts,
+                onSelectFilter = {
+                    dismissSearch()
+                    onAction(DashboardAction.SelectFilter(it))
+                }
             )
             if (state.filter == OfferFilter.FREE &&
                 state.sourceFilter == SourceFilter.ALL_SOURCES &&

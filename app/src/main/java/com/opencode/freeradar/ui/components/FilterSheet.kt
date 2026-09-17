@@ -2,17 +2,20 @@
 package com.opencode.freeradar.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -60,17 +63,44 @@ fun FilterBarButton(
     }
 }
 
-private fun activeSummary(
+/**
+ * One-tap status facet: same selection as the sheet's status section, no
+ * sheet round-trip. The sheet keeps source + sort; both read state.filter,
+ * so they can never disagree.
+ */
+@Composable
+fun FilterChipsRow(
     filter: OfferFilter,
+    statusCounts: Map<OfferFilter, Int>,
+    onSelectFilter: (OfferFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OfferFilter.entries.forEach { entry ->
+            FilterChip(
+                selected = entry == filter,
+                onClick = { onSelectFilter(entry) },
+                label = { Text("${stringResource(entry.labelRes)} (${statusCounts[entry] ?: 0})") },
+                modifier = Modifier.testTag("dashboard_chip_${entry.name.lowercase()}")
+            )
+        }
+    }
+}
+
+private fun activeSummary(
     source: SourceFilter,
     sort: OfferSort,
-    filterLabels: Map<OfferFilter, String>,
     sourceLabels: Map<SourceFilter, String>,
     sortLabels: Map<OfferSort, String>,
     defaultTitle: String
 ): String {
     val parts = buildList<String> {
-        if (filter != OfferFilter.FREE) add(filterLabels.getValue(filter))
         if (source != SourceFilter.ALL_SOURCES) add(sourceLabels.getValue(source))
         if (sort != OfferSort.RECENT) add(sortLabels.getValue(sort))
     }
@@ -115,6 +145,7 @@ fun FilterSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag("filter_option_${entry.name.lowercase()}")
                             .selectable(
                                 selected = selected,
                                 role = Role.RadioButton,
@@ -220,10 +251,8 @@ fun FilterBar(
     val title = stringResource(R.string.filter_title)
     FilterBarButton(
         summary = activeSummary(
-            filter = filter,
             source = sourceFilter,
             sort = sort,
-            filterLabels = OfferFilter.entries.associateWith { stringResource(it.labelRes) },
             sourceLabels = SourceFilter.entries.associateWith { stringResource(it.labelRes) },
             sortLabels = OfferSort.entries.associateWith { stringResource(it.labelRes) },
             defaultTitle = title

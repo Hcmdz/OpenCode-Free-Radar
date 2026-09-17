@@ -86,7 +86,7 @@ class SearchDismissTest {
         rule.onNodeWithTag("dashboard_search").performClick()
         rule.onNodeWithTag("search_suggestions").assertIsDisplayed()
         rule.onNodeWithTag("dashboard_filter").performClick()
-        rule.onNodeWithText("All (0)", useUnmergedTree = true).performClick()
+        rule.onNodeWithTag("filter_option_all").performClick()
         rule.runOnIdle {
             assertEquals(DashboardAction.SelectFilter(OfferFilter.ALL), actions.lastOrNull())
         }
