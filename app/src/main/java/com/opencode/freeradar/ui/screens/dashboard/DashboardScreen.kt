@@ -36,16 +36,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -70,7 +69,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -211,48 +209,13 @@ fun DashboardScreen(
     }
     // Visible past the first item only; Scaffold docks it bottom-end (right).
     val showScrollTop = listState.firstVisibleItemIndex > 0
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier
-            .testTag("dashboard_screen")
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.testTag("dashboard_screen"),
         topBar = {
-            MediumFlexibleTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = stringResource(R.string.dashboard_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                subtitle = {
-                    // Read inside this restartable scope: each tick
-                    // recomposes the subtitle alone, never the list.
-                    val now by remember { minuteTicker() }
-                        .collectAsStateWithLifecycle(initialValue = System.currentTimeMillis())
-                    val countRes = when (state.filter) {
-                        OfferFilter.ALL, OfferFilter.COMPATIBLE -> R.plurals.models_count
-                        OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE,
-                        OfferFilter.FAVORITE -> R.plurals.offers_count
-                    }
-                    val count = pluralStringResource(
-                        countRes,
-                        state.offers.size,
-                        state.offers.size
-                    )
-                    val age = state.lastSyncAt?.let {
-                        DateUtils.getRelativeTimeSpanString(
-                            it,
-                            now,
-                            DateUtils.MINUTE_IN_MILLIS
-                        ).toString()
-                    }
-                    Text(
-                        text = if (age != null) {
-                            stringResource(R.string.dashboard_subtitle, count, age)
-                        } else {
-                            count
-                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -267,8 +230,7 @@ fun DashboardScreen(
                             contentDescription = stringResource(R.string.desc_settings)
                         )
                     }
-                },
-                scrollBehavior = scrollBehavior
+                }
             )
         },
         floatingActionButton = {
@@ -309,6 +271,11 @@ fun DashboardScreen(
             if (state.offline) {
                 OfflineBanner(lastSyncAt = state.lastSyncAt)
             }
+            DashboardCountLine(
+                filter = state.filter,
+                offerCount = state.offers.size,
+                lastSyncAt = state.lastSyncAt
+            )
             FilterChipsRow(
                 filter = state.filter,
                 statusCounts = state.statusCounts,
@@ -778,6 +745,47 @@ private fun minuteTicker(): Flow<Long> = flow {
         emit(System.currentTimeMillis())
         delay(60_000)
     }
+}
+
+/** Former TopAppBar subtitle: count + sync age as a fixed line above the chips. */
+@Composable
+private fun DashboardCountLine(
+    filter: OfferFilter,
+    offerCount: Int,
+    lastSyncAt: Long?,
+    modifier: Modifier = Modifier
+) {
+    // Read inside this restartable scope: each tick recomposes this line
+    // alone, never the list.
+    val now by remember { minuteTicker() }
+        .collectAsStateWithLifecycle(initialValue = System.currentTimeMillis())
+    val countRes = when (filter) {
+        OfferFilter.ALL, OfferFilter.COMPATIBLE -> R.plurals.models_count
+        OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE,
+        OfferFilter.FAVORITE -> R.plurals.offers_count
+    }
+    val count = pluralStringResource(countRes, offerCount, offerCount)
+    val age = lastSyncAt?.let {
+        DateUtils.getRelativeTimeSpanString(
+            it,
+            now,
+            DateUtils.MINUTE_IN_MILLIS
+        ).toString()
+    }
+    Text(
+        text = if (age != null) {
+            stringResource(R.string.dashboard_subtitle, count, age)
+        } else {
+            count
+        },
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+    )
 }
 
 @Composable
