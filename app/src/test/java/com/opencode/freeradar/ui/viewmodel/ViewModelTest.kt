@@ -4,6 +4,7 @@ package com.opencode.freeradar.ui.viewmodel
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isEmpty
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -20,6 +21,7 @@ import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.OfferSort
 import com.opencode.freeradar.ui.model.SourceFilter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -215,6 +217,32 @@ class DashboardViewModelTest {
             var filtered = awaitItem()
             while (filtered.filter != OfferFilter.FREE_COMPATIBLE) filtered = awaitItem()
             assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+        }
+    }
+
+    @Test
+    fun `clear search and filters resets all four selections`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            vm.onAction(DashboardAction.SelectFilter(OfferFilter.ALL))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENROUTER))
+            vm.onAction(DashboardAction.SelectSort(OfferSort.NAME))
+            vm.onAction(DashboardAction.Search("zzz"))
+            testScheduler.advanceUntilIdle()
+            var dirty = awaitItem()
+            while (dirty.query != "zzz") dirty = awaitItem()
+            vm.onAction(DashboardAction.ClearSearchAndFilters)
+            testScheduler.advanceUntilIdle()
+            var cleared = awaitItem()
+            while (cleared.query != "" || cleared.filter != OfferFilter.FREE) cleared = awaitItem()
+            assertThat(cleared.filter).isEqualTo(OfferFilter.FREE)
+            assertThat(cleared.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
+            assertThat(cleared.sort).isEqualTo(OfferSort.RECENT)
+            assertThat(cleared.query).isEqualTo("")
+            assertThat(cleared.recentSearches).isEmpty()
         }
     }
 

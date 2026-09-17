@@ -65,6 +65,9 @@ sealed interface DashboardAction {
     data class SelectSource(val source: SourceFilter) : DashboardAction
     data class SelectSort(val sort: OfferSort) : DashboardAction
     data object ResetFilters : DashboardAction
+    // No-match escape hatch: ResetFilters keeps the typed query, so a
+    // query-caused empty state needs all four selections cleared at once.
+    data object ClearSearchAndFilters : DashboardAction
     data class OpenOffer(val remoteId: String) : DashboardAction
     data class SubmitSearch(val query: String) : DashboardAction
     data class ToggleFavorite(val remoteId: String, val favorite: Boolean) : DashboardAction
@@ -257,6 +260,12 @@ class DashboardViewModel(
                 filter.value = OfferFilter.FREE
                 sourceFilter.value = SourceFilter.ALL_SOURCES
                 sort.value = OfferSort.RECENT
+            }
+            DashboardAction.ClearSearchAndFilters -> {
+                filter.value = OfferFilter.FREE
+                sourceFilter.value = SourceFilter.ALL_SOURCES
+                sort.value = OfferSort.RECENT
+                query.value = ""
             }
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))
             is DashboardAction.Search -> query.value = action.query

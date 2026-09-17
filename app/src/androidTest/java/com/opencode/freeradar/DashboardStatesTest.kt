@@ -48,6 +48,18 @@ class DashboardStatesTest {
     }
 
     @Test
+    fun noMatchResetDispatchesClearSearchAndFilters() {
+        val actions = mutableListOf<DashboardAction>()
+        content(
+            DashboardUiState(isLoading = false, isBaseEmpty = false, query = "zzz"),
+            actions
+        )
+        rule.onNodeWithTag("dashboard_no_match_reset").assertIsDisplayed()
+        rule.onNodeWithTag("dashboard_no_match_reset").performClick()
+        rule.runOnIdle { assert(actions.contains(DashboardAction.ClearSearchAndFilters)) }
+    }
+
+    @Test
     fun pendingNewShowsPillAndAcks() {
         val actions = mutableListOf<DashboardAction>()
         content(

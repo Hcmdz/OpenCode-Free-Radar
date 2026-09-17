@@ -356,6 +356,11 @@ fun DashboardScreen(
                                 text = stringResource(R.string.no_match_hint),
                                 style = MaterialTheme.typography.bodyMedium
                             )
+                            PrimaryPillButton(
+                                text = stringResource(R.string.reset_filters),
+                                onClick = { onAction(DashboardAction.ClearSearchAndFilters) },
+                                modifier = Modifier.testTag("dashboard_no_match_reset")
+                            )
                         }
                     }
                 }
