@@ -4,6 +4,7 @@ package com.opencode.freeradar.ui.model
 import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isLocalProvider
 
 data class OfferUi(
     val remoteId: String,
@@ -15,7 +16,9 @@ data class OfferUi(
     val source: String,
     /** Zen-roster ghost: visible but unconfirmed — neutral chip, no bell. */
     val unverified: Boolean = false,
-    val favorite: Boolean = false
+    val favorite: Boolean = false,
+    /** Local runtime or self-deployed cloud: shown as a Local pill. */
+    val isLocal: Boolean = false
 )
 
 /**
@@ -39,5 +42,6 @@ fun Offer.toUi(): OfferUi = OfferUi(
     verifiedAt = verifiedAt,
     source = source,
     unverified = confidence == Confidence.TO_VERIFY,
-    favorite = favorite
+    favorite = favorite,
+    isLocal = providerId.isLocalProvider()
 )

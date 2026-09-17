@@ -55,6 +55,7 @@ import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isLocalProvider
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
@@ -243,12 +244,18 @@ private fun HeroCard(offer: Offer) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
                 StatusPill(text = sourceLabel(offer.source), tone = StatusTone.NEUTRAL)
+                if (offer.providerId.isLocalProvider()) {
+                    StatusPill(
+                        text = stringResource(R.string.status_local),
+                        tone = StatusTone.NEUTRAL
+                    )
+                }
                 if (offer.confidence == Confidence.TO_VERIFY) {
                     StatusPill(
                         text = stringResource(R.string.status_unverified),

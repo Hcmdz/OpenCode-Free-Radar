@@ -26,6 +26,7 @@
     <string name="filter_title">Filters</string>
     <string name="conflict_warning">Status to verify — confirm before use.</string>
     <string name="status_unverified">Unverified</string>
+    <string name="status_local">Local</string>
     <string name="status_cross_checked">Verified · 2 sources</string>
     <string name="settings_filter_button">Filter button</string>
     <string name="filter_peek_hint">When idle, the filter button slides to the screen edge, leaving a visible edge. Tap it to bring it back and open the filters.</string>

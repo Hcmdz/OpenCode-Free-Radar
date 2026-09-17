@@ -25,6 +25,7 @@
     <string name="filter_title">Filtres</string>
     <string name="conflict_warning">Statut à vérifier — confirmez avant usage.</string>
     <string name="status_unverified">Non vérifié</string>
+    <string name="status_local">Local</string>
     <string name="status_cross_checked">Vérifié · 2 sources</string>
     <string name="settings_filter_button">Bouton de filtre</string>
     <string name="filter_peek_hint">Après inactivité, le bouton de filtre glisse vers le bord de l’écran en laissant un bord visible. Touchez-le pour le ramener et ouvrir les filtres.</string>

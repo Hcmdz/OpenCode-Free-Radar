@@ -3,8 +3,8 @@ package com.opencode.freeradar.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -44,18 +44,30 @@ fun OfferCard(offer: OfferUi, onClick: () -> Unit, onToggleFavorite: () -> Unit)
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
-                StatusPill(text = sourceLabel(offer.source), tone = StatusTone.NEUTRAL)
-                if (offer.unverified) {
-                    StatusPill(text = stringResource(R.string.status_unverified), tone = StatusTone.NEUTRAL)
+                // FlowRow: status + source + local + tokens pills wrap instead
+                // of clipping the favorite star on narrow screens.
+                FlowRow(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatusPill(text = offer.freeStatus.name, tone = freeStatusTone(offer.freeStatus))
+                    StatusPill(text = sourceLabel(offer.source), tone = StatusTone.NEUTRAL)
+                    if (offer.isLocal) {
+                        StatusPill(
+                            text = stringResource(R.string.status_local),
+                            tone = StatusTone.NEUTRAL
+                        )
+                    }
+                    if (offer.unverified) {
+                        StatusPill(text = stringResource(R.string.status_unverified), tone = StatusTone.NEUTRAL)
+                    }
+                    offer.contextLength?.let {
+                        StatusPill(text = "${it.compactCount()} tokens", tone = StatusTone.NEUTRAL)
+                    }
                 }
-                offer.contextLength?.let {
-                    StatusPill(text = "${it.compactCount()} tokens", tone = StatusTone.NEUTRAL)
-                }
-                Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.testTag("offer_favorite"),
                     onClick = onToggleFavorite

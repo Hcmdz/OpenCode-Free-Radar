@@ -25,6 +25,7 @@
     <string name="filter_title">عوامل التصفية</string>
     <string name="conflict_warning">الحالة تحتاج إلى تحقق — تأكد قبل الاستخدام.</string>
     <string name="status_unverified">غير مؤكد</string>
+    <string name="status_local">محلي</string>
     <string name="status_cross_checked">موثّق · مصدران</string>
     <string name="settings_filter_button">زر الترشيح</string>
     <string name="filter_peek_hint">عند عدم الاستخدام، ينزلق زر الترشيح إلى حافة الشاشة تاركًا حافة مرئية. المسه لإعادته وفتح المرشحات.</string>
