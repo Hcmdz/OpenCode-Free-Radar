@@ -34,11 +34,11 @@ by Anomaly Innovations, Inc.
 
 | Light — free filter | Dark — free filter |
 |---|---|
-| <img src="screenshots/dashboard-light-free.jpg" width="270" alt="Dashboard in light mode with free filter"> | <img src="screenshots/dashboard-dark-free.jpg" width="270" alt="Dashboard in dark mode with free filter"> |
+| <img src="screenshots/dashboard-free-light-v2.jpg" width="270" alt="Dashboard in light mode with free filter"> | <img src="screenshots/dashboard-dark-free-v2.jpg" width="270" alt="Dashboard in dark mode with free filter"> |
 | Light — all models | Dark — offers list |
-| <img src="screenshots/dashboard-light-all.jpg" width="270" alt="Dashboard in light mode showing all models"> | <img src="screenshots/dashboard-dark-offers.jpg" width="270" alt="Dashboard in dark mode showing offers"> |
+| <img src="screenshots/dashboard-all-light-v2.jpg" width="270" alt="Dashboard in light mode showing all models"> | <img src="screenshots/dashboard-offers-dark-v2.jpg" width="270" alt="Dashboard in dark mode showing offers"> |
 | Settings | Filter sheet |
-| <img src="screenshots/settings.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
+| <img src="screenshots/settings-v2.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet-v2.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
 
 ## Tech stack
 
