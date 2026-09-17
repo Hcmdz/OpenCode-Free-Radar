@@ -3,13 +3,16 @@ package com.opencode.freeradar
 
 import android.os.ParcelFileDescriptor
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.opencode.freeradar.data.local.SyncPrefs
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -19,12 +22,17 @@ import org.junit.runner.RunWith
 /**
  * Metered-network warning dialog, driven by a really metered WiFi
  * (netpolicy shell commands; restored afterwards).
+ *
+ * The activity launches inside the test body, after the metered
+ * precondition: dashboard auto first-sync reads the metered state at
+ * launch and would otherwise start (skeleton, no Refresh button) in a
+ * race with the click below.
  */
 @RunWith(AndroidJUnit4::class)
 class MeteredDialogTest {
 
     @get:Rule
-    val rule = createAndroidComposeRule<MainActivity>()
+    val rule = createEmptyComposeRule()
 
     private fun shell(cmd: String): String {
         val fd: ParcelFileDescriptor = InstrumentationRegistry.getInstrumentation().uiAutomation
@@ -52,20 +60,32 @@ class MeteredDialogTest {
     }
 
     @Before
-    fun makeWifiMetered() = setMetered(true)
+    fun makeWifiMetered() {
+        setMetered(true)
+        // Freeze the first-install state before launch: the dashboard
+        // auto first-sync would otherwise race the Refresh click below
+        // (skeleton instead of the button, or fail-open read mid WiFi
+        // reconnect). This test only covers the manual refresh path.
+        runBlocking {
+            SyncPrefs(InstrumentationRegistry.getInstrumentation().targetContext)
+                .setFirstSyncDone()
+        }
+    }
 
     @After
     fun restoreWifiMetered() = setMetered(null)
 
     @Test
     fun meteredPullShowsWarningDialog() {
-        rule.waitForIdle()
-        rule.onNodeWithText("Refresh now").performClick()
-        rule.waitUntil(10_000) {
-            rule.onAllNodesWithTag("metered_dialog").fetchSemanticsNodes().isNotEmpty()
+        ActivityScenario.launch(MainActivity::class.java).use {
+            rule.waitForIdle()
+            rule.onNodeWithText("Refresh now").performClick()
+            rule.waitUntil(10_000) {
+                rule.onAllNodesWithTag("metered_dialog").fetchSemanticsNodes().isNotEmpty()
+            }
+            rule.onNodeWithTag("metered_dialog").assertIsDisplayed()
+            rule.onNodeWithTag("metered_later").performClick()
+            rule.onNodeWithTag("metered_dialog").assertDoesNotExist()
         }
-        rule.onNodeWithTag("metered_dialog").assertIsDisplayed()
-        rule.onNodeWithTag("metered_later").performClick()
-        rule.onNodeWithTag("metered_dialog").assertDoesNotExist()
     }
 }
