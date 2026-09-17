@@ -31,6 +31,7 @@ The catalog carries no USD free signal, so nothing maps to FREE/PAID:
 ## Consequences
 
 - No `00X-pollinations` implementation (no fetcher, no pins, no hook).
-- Keep S1 (models.dev) + S3 (OpenRouter) as the only catalog sources.
+- Keep S1 (models.dev) + S3 (OpenRouter) + S4 (LiteLLM price map) as the
+  catalog sources.
 - Revisit if: per-model USD pricing with a documented free tier appears,
   or the catalog gains a first-class free flag. Log the change here first.
