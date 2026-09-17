@@ -17,6 +17,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.IntSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.opencode.freeradar.ui.components.FilterChipsRow
@@ -91,6 +94,38 @@ class FilterSheetTest {
         rule.onNodeWithTag("dashboard_filter").performClick()
         rule.onNodeWithText("Free (1)").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
+    }
+
+    @Test
+    fun localSwitchToggles() {
+        val toggled = mutableListOf<Boolean>()
+        rule.setContent {
+            AppThemePreview {
+                var open by remember { mutableStateOf(true) }
+                var showLocal by remember { mutableStateOf(false) }
+                FilterSheet(
+                    visible = open,
+                    filter = OfferFilter.FREE,
+                    sourceFilter = SourceFilter.ALL_SOURCES,
+                    statusCounts = OfferFilter.entries.associateWith { 1 },
+                    sourceCounts = SourceFilter.entries.associateWith { 2 },
+                    showReset = false,
+                    onSelectFilter = {},
+                    onSelectSource = {},
+                    onReset = {},
+                    onDismiss = { open = false },
+                    showLocal = showLocal,
+                    onToggleShowLocal = { showLocal = it; toggled += it }
+                )
+            }
+        }
+        // Half-expanded sheet + tall content: drag fully open first,
+        // then scroll the switch into view.
+        rule.onNodeWithTag("filter_sheet").performTouchInput { swipeUp() }
+        rule.onNodeWithTag("filter_show_local").performScrollTo()
+        rule.onNodeWithTag("filter_show_local").assertIsDisplayed()
+        rule.onNodeWithTag("filter_show_local").performClick()
+        rule.runOnIdle { assert(toggled == listOf(true)) }
     }
 
     @Test

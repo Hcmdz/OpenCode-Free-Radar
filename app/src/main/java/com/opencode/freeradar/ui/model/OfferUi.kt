@@ -26,6 +26,7 @@ fun sourceLabel(source: String): String = when (source) {
     "opencode-data" -> "OpenCode"
     "nvidia-build" -> "NVIDIA"
     "openrouter" -> "OpenRouter"
+    "litellm" -> "LiteLLM"
     else -> source
 }
 

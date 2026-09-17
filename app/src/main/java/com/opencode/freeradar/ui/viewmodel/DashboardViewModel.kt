@@ -13,6 +13,7 @@ import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferSort
 import com.opencode.freeradar.domain.model.isUsableFree
+import com.opencode.freeradar.domain.model.isLocalProvider
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
@@ -46,6 +47,7 @@ data class DashboardUiState(
     val filter: OfferFilter = OfferFilter.FREE,
     val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
     val sort: OfferSort = OfferSort.RECENT,
+    val showLocal: Boolean = false,
     val query: String = "",
     val recentSearches: List<String> = emptyList(),
     val statusCounts: Map<OfferFilter, Int> = emptyMap(),
@@ -64,6 +66,7 @@ sealed interface DashboardAction {
     data class SelectFilter(val filter: OfferFilter) : DashboardAction
     data class SelectSource(val source: SourceFilter) : DashboardAction
     data class SelectSort(val sort: OfferSort) : DashboardAction
+    data class SetShowLocal(val show: Boolean) : DashboardAction
     data object ResetFilters : DashboardAction
     // No-match escape hatch: ResetFilters keeps the typed query, so a
     // query-caused empty state needs all four selections cleared at once.
@@ -97,6 +100,7 @@ class DashboardViewModel(
     private val filter = MutableStateFlow(OfferFilter.FREE)
     private val sourceFilter = MutableStateFlow(SourceFilter.ALL_SOURCES)
     private val sort = MutableStateFlow(OfferSort.RECENT)
+    private val showLocal = MutableStateFlow(false)
     private val refreshing = MutableStateFlow(false)
     private val manualError = MutableStateFlow<UiText?>(null)
     private val query = MutableStateFlow("")
@@ -141,23 +145,28 @@ class DashboardViewModel(
         val filter: OfferFilter,
         val source: SourceFilter,
         val sort: OfferSort,
+        val showLocal: Boolean,
         val refreshing: Boolean,
         val error: UiText?,
         val query: String,
         val recentSearches: List<String> = emptyList()
     )
 
-    private val prefsFlow = combine(filter, sourceFilter, sort, ::Triple)
-        .combine(combine(refreshing, manualError, query, ::Triple)) { selections, flags ->
-            Prefs(
-                filter = selections.first,
-                source = selections.second,
-                sort = selections.third,
-                refreshing = flags.first,
-                error = flags.second,
-                query = flags.third
-            )
-        }.combine(recents) { prefs, recents -> prefs.copy(recentSearches = recents) }
+    private val prefsFlow = combine(
+        combine(filter, sourceFilter, sort, ::Triple),
+        showLocal,
+        combine(refreshing, manualError, query, ::Triple)
+    ) { selections, local, flags ->
+        Prefs(
+            filter = selections.first,
+            source = selections.second,
+            sort = selections.third,
+            showLocal = local,
+            refreshing = flags.first,
+            error = flags.second,
+            query = flags.third
+        )
+    }.combine(recents) { prefs, recents -> prefs.copy(recentSearches = recents) }
 
     // Debounced for filtering only: the field itself always shows the raw
     // query, otherwise a stale display value reverts keystrokes mid-typing.
@@ -190,11 +199,12 @@ class DashboardViewModel(
     val state = combine(tripleFlow, prefsFlow, filterQuery, meteredWarning, pendingNew) {
             triple, prefs, activeQuery, warning, pending ->
         val (offers, health, lastRun) = triple
-            val counts = facetCounts(offers, prefs.filter, prefs.source)
+            val counts = facetCounts(offers, prefs.filter, prefs.source, hideLocal = !prefs.showLocal)
             DashboardUiState(
                 isLoading = false,
                 isRefreshing = prefs.refreshing,
                 offers = offers
+                    .filter { prefs.showLocal || !it.providerId.isLocalProvider() }
                     .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
                     .filter { !prefs.filter.favoriteOnly() || it.favorite }
@@ -205,12 +215,14 @@ class DashboardViewModel(
                 filter = prefs.filter,
                 sourceFilter = prefs.source,
                 sort = prefs.sort,
+                showLocal = prefs.showLocal,
                 query = prefs.query,
                 recentSearches = prefs.recentSearches,
                 statusCounts = counts.status,
                 sourceCounts = counts.source,
                 showResetFilters = prefs.filter != OfferFilter.FREE ||
-                    prefs.source != SourceFilter.ALL_SOURCES,
+                    prefs.source != SourceFilter.ALL_SOURCES ||
+                    prefs.showLocal,
                 offline = health.any { it.state == HealthState.UNAVAILABLE },
                 lastSyncAt = lastRun?.completedAt ?: lastRun?.startedAt,
                 error = prefs.error,
@@ -256,15 +268,18 @@ class DashboardViewModel(
             is DashboardAction.SelectFilter -> filter.value = action.filter
             is DashboardAction.SelectSource -> sourceFilter.value = action.source
             is DashboardAction.SelectSort -> sort.value = action.sort
+            is DashboardAction.SetShowLocal -> showLocal.value = action.show
             DashboardAction.ResetFilters -> {
                 filter.value = OfferFilter.FREE
                 sourceFilter.value = SourceFilter.ALL_SOURCES
                 sort.value = OfferSort.RECENT
+                showLocal.value = false
             }
             DashboardAction.ClearSearchAndFilters -> {
                 filter.value = OfferFilter.FREE
                 sourceFilter.value = SourceFilter.ALL_SOURCES
                 sort.value = OfferSort.RECENT
+                showLocal.value = false
                 query.value = ""
             }
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))

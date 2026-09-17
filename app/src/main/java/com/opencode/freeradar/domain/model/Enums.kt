@@ -19,6 +19,16 @@ enum class Confidence {
     OFFICIAL, API_VERIFIED, CROSS_CHECKED, AUTOMATICALLY_DETECTED, TO_VERIFY
 }
 
+/**
+ * Providers serving local runtimes or self-deployed clouds instead of
+ * hosted APIs: zero cost means "no meter", not "free offer". Reviewed
+ * 2026-09-17 against the LiteLLM price map (ollama/lemonade are local
+ * runtimes; sagemaker rows need a self-deployed AWS endpoint).
+ */
+val LOCAL_PROVIDERS = setOf("ollama", "lemonade", "sagemaker")
+
+fun String.isLocalProvider(): Boolean = this in LOCAL_PROVIDERS
+
 enum class ChangeType {
     NEW_MODEL,
     BECAME_FREE,

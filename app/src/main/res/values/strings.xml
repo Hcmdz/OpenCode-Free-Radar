@@ -21,6 +21,8 @@
     <string name="filter_all_sources">All sources</string>
     <string name="filter_source_opencode">OpenCode</string>
     <string name="filter_source_openrouter">OpenRouter</string>
+    <string name="filter_source_litellm">LiteLLM</string>
+    <string name="filter_show_local">Include local &amp; self-hosted</string>
     <string name="filter_title">Filters</string>
     <string name="conflict_warning">Status to verify — confirm before use.</string>
     <string name="status_unverified">Unverified</string>

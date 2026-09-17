@@ -3,6 +3,7 @@ package com.opencode.freeradar.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,11 +70,14 @@ internal fun activeSummary(
     sort: OfferSort,
     sourceLabels: Map<SourceFilter, String>,
     sortLabels: Map<OfferSort, String>,
-    defaultTitle: String
+    defaultTitle: String,
+    showLocal: Boolean = false,
+    localLabel: String = ""
 ): String {
     val parts = buildList<String> {
         if (source != SourceFilter.ALL_SOURCES) add(sourceLabels.getValue(source))
         if (sort != OfferSort.RECENT) add(sortLabels.getValue(sort))
+        if (showLocal && localLabel.isNotEmpty()) add(localLabel)
     }
     return parts.ifEmpty { listOf(defaultTitle) }.joinToString(" • ")
 }
@@ -91,6 +97,8 @@ fun FilterSheet(
     onDismiss: () -> Unit,
     sort: OfferSort = OfferSort.RECENT,
     onSelectSort: (OfferSort) -> Unit = {},
+    showLocal: Boolean = false,
+    onToggleShowLocal: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (!visible) return
@@ -99,6 +107,7 @@ fun FilterSheet(
             modifier = modifier
                 .testTag("filter_sheet")
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -184,6 +193,25 @@ fun FilterSheet(
                         Text(text = stringResource(entry.labelRes))
                     }
                 }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("filter_show_local")
+                    .toggleable(
+                        value = showLocal,
+                        role = Role.Switch,
+                        onValueChange = onToggleShowLocal
+                    )
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.filter_show_local),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(checked = showLocal, onCheckedChange = null)
             }
             if (showReset) {
                 TextButton(

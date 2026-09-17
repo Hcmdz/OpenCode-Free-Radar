@@ -20,6 +20,8 @@
     <string name="filter_all_sources">كل المصادر</string>
     <string name="filter_source_opencode">OpenCode</string>
     <string name="filter_source_openrouter">OpenRouter</string>
+    <string name="filter_source_litellm">LiteLLM</string>
+    <string name="filter_show_local">تضمين النماذج المحلية</string>
     <string name="filter_title">عوامل التصفية</string>
     <string name="conflict_warning">الحالة تحتاج إلى تحقق — تأكد قبل الاستخدام.</string>
     <string name="status_unverified">غير مؤكد</string>

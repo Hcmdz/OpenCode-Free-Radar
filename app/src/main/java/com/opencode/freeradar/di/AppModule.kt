@@ -11,6 +11,8 @@ import com.opencode.freeradar.data.local.SyncStatePrefs
 import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.local.UpdatePrefs
 import com.opencode.freeradar.data.repository.OfflineFirstOfferRepository
+import com.opencode.freeradar.data.source.litellm.LITELLM_SOURCE_ID
+import com.opencode.freeradar.data.source.litellm.LiteLLMSource
 import com.opencode.freeradar.data.source.openrouter.OPENROUTER_SOURCE_ID
 import com.opencode.freeradar.data.source.openrouter.OpenRouterSource
 import com.opencode.freeradar.data.source.remote.ModelsDevSource
@@ -47,11 +49,13 @@ val appModule = module {
     single { createHttpClient(cacheDir = androidContext().cacheDir) }
     singleOf(::ModelsDevSource)
     singleOf(::OpenRouterSource)
-    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<OpenRouterSource>()) }
+    singleOf(::LiteLLMSource)
+    single<Set<OfferSource>> { linkedSetOf(get<ModelsDevSource>(), get<OpenRouterSource>(), get<LiteLLMSource>()) }
     single<Map<String, (SourceOffer, Long) -> Offer>> {
         mapOf(
             "opencode-data" to { dto: SourceOffer, now: Long -> dto.toOffer(now) },
             OPENROUTER_SOURCE_ID to { dto: SourceOffer, now: Long -> dto.toOffer(now, OPENROUTER_SOURCE_ID) },
+            LITELLM_SOURCE_ID to { dto: SourceOffer, now: Long -> dto.toOffer(now, LITELLM_SOURCE_ID) },
         )
     }
     single<OfferRepository> {

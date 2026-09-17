@@ -15,10 +15,11 @@ class FilterCountsTest {
         source: String,
         status: FreeStatus = FreeStatus.FREE,
         compatible: Boolean = true,
-        favorite: Boolean = false
+        favorite: Boolean = false,
+        providerId: String = "p"
     ) = Offer(
         remoteId = remoteId,
-        providerId = "p",
+        providerId = providerId,
         modelId = "m",
         name = "M",
         inputPrice = 0.0,
@@ -89,5 +90,19 @@ class FilterCountsTest {
         )
         val counts = facetCounts(rows, OfferFilter.FAVORITE, SourceFilter.ALL_SOURCES)
         assertThat(counts.status[OfferFilter.FAVORITE]).isEqualTo(2)
+    }
+
+    @Test
+    fun `hideLocal drops local providers from every count`() {
+        val rows = listOf(
+            offer("ollama/m", "litellm", FreeStatus.FREE, providerId = "ollama"),
+            offer("g/m", "litellm", FreeStatus.FREE, providerId = "gemini")
+        )
+        val hidden = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES, hideLocal = true)
+        assertThat(hidden.status[OfferFilter.FREE]).isEqualTo(1)
+        assertThat(hidden.source[SourceFilter.LITELLM]).isEqualTo(1)
+        val shown = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
+        assertThat(shown.status[OfferFilter.FREE]).isEqualTo(2)
+        assertThat(shown.source[SourceFilter.LITELLM]).isEqualTo(2)
     }
 }

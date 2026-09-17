@@ -499,7 +499,9 @@ fun DashboardScreen(
                     sort = state.sort,
                     sourceLabels = SourceFilter.entries.associateWith { stringResource(it.labelRes) },
                     sortLabels = OfferSort.entries.associateWith { stringResource(it.labelRes) },
-                    defaultTitle = stringResource(R.string.filter_title)
+                    defaultTitle = stringResource(R.string.filter_title),
+                    showLocal = state.showLocal,
+                    localLabel = stringResource(R.string.filter_show_local)
                 ),
                 active = state.showResetFilters,
                 containerSize = containerSize,
@@ -537,7 +539,9 @@ fun DashboardScreen(
                 },
                 onDismiss = { sheetOpen = false; poke() },
                 sort = state.sort,
-                onSelectSort = { userAction(DashboardAction.SelectSort(it)) }
+                onSelectSort = { userAction(DashboardAction.SelectSort(it)) },
+                showLocal = state.showLocal,
+                onToggleShowLocal = { userAction(DashboardAction.SetShowLocal(it)) }
             )
         }
     }
