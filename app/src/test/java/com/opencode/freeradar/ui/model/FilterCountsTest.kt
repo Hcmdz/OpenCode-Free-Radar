@@ -14,7 +14,8 @@ class FilterCountsTest {
         remoteId: String,
         source: String,
         status: FreeStatus = FreeStatus.FREE,
-        compatible: Boolean = true
+        compatible: Boolean = true,
+        favorite: Boolean = false
     ) = Offer(
         remoteId = remoteId,
         providerId = "p",
@@ -39,7 +40,7 @@ class FilterCountsTest {
         retrievedAt = 1_000L,
         verifiedAt = 1_000L,
         confidence = Confidence.OFFICIAL,
-        favorite = false
+        favorite = favorite
     )
 
     private val offers = listOf(
@@ -77,5 +78,16 @@ class FilterCountsTest {
         )
         val counts = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
         assertThat(counts.status[OfferFilter.FREE]).isEqualTo(3)
+    }
+
+    @Test
+    fun `favorite counts ignore status and compatibility`() {
+        val rows = listOf(
+            offer("s/fav-free", "opencode-data", FreeStatus.FREE, favorite = true),
+            offer("s/fav-paid", "opencode-data", FreeStatus.PAID, favorite = true),
+            offer("s/plain", "opencode-data", FreeStatus.FREE, favorite = false)
+        )
+        val counts = facetCounts(rows, OfferFilter.FAVORITE, SourceFilter.ALL_SOURCES)
+        assertThat(counts.status[OfferFilter.FAVORITE]).isEqualTo(2)
     }
 }

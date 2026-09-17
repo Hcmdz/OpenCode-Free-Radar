@@ -126,4 +126,11 @@
     <string name="new_models_new_section">New free models</string>
     <string name="new_models_expired_section">Expired offers</string>
     <string name="new_models_gone">These models are no longer in the catalog.</string>
+    <string name="filter_favorite">Favorites</string>
+    <string name="section_sort">Sort</string>
+    <string name="sort_recent">Recent</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_context">Context</string>
+    <string name="dashboard_subtitle">%1$s • %2$s</string>
+    <string name="hero_stats">%1$d free • %2$d compatible • %3$d sources</string>
 </resources>

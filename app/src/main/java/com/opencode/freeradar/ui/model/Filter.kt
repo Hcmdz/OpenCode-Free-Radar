@@ -10,7 +10,8 @@ enum class OfferFilter(@StringRes val labelRes: Int) {
     ALL(R.string.filter_all),
     FREE(R.string.filter_free),
     COMPATIBLE(R.string.filter_compatible),
-    FREE_COMPATIBLE(R.string.filter_free_compatible)
+    FREE_COMPATIBLE(R.string.filter_free_compatible),
+    FAVORITE(R.string.filter_favorite)
 }
 
 enum class SourceFilter(@StringRes val labelRes: Int, val sourceId: String?) {
@@ -20,14 +21,16 @@ enum class SourceFilter(@StringRes val labelRes: Int, val sourceId: String?) {
 }
 
 fun OfferFilter.freeOnly(): Boolean = when (this) {
-    OfferFilter.ALL, OfferFilter.COMPATIBLE -> false
+    OfferFilter.ALL, OfferFilter.COMPATIBLE, OfferFilter.FAVORITE -> false
     OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE -> true
 }
 
 fun OfferFilter.compatibleOnly(): Boolean = when (this) {
-    OfferFilter.ALL, OfferFilter.FREE -> false
+    OfferFilter.ALL, OfferFilter.FREE, OfferFilter.FAVORITE -> false
     OfferFilter.COMPATIBLE, OfferFilter.FREE_COMPATIBLE -> true
 }
+
+fun OfferFilter.favoriteOnly(): Boolean = this == OfferFilter.FAVORITE
 
 data class FacetCounts(
     val status: Map<OfferFilter, Int>,
@@ -42,7 +45,8 @@ data class FacetCounts(
 fun facetCounts(offers: List<Offer>, filter: OfferFilter, source: SourceFilter): FacetCounts {
     fun List<Offer>.matchingStatus(f: OfferFilter) = filter {
         (!f.freeOnly() || it.freeStatus.isUsableFree()) &&
-            (!f.compatibleOnly() || it.openCodeCompatible)
+            (!f.compatibleOnly() || it.openCodeCompatible) &&
+            (!f.favoriteOnly() || it.favorite)
     }
     val bySource = offers.filter { source.sourceId == null || it.source == source.sourceId }
     val statusCounts = OfferFilter.entries.associateWith { bySource.matchingStatus(it).size }

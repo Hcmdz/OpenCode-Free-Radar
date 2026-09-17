@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +52,7 @@ fun OfferCard(offer: OfferUi, onClick: () -> Unit, onToggleFavorite: () -> Unit)
                     StatusPill(text = stringResource(R.string.status_unverified), tone = StatusTone.NEUTRAL)
                 }
                 offer.contextLength?.let {
-                    AssistChip(onClick = {}, label = { Text("$it tokens") })
+                    StatusPill(text = "$it tokens", tone = StatusTone.NEUTRAL)
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(

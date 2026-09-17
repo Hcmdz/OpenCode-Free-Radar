@@ -4,6 +4,7 @@ package com.opencode.freeradar.ui.screens.dashboard
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
@@ -31,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -39,7 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -62,10 +65,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
@@ -136,21 +141,46 @@ fun DashboardScreen(
     }
     // Visible past the first item only; Scaffold docks it bottom-end (right).
     val showScrollTop = listState.firstVisibleItemIndex > 0
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.testTag("dashboard_screen"),
+        modifier = Modifier
+            .testTag("dashboard_screen")
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            MediumFlexibleTopAppBar(
                 title = {
+                    Text(
+                        text = stringResource(R.string.dashboard_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                subtitle = {
                     val countRes = when (state.filter) {
                         OfferFilter.ALL, OfferFilter.COMPATIBLE -> R.plurals.models_count
-                        OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE -> R.plurals.offers_count
+                        OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE,
+                        OfferFilter.FAVORITE -> R.plurals.offers_count
+                    }
+                    val count = pluralStringResource(
+                        countRes,
+                        state.offers.size,
+                        state.offers.size
+                    )
+                    val age = state.lastSyncAt?.let {
+                        DateUtils.getRelativeTimeSpanString(
+                            it,
+                            System.currentTimeMillis(),
+                            DateUtils.MINUTE_IN_MILLIS
+                        ).toString()
                     }
                     Text(
-                        pluralStringResource(
-                            countRes,
-                            state.offers.size,
-                            state.offers.size
-                        )
+                        text = if (age != null) {
+                            stringResource(R.string.dashboard_subtitle, count, age)
+                        } else {
+                            count
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 actions = {
@@ -163,7 +193,8 @@ fun DashboardScreen(
                             contentDescription = stringResource(R.string.desc_settings)
                         )
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
@@ -218,11 +249,42 @@ fun DashboardScreen(
                     onAction(DashboardAction.ResetFilters)
                 },
                 onOpenSheet = dismissSearch,
+                sort = state.sort,
+                onSelectSort = { onAction(DashboardAction.SelectSort(it)) },
                 modifier = Modifier
                     .testTag("dashboard_filter")
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
+            if (state.filter == OfferFilter.FREE &&
+                state.sourceFilter == SourceFilter.ALL_SOURCES &&
+                state.query.isBlank() &&
+                !state.offline &&
+                state.offers.isNotEmpty()
+            ) {
+                val activeSources = state.sourceCounts
+                    .count { it.key.sourceId != null && it.value > 0 }
+                Surface(
+                    modifier = Modifier
+                        .testTag("dashboard_hero")
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.hero_stats,
+                            state.statusCounts[OfferFilter.FREE] ?: 0,
+                            state.statusCounts[OfferFilter.COMPATIBLE] ?: 0,
+                            activeSources
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+            }
             state.error?.let { error ->
                 ErrorBanner(
                     message = error.text(),
@@ -245,12 +307,9 @@ fun DashboardScreen(
                 }
 
                 state.offers.isEmpty() -> when {
-                    state.isRefreshing && state.lastSyncAt == null -> Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    state.isRefreshing && state.lastSyncAt == null -> LoadingSkeleton(
+                        modifier = Modifier.fillMaxSize()
+                    )
                     state.isBaseEmpty -> Box(
                         modifier = Modifier.fillMaxSize().padding(24.dp),
                         contentAlignment = Alignment.Center
@@ -542,9 +601,59 @@ private fun SearchInput(
     )
 }
 
+/** First-sync placeholder: static card ghosts, never a spinner flash. */
 @Composable
-private fun OfflineBanner(lastSyncAt: Long?) {
-    val age = lastSyncAt?.let {
+private fun LoadingSkeleton(modifier: Modifier = Modifier) {
+    val ghost = MaterialTheme.colorScheme.surfaceContainerHighest
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        repeat(5) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("dashboard_skeleton_card"),
+                shape = MaterialTheme.shapes.extraLarge
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(20.dp)
+                            .background(ghost, MaterialTheme.shapes.small)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.4f)
+                            .height(14.dp)
+                            .background(ghost, MaterialTheme.shapes.small)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.25f)
+                                .height(28.dp)
+                                .background(ghost, MaterialTheme.shapes.small)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.3f)
+                                .height(28.dp)
+                                .background(ghost, MaterialTheme.shapes.small)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OfflineBanner(lastSyncAt: Long?) {    val age = lastSyncAt?.let {
         DateUtils.getRelativeTimeSpanString(it, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
             .toString()
     } ?: stringResource(R.string.value_unknown)

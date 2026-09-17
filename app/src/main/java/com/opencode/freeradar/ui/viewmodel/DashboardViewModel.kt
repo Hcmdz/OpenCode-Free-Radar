@@ -11,13 +11,16 @@ import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.OfferSort
 import com.opencode.freeradar.domain.model.isUsableFree
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.UiText
 import com.opencode.freeradar.ui.model.compatibleOnly
 import com.opencode.freeradar.ui.model.facetCounts
+import com.opencode.freeradar.ui.model.favoriteOnly
 import com.opencode.freeradar.ui.model.freeOnly
+import com.opencode.freeradar.ui.model.sortComparator
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
 import com.opencode.freeradar.util.NetworkMonitor
@@ -42,6 +45,7 @@ data class DashboardUiState(
     val offers: List<OfferUi> = emptyList(),
     val filter: OfferFilter = OfferFilter.FREE,
     val sourceFilter: SourceFilter = SourceFilter.ALL_SOURCES,
+    val sort: OfferSort = OfferSort.RECENT,
     val query: String = "",
     val recentSearches: List<String> = emptyList(),
     val statusCounts: Map<OfferFilter, Int> = emptyMap(),
@@ -59,6 +63,7 @@ sealed interface DashboardAction {
     data object Refresh : DashboardAction
     data class SelectFilter(val filter: OfferFilter) : DashboardAction
     data class SelectSource(val source: SourceFilter) : DashboardAction
+    data class SelectSort(val sort: OfferSort) : DashboardAction
     data object ResetFilters : DashboardAction
     data class OpenOffer(val remoteId: String) : DashboardAction
     data class SubmitSearch(val query: String) : DashboardAction
@@ -88,6 +93,7 @@ class DashboardViewModel(
 
     private val filter = MutableStateFlow(OfferFilter.FREE)
     private val sourceFilter = MutableStateFlow(SourceFilter.ALL_SOURCES)
+    private val sort = MutableStateFlow(OfferSort.RECENT)
     private val refreshing = MutableStateFlow(false)
     private val manualError = MutableStateFlow<UiText?>(null)
     private val query = MutableStateFlow("")
@@ -131,14 +137,24 @@ class DashboardViewModel(
     private data class Prefs(
         val filter: OfferFilter,
         val source: SourceFilter,
+        val sort: OfferSort,
         val refreshing: Boolean,
         val error: UiText?,
         val query: String,
         val recentSearches: List<String> = emptyList()
     )
 
-    private val prefsFlow = combine(filter, sourceFilter, refreshing, manualError, query, ::Prefs)
-        .combine(recents) { prefs, recents -> prefs.copy(recentSearches = recents) }
+    private val prefsFlow = combine(filter, sourceFilter, sort, ::Triple)
+        .combine(combine(refreshing, manualError, query, ::Triple)) { selections, flags ->
+            Prefs(
+                filter = selections.first,
+                source = selections.second,
+                sort = selections.third,
+                refreshing = flags.first,
+                error = flags.second,
+                query = flags.third
+            )
+        }.combine(recents) { prefs, recents -> prefs.copy(recentSearches = recents) }
 
     // Debounced for filtering only: the field itself always shows the raw
     // query, otherwise a stale display value reverts keystrokes mid-typing.
@@ -178,11 +194,14 @@ class DashboardViewModel(
                 offers = offers
                     .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
+                    .filter { !prefs.filter.favoriteOnly() || it.favorite }
                     .filter { prefs.source.sourceId == null || it.source == prefs.source.sourceId }
                     .filter { matchesQuery(it, activeQuery) }
+                    .sortedWith(sortComparator(prefs.sort))
                     .map { it.toUi() },
                 filter = prefs.filter,
                 sourceFilter = prefs.source,
+                sort = prefs.sort,
                 query = prefs.query,
                 recentSearches = prefs.recentSearches,
                 statusCounts = counts.status,
@@ -233,9 +252,11 @@ class DashboardViewModel(
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter
             is DashboardAction.SelectSource -> sourceFilter.value = action.source
+            is DashboardAction.SelectSort -> sort.value = action.sort
             DashboardAction.ResetFilters -> {
                 filter.value = OfferFilter.FREE
                 sourceFilter.value = SourceFilter.ALL_SOURCES
+                sort.value = OfferSort.RECENT
             }
             is DashboardAction.OpenOffer -> events.trySend(DashboardEvent.OpenDetails(action.remoteId))
             is DashboardAction.Search -> query.value = action.query

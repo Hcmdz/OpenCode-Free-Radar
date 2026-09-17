@@ -145,4 +145,11 @@
     <string name="new_models_new_section">نماذج مجانية جديدة</string>
     <string name="new_models_expired_section">عروض منتهية</string>
     <string name="new_models_gone">لم تعد هذه النماذج في الكتالوج.</string>
+    <string name="filter_favorite">المفضلة</string>
+    <string name="section_sort">الترتيب</string>
+    <string name="sort_recent">الأحدث</string>
+    <string name="sort_name">الاسم</string>
+    <string name="sort_context">السياق</string>
+    <string name="dashboard_subtitle">%1$s • %2$s</string>
+    <string name="hero_stats">%1$d مجاني • %2$d متوافق • %3$d مصادر</string>
 </resources>

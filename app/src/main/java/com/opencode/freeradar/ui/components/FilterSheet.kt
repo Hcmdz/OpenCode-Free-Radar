@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.opencode.freeradar.R
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.OfferSort
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.theme.AppThemePreview
 
@@ -62,13 +63,16 @@ fun FilterBarButton(
 private fun activeSummary(
     filter: OfferFilter,
     source: SourceFilter,
+    sort: OfferSort,
     filterLabels: Map<OfferFilter, String>,
     sourceLabels: Map<SourceFilter, String>,
+    sortLabels: Map<OfferSort, String>,
     defaultTitle: String
 ): String {
     val parts = buildList<String> {
         if (filter != OfferFilter.FREE) add(filterLabels.getValue(filter))
         if (source != SourceFilter.ALL_SOURCES) add(sourceLabels.getValue(source))
+        if (sort != OfferSort.RECENT) add(sortLabels.getValue(sort))
     }
     return parts.ifEmpty { listOf(defaultTitle) }.joinToString(" • ")
 }
@@ -86,6 +90,8 @@ fun FilterSheet(
     onSelectSource: (SourceFilter) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
+    sort: OfferSort = OfferSort.RECENT,
+    onSelectSort: (OfferSort) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (!visible) return
@@ -153,6 +159,32 @@ fun FilterSheet(
                     }
                 }
             }
+            Text(
+                text = stringResource(R.string.section_sort),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Column(Modifier.selectableGroup()) {
+                OfferSort.entries.forEach { entry ->
+                    val selected = entry == sort
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = selected,
+                                role = Role.RadioButton,
+                                onClick = { onSelectSort(entry) }
+                            )
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        RadioButton(selected = selected, onClick = null)
+                        Text(text = stringResource(entry.labelRes))
+                    }
+                }
+            }
             if (showReset) {
                 TextButton(
                     onClick = onReset,
@@ -180,6 +212,8 @@ fun FilterBar(
     onSelectSource: (SourceFilter) -> Unit,
     onReset: () -> Unit,
     onOpenSheet: () -> Unit = {},
+    sort: OfferSort = OfferSort.RECENT,
+    onSelectSort: (OfferSort) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var open by remember { mutableStateOf(false) }
@@ -188,8 +222,10 @@ fun FilterBar(
         summary = activeSummary(
             filter = filter,
             source = sourceFilter,
+            sort = sort,
             filterLabels = OfferFilter.entries.associateWith { stringResource(it.labelRes) },
             sourceLabels = SourceFilter.entries.associateWith { stringResource(it.labelRes) },
+            sortLabels = OfferSort.entries.associateWith { stringResource(it.labelRes) },
             defaultTitle = title
         ),
         onOpen = {
@@ -208,7 +244,9 @@ fun FilterBar(
         onSelectFilter = onSelectFilter,
         onSelectSource = onSelectSource,
         onReset = onReset,
-        onDismiss = { open = false }
+        onDismiss = { open = false },
+        sort = sort,
+        onSelectSort = onSelectSort
     )
 }
 
