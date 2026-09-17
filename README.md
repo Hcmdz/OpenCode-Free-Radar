@@ -15,11 +15,13 @@ by Anomaly Innovations, Inc.
 ## Features
 
 - Daily catalog sync from public model indexes (models.dev, OpenRouter, OpenCode Zen roster)
+- Wi-Fi-only mode, metered-data guard, and auto first sync on install
 - Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY), paid and expired offers filtered out
 - OpenCode compatibility flags (tool calling, vision, reasoning)
 - Price history and change log per model, stored on device
-- Favorites, filters, offline-first Room database
-- Daily background sync via WorkManager, alerts on new freebies
+- Favorites with dedicated filter, status/source views, sort by recent, name, or context
+- Offline-first Room database, immersive fullscreen with collapsing title bar and sync age
+- Daily background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers
 - In-app updates via GitHub Releases (daily check, SHA-256 verified download)
 - English, French, and Arabic UI with RTL layout support
 - Material 3 dynamic color with dark and high-contrast themes
@@ -36,7 +38,7 @@ by Anomaly Innovations, Inc.
 
 - Kotlin 2.4.10, Jetpack Compose + Material 3 Expressive
 - Single `:app` module, MVI with StateFlow, Navigation 3
-- Koin (DI), Room 3.0 (source of truth), Ktor (network)
+- Koin (DI), Room 3.0.3 (source of truth), Ktor (network)
 - DataStore (settings), WorkManager (daily sync)
 - JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E)
 - minSdk 29, targetSdk 36, JDK 17, AGP 9.4.0
