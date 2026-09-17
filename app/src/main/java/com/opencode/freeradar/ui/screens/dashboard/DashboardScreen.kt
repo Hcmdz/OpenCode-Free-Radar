@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -68,8 +69,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.pluralStringResource
@@ -84,14 +87,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.ui.components.ErrorBanner
-import com.opencode.freeradar.ui.components.FilterBar
 import com.opencode.freeradar.ui.components.FilterChipsRow
+import com.opencode.freeradar.ui.components.FilterFab
+import com.opencode.freeradar.ui.components.FilterSheet
 import com.opencode.freeradar.ui.components.OfferCard
 import com.opencode.freeradar.ui.components.PrimaryPillButton
 import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
+import com.opencode.freeradar.ui.components.activeSummary
 import com.opencode.freeradar.ui.model.OfferFilter
+import com.opencode.freeradar.ui.model.OfferSort
 import com.opencode.freeradar.ui.model.OfferUi
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.sourceLabel
@@ -131,6 +137,7 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
+    var sheetOpen by remember { mutableStateOf(false) }
     // ponytail: single dismiss path for back-press, tap-outside and filter taps.
     val dismissSearch = {
         searchExpanded = false
@@ -224,8 +231,13 @@ fun DashboardScreen(
     ) { padding ->
         // Truly floating search: overlay in a Box over the list instead of a
         // docked bottomBar slot. The dock hosts our debugged input (raw display
-        // value) in a plain container.
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        // value) in a plain container. BoxWithConstraints feeds the draggable
+        // filter FAB its container size for clamping.
+        BoxWithConstraints(modifier = Modifier.padding(padding).fillMaxSize()) {
+            val density = LocalDensity.current
+            val containerSize = with(density) {
+                IntSize(maxWidth.roundToPx(), maxHeight.roundToPx())
+            }
             // Tap-outside dismiss: pointerInput adds no semantics, so TalkBack
             // never sees this layer. Scoped to the content column only — the
             // bottom search dock is a sibling and never collapses itself.
@@ -239,32 +251,6 @@ fun DashboardScreen(
             if (state.offline) {
                 OfflineBanner(lastSyncAt = state.lastSyncAt)
             }
-            FilterBar(
-                filter = state.filter,
-                sourceFilter = state.sourceFilter,
-                statusCounts = state.statusCounts,
-                sourceCounts = state.sourceCounts,
-                showReset = state.showResetFilters,
-                onSelectFilter = {
-                    dismissSearch()
-                    onAction(DashboardAction.SelectFilter(it))
-                },
-                onSelectSource = {
-                    dismissSearch()
-                    onAction(DashboardAction.SelectSource(it))
-                },
-                onReset = {
-                    dismissSearch()
-                    onAction(DashboardAction.ResetFilters)
-                },
-                onOpenSheet = dismissSearch,
-                sort = state.sort,
-                onSelectSort = { onAction(DashboardAction.SelectSort(it)) },
-                modifier = Modifier
-                    .testTag("dashboard_filter")
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
             FilterChipsRow(
                 filter = state.filter,
                 statusCounts = state.statusCounts,
@@ -474,6 +460,51 @@ fun DashboardScreen(
                     )
                 }
             }
+            // Draggable filter entry point, declared last so it stays on top of
+            // the content column (tap-outside layer never sees its touches).
+            // Anchored bottom-end above the search dock; drag offset is relative.
+            FilterFab(
+                summary = activeSummary(
+                    source = state.sourceFilter,
+                    sort = state.sort,
+                    sourceLabels = SourceFilter.entries.associateWith { stringResource(it.labelRes) },
+                    sortLabels = OfferSort.entries.associateWith { stringResource(it.labelRes) },
+                    defaultTitle = stringResource(R.string.filter_title)
+                ),
+                active = state.showResetFilters,
+                containerSize = containerSize,
+                onOpen = {
+                    dismissSearch()
+                    sheetOpen = true
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .testTag("dashboard_filter"),
+                bottomPadding = OverlayDockReserve + 16.dp
+            )
+            FilterSheet(
+                visible = sheetOpen,
+                filter = state.filter,
+                sourceFilter = state.sourceFilter,
+                statusCounts = state.statusCounts,
+                sourceCounts = state.sourceCounts,
+                showReset = state.showResetFilters,
+                onSelectFilter = {
+                    dismissSearch()
+                    onAction(DashboardAction.SelectFilter(it))
+                },
+                onSelectSource = {
+                    dismissSearch()
+                    onAction(DashboardAction.SelectSource(it))
+                },
+                onReset = {
+                    dismissSearch()
+                    onAction(DashboardAction.ResetFilters)
+                },
+                onDismiss = { sheetOpen = false },
+                sort = state.sort,
+                onSelectSort = { onAction(DashboardAction.SelectSort(it)) }
+            )
         }
     }
     if (state.meteredWarning) {

@@ -1,14 +1,27 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.IntSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.opencode.freeradar.ui.components.FilterBar
 import com.opencode.freeradar.ui.components.FilterChipsRow
+import com.opencode.freeradar.ui.components.FilterFab
+import com.opencode.freeradar.ui.components.FilterSheet
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.theme.AppThemePreview
@@ -16,7 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Filter bottom sheet: opens from the bar button and emits selections. */
+/** Filter bottom sheet: opens from the FAB and emits selections. */
 @RunWith(AndroidJUnit4::class)
 class FilterSheetTest {
 
@@ -29,16 +42,34 @@ class FilterSheetTest {
     ) {
         rule.setContent {
             AppThemePreview {
-                FilterBar(
-                    filter = OfferFilter.FREE,
-                    sourceFilter = SourceFilter.ALL_SOURCES,
-                    statusCounts = OfferFilter.entries.associateWith { 1 },
-                    sourceCounts = SourceFilter.entries.associateWith { 2 },
-                    showReset = true,
-                    onSelectFilter = onSelectFilter,
-                    onSelectSource = onSelectSource,
-                    onReset = {}
-                )
+                var open by remember { mutableStateOf(false) }
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val density = LocalDensity.current
+                    val container = with(density) {
+                        IntSize(maxWidth.roundToPx(), maxHeight.roundToPx())
+                    }
+                    FilterFab(
+                        summary = "Filters",
+                        active = true,
+                        containerSize = container,
+                        onOpen = { open = true },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .testTag("dashboard_filter")
+                    )
+                    FilterSheet(
+                        visible = open,
+                        filter = OfferFilter.FREE,
+                        sourceFilter = SourceFilter.ALL_SOURCES,
+                        statusCounts = OfferFilter.entries.associateWith { 1 },
+                        sourceCounts = SourceFilter.entries.associateWith { 2 },
+                        showReset = true,
+                        onSelectFilter = onSelectFilter,
+                        onSelectSource = onSelectSource,
+                        onReset = {},
+                        onDismiss = { open = false }
+                    )
+                }
             }
         }
     }
@@ -47,7 +78,7 @@ class FilterSheetTest {
     fun sheetOpensAndSelectsSource() {
         val selected = mutableListOf<SourceFilter>()
         content(onSelectSource = selected::add)
-        rule.onNodeWithText("Filters").performClick()
+        rule.onNodeWithTag("dashboard_filter").performClick()
         rule.onNodeWithTag("filter_sheet").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").performClick()
@@ -57,7 +88,7 @@ class FilterSheetTest {
     @Test
     fun sheetShowsBothSectionsWithCounts() {
         content()
-        rule.onNodeWithText("Filters").performClick()
+        rule.onNodeWithTag("dashboard_filter").performClick()
         rule.onNodeWithText("Free (1)").assertIsDisplayed()
         rule.onNodeWithText("OpenCode (2)").assertIsDisplayed()
     }

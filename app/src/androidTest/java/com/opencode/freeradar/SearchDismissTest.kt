@@ -142,4 +142,15 @@ class SearchDismissTest {
         // Only the panel folds; the typed query survives in the field.
         rule.onNodeWithTag("dashboard_search").assertTextContains("muse")
     }
+
+    @Test
+    fun draggingFilterFabKeepsItUsable() {
+        val query = mutableStateOf("")
+        setScreen(query, mutableListOf())
+        rule.onNodeWithTag("dashboard_filter").performTouchInput { swipeUp() }
+        // Drag repositions inside the container: still visible, still opening.
+        rule.onNodeWithTag("dashboard_filter").assertIsDisplayed()
+        rule.onNodeWithTag("dashboard_filter").performClick()
+        rule.onNodeWithTag("filter_option_all").assertIsDisplayed()
+    }
 }
