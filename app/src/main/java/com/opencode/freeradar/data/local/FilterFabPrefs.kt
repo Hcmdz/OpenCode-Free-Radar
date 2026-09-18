@@ -33,6 +33,8 @@ class FilterFabPrefs(private val context: Context) {
     private object Keys {
         val PEEK_DELAY = longPreferencesKey("peek_delay_millis")
         val PEEK_SLIVER = intPreferencesKey("peek_sliver_dp")
+        val FAB_OFFSET_X = intPreferencesKey("fab_offset_x")
+        val FAB_OFFSET_Y = intPreferencesKey("fab_offset_y")
     }
 
     val peekDelayMillis: Flow<Long> = context.filterFabStore.data
@@ -62,6 +64,27 @@ class FilterFabPrefs(private val context: Context) {
     suspend fun setPeekSliverDp(sliverDp: Int) {
         context.filterFabStore.edit {
             it[Keys.PEEK_SLIVER] = sliverDp.coerceIn(MIN_SLIVER_DP, MAX_SLIVER_DP)
+        }
+    }
+
+    /**
+     * Dragged FAB position in pixels, null when never dragged (anchor
+     * default). Restored offsets are re-clamped by the FAB math every
+     * recomposition, so a value saved on another screen size or density
+     * can never strand the button off-screen.
+     */
+    val fabOffset: Flow<Pair<Int, Int>?> = context.filterFabStore.data
+        .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
+        .map { prefs ->
+            val x = prefs[Keys.FAB_OFFSET_X] ?: return@map null
+            val y = prefs[Keys.FAB_OFFSET_Y] ?: return@map null
+            x to y
+        }
+
+    suspend fun setFabOffset(x: Int, y: Int) {
+        context.filterFabStore.edit {
+            it[Keys.FAB_OFFSET_X] = x
+            it[Keys.FAB_OFFSET_Y] = y
         }
     }
 }

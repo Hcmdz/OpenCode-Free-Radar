@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.ui.components
 
-import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -16,9 +17,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.opencode.freeradar.data.local.FilterFabPrefs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 const val PEEK_ANIM_MILLIS = 220
 
@@ -154,10 +158,31 @@ fun FilterFab(
     peeked: Boolean = false,
     sliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP,
     onUserInteraction: () -> Unit = {},
-    onDraggingChange: (Boolean) -> Unit = {}
+    onDraggingChange: (Boolean) -> Unit = {},
+    /** Last persisted drag position, null when never dragged (anchor). */
+    persistedOffset: IntOffset? = null,
+    /** Called once per drop with the snapped position; never mid-drag. */
+    onPersistOffset: (IntOffset) -> Unit = {}
 ) {
     var dragOffset by rememberSaveable(stateSaver = IntOffsetSaver) {
         mutableStateOf(IntOffset.Zero)
+    }
+    // One-shot restore: disk wins only on first load, afterwards memory
+    // (fresher: it includes drops whose DataStore write is still in
+    // flight). Without the lock, a late emission arriving after the user
+    // already dragged elsewhere yanks the button back mid-gesture.
+    var restored by rememberSaveable { mutableStateOf(false) }
+    // Single animated truth: drags write it instantly (snapTo), peek and
+    // restore glide through it (animateTo). Nothing ever chases the finger
+    // with a lagging tween, so release can't jump backwards.
+    val animScope = rememberCoroutineScope()
+    val animOffset = remember { Animatable(IntOffset.Zero, IntOffset.VectorConverter) }
+    LaunchedEffect(persistedOffset) {
+        if (!restored && persistedOffset != null) {
+            dragOffset = persistedOffset
+            animOffset.snapTo(persistedOffset)
+            restored = true
+        }
     }
     var fabSize by remember { mutableStateOf(IntSize.Zero) }
     var dragging by remember { mutableStateOf(false) }
@@ -166,19 +191,26 @@ fun FilterFab(
     val padBottomPx = with(density) { bottomPadding.roundToPx() }
     val sliverPx = with(density) { sliverDp.dp.roundToPx() }
     val dockedOffset = coerceFabOffset(dragOffset, containerSize, fabSize, padEndPx, padBottomPx)
-    // Null while the finger is down: raw snap, no chase lag. Everywhere else
-    // the display animates toward the target, so release-snap, peek and
-    // restore all glide instead of jumping.
-    val programmaticTarget = when {
-        dragging -> null
-        peeked -> peekTarget(dockedOffset, containerSize, fabSize, padEndPx, padBottomPx, sliverPx)
-        else -> dockedOffset
+    // Peek and restore are the only glides. Restarting this effect cancels
+    // the in-flight one, so a tap mid-peek never fights the peek slide.
+    // Gated on a pending restore: at startup this effect would otherwise
+    // capture the pre-restore docked position and glide the freshly
+    // restored button back to the anchor, racing the restore snap.
+    // Null persisted (never dragged) needs no gate. Keyed on all three
+    // so every interleaving converges on the post-restore target.
+    LaunchedEffect(peeked, restored, persistedOffset) {
+        if (!restored && persistedOffset != null) return@LaunchedEffect
+        val target = if (peeked) {
+            peekTarget(dockedOffset, containerSize, fabSize, padEndPx, padBottomPx, sliverPx)
+        } else {
+            dockedOffset
+        }
+        animOffset.animateTo(target, tween(PEEK_ANIM_MILLIS))
     }
-    val animatedOffset by animateIntOffsetAsState(
-        targetValue = programmaticTarget ?: dockedOffset,
-        animationSpec = tween(PEEK_ANIM_MILLIS)
-    )
-    val displayedOffset = if (programmaticTarget == null) dockedOffset else animatedOffset
+    // Raw while the finger is down, animated truth everywhere else. Drops
+    // snap the animation instantly (see onDragEnd), so the display never
+    // sits on a lagging value.
+    val displayedOffset = if (dragging) dockedOffset else animOffset.value
     // Icon-only small FAB: the summary text is gone from the screen, so the
     // localized summary becomes the TalkBack label (one node: label + tap).
     SmallFloatingActionButton(
@@ -196,9 +228,10 @@ fun FilterFab(
             .pointerInput(containerSize, fabSize, padEndPx, padBottomPx) {
                 detectDragGestures(
                     onDragStart = {
-                        // Grab continuity: dropping the finger mid-glide must
-                        // not teleport the FAB back to the docked position.
-                        dragOffset = animatedOffset
+                        // Grab continuity: taking over mid-glide (e.g. a
+                        // peek slide) resumes from the drawn position,
+                        // never teleports back to the docked one.
+                        dragOffset = animOffset.value
                         dragging = true
                         onDraggingChange(true)
                         onUserInteraction()
@@ -221,17 +254,23 @@ fun FilterFab(
                         dragOffset = snappedOffset(
                             dragOffset, containerSize, fabSize, padEndPx, padBottomPx
                         )
+                        // Instant: the display must sit on the snapped spot,
+                        // not on a tween still chasing the finger.
+                        animScope.launch { animOffset.snapTo(dragOffset) }
                         dragging = false
                         onDraggingChange(false)
                         onUserInteraction()
+                        onPersistOffset(dragOffset)
                     },
                     onDragCancel = {
                         dragOffset = snappedOffset(
                             dragOffset, containerSize, fabSize, padEndPx, padBottomPx
                         )
+                        animScope.launch { animOffset.snapTo(dragOffset) }
                         dragging = false
                         onDraggingChange(false)
                         onUserInteraction()
+                        onPersistOffset(dragOffset)
                     }
                 )
             }

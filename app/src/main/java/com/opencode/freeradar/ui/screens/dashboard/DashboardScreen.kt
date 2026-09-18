@@ -6,6 +6,7 @@ import android.text.format.DateUtils
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -74,6 +75,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -128,18 +130,26 @@ fun DashboardRoot(
     }
     val appContext = LocalContext.current.applicationContext
     val fabPrefs = remember { FilterFabPrefs(appContext) }
+    val persistScope = rememberCoroutineScope()
     val peekDelayMs by fabPrefs.peekDelayMillis.collectAsStateWithLifecycle(
         initialValue = FilterFabPrefs.DEFAULT_DELAY_MILLIS
     )
     val peekSliverDp by fabPrefs.peekSliverDp.collectAsStateWithLifecycle(
         initialValue = FilterFabPrefs.DEFAULT_SLIVER_DP
     )
+    val persistedFabOffset by fabPrefs.fabOffset.collectAsStateWithLifecycle(
+        initialValue = null
+    )
     DashboardScreen(
         state = state,
         onAction = viewModel::onAction,
         onOpenSettings = onOpenSettings,
         peekDelayMs = peekDelayMs,
-        peekSliverDp = peekSliverDp
+        peekSliverDp = peekSliverDp,
+        persistedFabOffset = persistedFabOffset?.let { (x, y) -> IntOffset(x, y) },
+        onPersistFabOffset = { offset ->
+            persistScope.launch { fabPrefs.setFabOffset(offset.x, offset.y) }
+        }
     )
 }
 
@@ -151,7 +161,11 @@ fun DashboardScreen(
     onOpenSettings: () -> Unit = {},
     filterAutoPeek: Boolean = true,
     peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
-    peekSliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP
+    peekSliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP,
+    /** Last persisted drag position, null when never dragged (anchor). */
+    persistedFabOffset: IntOffset? = null,
+    /** Called once per filter-FAB drop with the snapped position. */
+    onPersistFabOffset: (IntOffset) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -209,6 +223,13 @@ fun DashboardScreen(
     }
     // Visible past the first item only; Scaffold docks it bottom-end (right).
     val showScrollTop = listState.firstVisibleItemIndex > 0
+    // The filter FAB shares the bottom-end corner: while the scroll-top
+    // button is up, the anchor glides one button-height plus air above it
+    // instead of stacking both pastilles on the same spot.
+    val filterLift by animateDpAsState(
+        targetValue = if (showScrollTop) ScrollTopClearance else 0.dp,
+        label = "filterLift"
+    )
     Scaffold(
         modifier = Modifier.testTag("dashboard_screen"),
         topBar = {
@@ -512,11 +533,13 @@ fun DashboardScreen(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .testTag("dashboard_filter"),
-                bottomPadding = OverlayDockReserve + 16.dp,
+                bottomPadding = OverlayDockReserve + 16.dp + filterLift,
                 peeked = peeked,
                 sliverDp = peekSliverDp,
                 onUserInteraction = { poke() },
-                onDraggingChange = { fabDragging = it }
+                onDraggingChange = { fabDragging = it },
+                persistedOffset = persistedFabOffset,
+                onPersistOffset = onPersistFabOffset
             )
             FilterSheet(
                 visible = sheetOpen,
@@ -581,6 +604,9 @@ fun DashboardScreen(
 
 /** Space reserved under the floating search dock (bar + margins). */
 private val OverlayDockReserve = 96.dp
+
+/** Filter-FAB lift while the scroll-top button is up: its height + air. */
+private val ScrollTopClearance = 48.dp
 
 @Composable
 private fun SuggestionsPanel(
