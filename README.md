@@ -18,13 +18,14 @@ by Anomaly Innovations, Inc.
 
 ## Features
 
-- Daily catalog sync from public model indexes (models.dev, OpenRouter, OpenCode Zen roster)
+- Daily catalog sync from public model indexes (models.dev, OpenRouter, LiteLLM price map, OpenCode Zen roster)
 - Wi-Fi-only mode, metered-data guard, and auto first sync on install
 - Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY), paid and expired offers filtered out
 - OpenCode compatibility flags (tool calling, vision, reasoning)
 - Price history and change log per model, stored on device
 - Favorites with dedicated filter, status/source views, sort by recent, name, or context
-- Offline-first Room database, immersive fullscreen with collapsing title bar and sync age
+- Third catalog source (LiteLLM) with local and self-hosted rows hidden by default behind a switch and marked with a Local pill
+- Offline-first Room database, compact pinned top bar with count and sync age
 - Daily background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers
 - In-app updates via GitHub Releases (daily check, SHA-256 verified download)
 - English, French, and Arabic UI with RTL layout support
@@ -85,7 +86,7 @@ app/src/main/java/com/opencode/freeradar/
 ├── worker/          # WorkManager daily sync (SyncWorker, SyncScheduler)
 ├── notifications/   # Alert channels and gates
 └── di/              # Koin modules
-docs/sources/        # Per-source notes (models.dev, OpenRouter, Zen roster)
+docs/sources/        # Per-source notes (models.dev, OpenRouter, LiteLLM, Zen roster, rejected candidates)
 ```
 
 ## Contributing
