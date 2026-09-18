@@ -1,37 +1,67 @@
 # OpenCode Free Radar
 
+[![OpenCode Free Radar](docs/assets/feature-graphic.png)](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)
+
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg?logo=android)](https://www.android.com)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg?logo=kotlin)](https://kotlinlang.org)
 [![MinSDK](https://img.shields.io/badge/MinSDK-29-orange.svg)](#)
 [![TargetSDK](https://img.shields.io/badge/TargetSDK-36-blue.svg)](#)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Release](https://img.shields.io/github/v/release/Hcmdz/OpenCode-Free-Radar)](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Hcmdz/OpenCode-Free-Radar/total)](https://github.com/Hcmdz/OpenCode-Free-Radar/releases)
+[![Stars](https://img.shields.io/github/stars/Hcmdz/OpenCode-Free-Radar)](https://github.com/Hcmdz/OpenCode-Free-Radar/stargazers)
+[![Forks](https://img.shields.io/github/forks/Hcmdz/OpenCode-Free-Radar)](https://github.com/Hcmdz/OpenCode-Free-Radar/network/members)
+[![Compose M3 Expressive](https://img.shields.io/badge/Jetpack_Compose-Material_3_Expressive-4285F4.svg?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 
 Native Android app that tracks AI models free to use with
 [OpenCode](https://opencode.ai) and notifies you when new free offers appear.
+
+Free tiers appear and vanish without warning — a model that's free today is
+paywalled tomorrow. OpenCode Free Radar is the offline-first watchtower: every
+free offer tracked once, changes surfaced in seconds, history kept on device.
 
 Unofficial community project — not affiliated with, endorsed, or sponsored
 by Anomaly Innovations, Inc.
 
 - **Package**: `com.opencode.freeradar`
 - **Version**: 0.3.0
-- **Author**: HcmDZ &lt;HcmDz.Dev@gmail.com&gt;
+- **Author**: HcmDZ &lt;[REDACTED]&gt;
+
+---
+
+## 📦 Downloads
+
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.3.0.apk`, ~4.1 MB).
+
+- Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
+- Verify integrity: `sha256sum -c OFR-release.v0.3.0.apk.sha256` (sidecar next to the APK).
+- In-app updates check GitHub Releases daily and verify the SHA-256 before install.
+
+---
 
 ## Features
 
-- Daily catalog sync from public model indexes (models.dev, OpenRouter, LiteLLM price map, OpenCode Zen roster)
-- Wi-Fi-only mode, metered-data guard, and auto first sync on install
-- Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY), paid and expired offers filtered out
-- OpenCode compatibility flags (tool calling, vision, reasoning)
-- Price history and change log per model, stored on device
-- Favorites with dedicated filter, status/source views, sort by recent, name, or context
-- Third catalog source (LiteLLM) with local and self-hosted rows hidden by default behind a switch and marked with a Local pill
-- Offline-first Room database, compact pinned top bar with count and sync age
-- Daily background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers
-- In-app updates via GitHub Releases (daily check, SHA-256 verified download)
-- English, French, and Arabic UI with RTL layout support
-- Material 3 dynamic color with dark and high-contrast themes
+### Catalog
+- **Every free offer on record.** Daily catalog sync from public model indexes (models.dev, OpenRouter, LiteLLM price map, OpenCode Zen roster).
+- **Know what's actually usable.** Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY); paid and expired offers filtered out.
+- **Know what runs where.** OpenCode compatibility flags (tool calling, vision, reasoning).
+- **Local stays local.** Third catalog source (LiteLLM) with local and self-hosted rows hidden by default behind a switch and marked with a Local pill.
+
+### Sync & alerts
+- **Never miss a new freebie.** Daily background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers.
+- **Your data plan survives.** Wi-Fi-only mode, metered-data guard, and auto first sync on install.
+- **History on device.** Price history and change log per model, stored on device.
+
+### App
+- **Your shortlist.** Favorites with dedicated filter, status/source views, sort by recent, name, or context.
+- **Always up to date.** In-app updates via GitHub Releases (daily check, SHA-256 verified download).
+- **Offline-first.** Room database, compact pinned top bar with count and sync age.
+- **Speaks your language.** English, French, and Arabic UI with RTL layout support.
+- **Looks at home.** Material 3 dynamic color with dark and high-contrast themes.
 
 ## Screenshots
+
+Every free offer at a glance, light or dark — dashboard, filters, and settings.
 
 | Light — free filter | Dark — free filter |
 |---|---|
@@ -41,14 +71,25 @@ by Anomaly Innovations, Inc.
 | Settings | Filter sheet |
 | <img src="screenshots/settings-v2.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet-v2.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
 
+Fine-tune sources, appearance, and sync behavior in one place.
+
 ## Tech stack
 
-- Kotlin 2.4.10, Jetpack Compose + Material 3 Expressive
-- Single `:app` module, MVI with StateFlow, Navigation 3
-- Koin (DI), Room 3.0.3 (source of truth), Ktor (network)
-- DataStore (settings), WorkManager (daily sync)
-- JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E)
-- minSdk 29, targetSdk 36, JDK 17, AGP 9.4.0
+| Category | Library | Version |
+|---|---|---|
+| **Language** | Kotlin | 2.4.10 |
+| **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.00 / Nav 1.1.7 |
+| **Architecture** | Single `:app` module, MVI with StateFlow | — |
+| **DI** | Koin | 4.2.2 (BOM) |
+| **Database** | Room (source of truth) | 3.0.3 |
+| **Networking** | Ktor + kotlinx.serialization | 3.5.2 / 1.11.0 |
+| **Storage** | DataStore (settings) | 1.2.1 |
+| **Scheduling** | WorkManager (daily sync) | 2.11.2 |
+| **Image** | Coil | 3.6.2 |
+| **Logging** | Kermit | 2.2.0 |
+| **Async** | Kotlin Coroutines | 1.11.0 |
+| **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 |
+| **Build** | AGP 9.4.0, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
 
 ## Getting started
 
@@ -115,6 +156,34 @@ Then run:
 ./gradlew :app:assembleRelease
 ```
 
+---
+
+## Changelog (v0.1.0 → v0.3.0)
+
+### v0.3.0
+
+- **Third catalog source** — LiteLLM price map with local/self-hosted rows hidden by default and marked with a Local pill
+- **Stronger cross-check** — free models confirmed seen on both sources before alerting
+- **Dashboard rework** — draggable floating filter button replaces the filter bar; one-tap status chips; compact token counts and pinned top bar; reset escape hatch for empty states; filter position is retained
+
+### v0.2.0
+
+- **In-app updates** — update check via GitHub Releases with sideload gated on host allowlist and unknown-sources consent
+- **Data-sparing sync** — Wi-Fi-only mode, metered-data guard, auto first sync on install; unchanged catalogs skipped
+- **Expressive redesign** — Material 3 Expressive overhaul with fullscreen content
+- **Dashboard polish** — title bar, favorites filter, sort, loading skeleton; snapshot card opens on notification tap; sync age refreshes every minute
+- **Build** — Room 3.0.3, Navigation 3 1.1.7
+
+### v0.1.0
+
+- **Initial release** — models.dev catalog source, multi-source sync with PARTIAL state and cross-check, OpenRouter source
+- **Event notifications** — global toggle, 3 events, 1 summary per sync
+- **Safe offline core** — Room v1→v2 with absence counter and absence-gated removal; degraded mode instead of catalog wipe on empty responses
+- **App shell** — pull-to-refresh, collapsible settings, about section, adaptive launcher icon
+- **Sources hygiene** — NVIDIA Build source dropped over website ToS; rejections documented in `docs/sources/`
+
+---
+
 ## Privacy
 
 All data stays on device. The app fetches the public model catalog over
@@ -134,3 +203,12 @@ https://hcmdz.github.io/OpenCode-Free-Radar/terms/ — see also
 Copyright holders are listed in the git history.
 This program is free software under the GNU General Public License v3.0 or
 later. See [LICENSE](LICENSE) for the full text.
+
+## Related Docs
+
+- [Contributing](CONTRIBUTING.md) · [Third-Party Components](THIRD_PARTY.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Privacy Policy](https://hcmdz.github.io/OpenCode-Free-Radar/privacy/) · [Terms](https://hcmdz.github.io/OpenCode-Free-Radar/terms/) · [Sources](docs/sources/)
+
+---
+
+Made with ❤️ by HcmDZ
