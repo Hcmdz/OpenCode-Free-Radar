@@ -13,7 +13,7 @@ Unofficial community project — not affiliated with, endorsed, or sponsored
 by Anomaly Innovations, Inc.
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.2.0
+- **Version**: 0.3.0
 - **Author**: HcmDZ &lt;HcmDz.Dev@gmail.com&gt;
 
 ## Features
