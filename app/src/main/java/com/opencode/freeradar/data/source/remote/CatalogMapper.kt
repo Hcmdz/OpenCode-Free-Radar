@@ -19,12 +19,18 @@ private fun String.isPlanOrGated(): Boolean =
 fun SourceOffer.toOffer(now: Long, source: String = "opencode-data"): Offer {
     val freeStatus = when {
         inputPrice == 0.0 && outputPrice == 0.0 && conditions != null -> FreeStatus.TRIAL
+        // Unconfirmed `opencode` $0 rows are ghosts Zen does not serve
+        // (absent from the live roster): UNKNOWN drops them from the free
+        // views without ringing expiry (UNKNOWN never expires per FR-002).
+        // Synth rows carry the MDX provenance URL and stay free.
+        inputPrice == 0.0 && outputPrice == 0.0 && providerId == "opencode" &&
+            confidence == Confidence.TO_VERIFY && sourceUrl != ZEN_MDX_URL -> FreeStatus.UNKNOWN
         // Zen refinement 2026-09-17: every free model on the opencode
         // provider is time-boxed per their docs (https://opencode.ai/docs/zen/
         // pricing section: each of the 7 free rows is "available for a
         // limited time"), so `opencode` $0 rows are TEMPORARY (~32 rows on
-        // 2026-09-17; roster ghosts keep TO_VERIFY via ModelsDevSource and
-        // stay silent).
+        // 2026-09-17; unconfirmed roster ghosts map to UNKNOWN above and
+        // leave the free views silently).
         inputPrice == 0.0 && outputPrice == 0.0 && providerId == "opencode" -> FreeStatus.TEMPORARY
         inputPrice == 0.0 && outputPrice == 0.0 && providerId.isPlanOrGated() -> FreeStatus.LIMITED
         inputPrice == 0.0 && outputPrice == 0.0 -> FreeStatus.FREE

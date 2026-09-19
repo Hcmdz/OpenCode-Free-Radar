@@ -205,4 +205,20 @@ class DetectChangesTest {
         )
         assertThat(types(events).contains(ChangeType.BECAME_FREE)).isEqualTo(true)
     }
+
+    @Test
+    fun `unconfirmed temporary demoted to unknown is silent`() {
+        // Ghost demotion (roster absence): leaving usable-free for UNKNOWN
+        // is not expiry — UNKNOWN never rings per FR-002.
+        val events = detectChanges(
+            old = listOf(
+                offer(freeStatus = FreeStatus.TEMPORARY, confidence = Confidence.TO_VERIFY)
+            ),
+            new = listOf(
+                offer(freeStatus = FreeStatus.UNKNOWN, confidence = Confidence.TO_VERIFY)
+            ),
+            now = 2_000L
+        )
+        assertThat(events).hasSize(0)
+    }
 }

@@ -16,7 +16,9 @@ class CatalogMapperTest {
         outputPrice: Double? = 0.0,
         supportsTools: Boolean? = true,
         providerId: String = "bothub",
-        conditions: String? = null
+        conditions: String? = null,
+        confidence: Confidence? = null,
+        sourceUrl: String? = null
     ) = SourceOffer(
         providerId = providerId,
         modelId = "m",
@@ -31,7 +33,8 @@ class CatalogMapperTest {
         quota = null,
         conditions = conditions,
         officialUrl = null,
-        sourceUrl = null
+        sourceUrl = sourceUrl,
+        confidence = confidence
     )
 
     @Test
@@ -84,6 +87,30 @@ class CatalogMapperTest {
         // limited time" (https://opencode.ai/docs/zen/).
         assertThat(offer(providerId = "opencode").toOffer(now = 1_000L).freeStatus)
             .isEqualTo(FreeStatus.TEMPORARY)
+    }
+
+    @Test
+    fun `unconfirmed opencode ghost maps to UNKNOWN, never free`() {
+        // Live proof 2026-09-19: 23 models.dev $0 rows Zen does not serve
+        // (absent from the 74-id roster, flagged deprecated by models.dev).
+        val mapped = offer(
+            providerId = "opencode",
+            confidence = Confidence.TO_VERIFY,
+            sourceUrl = "https://models.dev/api.json"
+        ).toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.UNKNOWN)
+    }
+
+    @Test
+    fun `mdx-synth rows keep TEMPORARY despite TO_VERIFY`() {
+        // Synth rows are confirmed by construction (served + free
+        // signal); only their confidence is TO_VERIFY (silent arrival).
+        val mapped = offer(
+            providerId = "opencode",
+            confidence = Confidence.TO_VERIFY,
+            sourceUrl = ZEN_MDX_URL
+        ).toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.TEMPORARY)
     }
 
     @Test

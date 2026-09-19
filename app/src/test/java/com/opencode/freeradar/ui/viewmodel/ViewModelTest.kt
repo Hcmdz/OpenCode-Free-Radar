@@ -103,9 +103,10 @@ fun sampleOffer(
     compatible: Boolean = true,
     status: FreeStatus = FreeStatus.FREE,
     source: String = "opencode-data",
-    name: String = "M"
+    name: String = "M",
+    providerId: String = "p"
 ) = Offer(
-    remoteId = remoteId, providerId = "p", modelId = "m", name = name,
+    remoteId = remoteId, providerId = providerId, modelId = "m", name = name,
     inputPrice = 0.0, outputPrice = 0.0, freeStatus = status,
     quota = null, quotaPeriod = null, temporary = false, conditions = null,
     contextLength = 1000, maxOutputTokens = null, supportsTools = true,
@@ -268,11 +269,32 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `selecting OPENCODE source shows provider rows, not pipeline rows`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer("opencode/m", providerId = "opencode"),
+            sampleOffer("or/m", source = "opencode-data")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            awaitItem()
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.OPENCODE))
+            testScheduler.advanceUntilIdle()
+            var filtered = awaitItem()
+            while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m"))
+        }
+    }
+
+    @Test
     fun `selecting OPENCODE source hides other sources`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.offersFlow.value = listOf(
-            sampleOffer(),
+            sampleOffer("opencode/m", providerId = "opencode"),
             sampleOffer("other/m", source = "other-source")
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
@@ -284,7 +306,7 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
             while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
-            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m"))
         }
     }
 
@@ -293,8 +315,8 @@ class DashboardViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.offersFlow.value = listOf(
-            sampleOffer(),
-            sampleOffer("p/paid", status = FreeStatus.PAID),
+            sampleOffer("opencode/m", providerId = "opencode"),
+            sampleOffer("opencode/paid", status = FreeStatus.PAID, providerId = "opencode"),
             sampleOffer("other/m", source = "other-source")
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
@@ -307,7 +329,7 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             var filtered = awaitItem()
             while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
-            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "p/paid"))
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m", "opencode/paid"))
         }
     }
 
@@ -316,8 +338,8 @@ class DashboardViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = FakeOfferRepository()
         repo.offersFlow.value = listOf(
-            sampleOffer(),
-            sampleOffer("p/paid", status = FreeStatus.PAID),
+            sampleOffer("opencode/m", providerId = "opencode"),
+            sampleOffer("opencode/paid", status = FreeStatus.PAID, providerId = "opencode"),
             sampleOffer("other/m", source = "other-source", status = FreeStatus.LIMITED)
         )
         val vm = DashboardViewModel(repo, NoopSyncNotifier())
@@ -331,7 +353,7 @@ class DashboardViewModelTest {
             var filtered = awaitItem()
             while (filtered.sourceFilter != SourceFilter.OPENCODE) filtered = awaitItem()
             assertThat(filtered.showResetFilters).isTrue()
-            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "p/paid"))
+            assertThat(filtered.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m", "opencode/paid"))
             vm.onAction(DashboardAction.ResetFilters)
             testScheduler.advanceUntilIdle()
             var reset = awaitItem()
@@ -339,7 +361,7 @@ class DashboardViewModelTest {
             assertThat(reset.filter).isEqualTo(OfferFilter.FREE)
             assertThat(reset.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
             // other/m is LIMITED: usable-free, so visible in the default view.
-            assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("p/m", "other/m"))
+            assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m", "other/m"))
         }
     }
 

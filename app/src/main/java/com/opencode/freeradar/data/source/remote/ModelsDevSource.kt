@@ -77,7 +77,11 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
     private suspend fun zenMdxFree(): Pair<Set<String>?, String?> {
         return when (val response = safeCall { client.get(ZEN_MDX_URL).bodyAsText() }) {
             is Result.Success -> try {
-                parseZenFreeIds(response.value) to response.value
+                val ids = parseZenFreeIds(response.value)
+                // A restructured doc parses to empty and would silently
+                // de-confirm non-suffixed free models: fail open instead.
+                if (response.value.isNotBlank() && ids.isEmpty()) null to null
+                else ids to response.value
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -45,11 +45,25 @@ class FilterCountsTest {
     )
 
     private val offers = listOf(
-        offer("s1/free", "opencode-data", FreeStatus.FREE),
-        offer("s1/paid", "opencode-data", FreeStatus.PAID),
-        offer("s1/nc", "opencode-data", FreeStatus.FREE, compatible = false),
+        offer("op/open", "opencode-data", FreeStatus.FREE, providerId = "opencode"),
+        offer("op/paid", "opencode-data", FreeStatus.PAID, providerId = "opencode"),
+        offer("op/nc", "opencode-data", FreeStatus.FREE, compatible = false, providerId = "opencode"),
+        offer("or/ltd", "opencode-data", FreeStatus.LIMITED, providerId = "openrouter"),
         offer("o/ltd", "other-source", FreeStatus.LIMITED)
     )
+
+    @Test
+    fun `opencode filter matches the zen provider, not the pipeline`() {
+        // source "opencode-data" carries the whole models.dev catalog:
+        // only providerId "opencode" rows count, whatever their source.
+        val rows = listOf(
+            offer("op/m", "opencode-data", FreeStatus.FREE, providerId = "opencode"),
+            offer("or/m", "opencode-data", FreeStatus.FREE, providerId = "openrouter"),
+            offer("op/x", "openrouter", FreeStatus.FREE, providerId = "opencode")
+        )
+        val counts = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
+        assertThat(counts.source[SourceFilter.OPENCODE]).isEqualTo(2)
+    }
 
     @Test
     fun `status counts honor the active source filter`() {
@@ -61,9 +75,9 @@ class FilterCountsTest {
 
     @Test
     fun `source counts honor the active status filter`() {
-        // o/ltd is LIMITED: usable-free, so counted under the FREE view.
+        // o/ltd and or/ltd are LIMITED: usable-free, so counted under the FREE view.
         val counts = facetCounts(offers, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
-        assertThat(counts.source[SourceFilter.ALL_SOURCES]).isEqualTo(3)
+        assertThat(counts.source[SourceFilter.ALL_SOURCES]).isEqualTo(4)
         assertThat(counts.source[SourceFilter.OPENCODE]).isEqualTo(2)
     }
 

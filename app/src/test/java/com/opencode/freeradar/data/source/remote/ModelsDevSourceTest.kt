@@ -134,4 +134,16 @@ class ModelsDevSourceTest {
         val with = (ModelsDevSource(client(mdx = mdx())).fetch() as Result.Success).value.bodyHash
         assertThat((without == with)).isEqualTo(false)
     }
+
+    @Test
+    fun `restructured mdx parsing to empty fails open like dead mdx`() = runTest {
+        // A doc restructure is not "zero free models": same confidences
+        // as a dead MDX fetch, roster signal intact.
+        val drifted = (ModelsDevSource(client(mdx = "# Zen\nNo tables here.\n")).fetch()
+            as Result.Success).value.offers.map { it.modelId to it.confidence }
+        val dead = (ModelsDevSource(client()).fetch()
+            as Result.Success).value.offers.map { it.modelId to it.confidence }
+        assertThat(drifted).isEqualTo(dead)
+        assertThat(drifted.toMap()["ghost-free"]).isEqualTo(Confidence.TO_VERIFY)
+    }
 }

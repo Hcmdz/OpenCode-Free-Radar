@@ -22,6 +22,18 @@ enum class SourceFilter(@StringRes val labelRes: Int, val sourceId: String?) {
     LITELLM(R.string.filter_source_litellm, "litellm")
 }
 
+/** Zen provider id: OPENCODE matches served models, not the ingestion pipeline. */
+private const val ZEN_PROVIDER_ID = "opencode"
+
+/**
+ * OPENCODE is the Zen provider: source "opencode-data" carries the whole
+ * models.dev catalog (222 providers), so matching it shows 600+ rows that
+ * are not Zen models. Every other entry keeps its source matching.
+ */
+fun SourceFilter.matches(offer: Offer): Boolean =
+    if (this == SourceFilter.OPENCODE) offer.providerId == ZEN_PROVIDER_ID
+    else sourceId == null || offer.source == sourceId
+
 fun OfferFilter.freeOnly(): Boolean = when (this) {
     OfferFilter.ALL, OfferFilter.COMPATIBLE, OfferFilter.FAVORITE -> false
     OfferFilter.FREE, OfferFilter.FREE_COMPATIBLE -> true
@@ -57,11 +69,11 @@ fun facetCounts(
             (!f.compatibleOnly() || it.openCodeCompatible) &&
             (!f.favoriteOnly() || it.favorite)
     }
-    val bySource = offers.filter { source.sourceId == null || it.source == source.sourceId }
+    val bySource = offers.filter { source.matches(it) }
     val statusCounts = OfferFilter.entries.associateWith { bySource.matchingStatus(it).size }
     val byStatus = offers.matchingStatus(filter)
     val sourceCounts = SourceFilter.entries.associateWith { s ->
-        byStatus.count { s.sourceId == null || it.source == s.sourceId }
+        byStatus.count { s.matches(it) }
     }
     return FacetCounts(statusCounts, sourceCounts)
 }

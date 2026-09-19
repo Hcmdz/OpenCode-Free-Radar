@@ -21,6 +21,7 @@ import com.opencode.freeradar.ui.model.compatibleOnly
 import com.opencode.freeradar.ui.model.facetCounts
 import com.opencode.freeradar.ui.model.favoriteOnly
 import com.opencode.freeradar.ui.model.freeOnly
+import com.opencode.freeradar.ui.model.matches
 import com.opencode.freeradar.ui.model.sortComparator
 import com.opencode.freeradar.ui.model.toUi
 import com.opencode.freeradar.ui.model.toUiText
@@ -208,7 +209,7 @@ class DashboardViewModel(
                     .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
                     .filter { !prefs.filter.favoriteOnly() || it.favorite }
-                    .filter { prefs.source.sourceId == null || it.source == prefs.source.sourceId }
+                    .filter { prefs.source.matches(it) }
                     .filter { matchesQuery(it, activeQuery) }
                     .sortedWith(sortComparator(prefs.sort))
                     .map { it.toUi() },
