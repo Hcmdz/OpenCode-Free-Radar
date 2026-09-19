@@ -4,8 +4,8 @@ package com.opencode.freeradar.ui.model
 import androidx.annotation.StringRes
 import com.opencode.freeradar.R
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isConfirmedFree
 import com.opencode.freeradar.domain.model.isLocalProvider
-import com.opencode.freeradar.domain.model.isUsableFree
 
 enum class OfferFilter(@StringRes val labelRes: Int) {
     ALL(R.string.filter_all),
@@ -65,7 +65,7 @@ fun facetCounts(
 ): FacetCounts {
     fun List<Offer>.matchingStatus(f: OfferFilter) = filter {
         (!hideLocal || !it.providerId.isLocalProvider()) &&
-        (!f.freeOnly() || it.freeStatus.isUsableFree()) &&
+        (!f.freeOnly() || it.isConfirmedFree()) &&
             (!f.compatibleOnly() || it.openCodeCompatible) &&
             (!f.favoriteOnly() || it.favorite)
     }

@@ -4,6 +4,7 @@ package com.opencode.freeradar.data.source.remote
 import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
+import com.opencode.freeradar.domain.model.isGatedProvider
 
 /**
  * Reviewed 2026-09-15 against the live catalogs: a zero price alone does
@@ -13,17 +14,15 @@ import com.opencode.freeradar.domain.model.Offer
  * + Duo/credits). Uncertain providers stay FREE — never guess from a name
  * alone. The `opencode` provider has its own TEMPORARY branch below.
  */
-private fun String.isPlanOrGated(): Boolean =
-    "-plan" in this || this == "gitlab"
-
 fun SourceOffer.toOffer(now: Long, source: String = "opencode-data"): Offer {
     val freeStatus = when {
         inputPrice == 0.0 && outputPrice == 0.0 && conditions != null -> FreeStatus.TRIAL
-        // Unconfirmed `opencode` $0 rows are ghosts Zen does not serve
-        // (absent from the live roster): UNKNOWN drops them from the free
-        // views without ringing expiry (UNKNOWN never expires per FR-002).
-        // Synth rows carry the MDX provenance URL and stay free.
-        inputPrice == 0.0 && outputPrice == 0.0 && providerId == "opencode" &&
+        // Unconfirmed $0 rows are ghosts no source serves (roster absence
+        // for Zen, aggregator-only everywhere else): UNKNOWN drops them
+        // from the free views without ringing expiry (UNKNOWN never
+        // expires per FR-002). Synth rows carry the MDX provenance URL
+        // and stay free.
+        inputPrice == 0.0 && outputPrice == 0.0 &&
             confidence == Confidence.TO_VERIFY && sourceUrl != ZEN_MDX_URL -> FreeStatus.UNKNOWN
         // Zen refinement 2026-09-17: every free model on the opencode
         // provider is time-boxed per their docs (https://opencode.ai/docs/zen/
@@ -32,7 +31,7 @@ fun SourceOffer.toOffer(now: Long, source: String = "opencode-data"): Offer {
         // 2026-09-17; unconfirmed roster ghosts map to UNKNOWN above and
         // leave the free views silently).
         inputPrice == 0.0 && outputPrice == 0.0 && providerId == "opencode" -> FreeStatus.TEMPORARY
-        inputPrice == 0.0 && outputPrice == 0.0 && providerId.isPlanOrGated() -> FreeStatus.LIMITED
+        inputPrice == 0.0 && outputPrice == 0.0 && providerId.isGatedProvider() -> FreeStatus.LIMITED
         inputPrice == 0.0 && outputPrice == 0.0 -> FreeStatus.FREE
         inputPrice == null || outputPrice == null -> FreeStatus.UNKNOWN
         else -> FreeStatus.PAID

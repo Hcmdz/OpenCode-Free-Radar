@@ -12,7 +12,7 @@ import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferSort
-import com.opencode.freeradar.domain.model.isUsableFree
+import com.opencode.freeradar.domain.model.isConfirmedFree
 import com.opencode.freeradar.domain.model.isLocalProvider
 import com.opencode.freeradar.ui.model.SourceFilter
 import com.opencode.freeradar.ui.model.OfferUi
@@ -206,7 +206,7 @@ class DashboardViewModel(
                 isRefreshing = prefs.refreshing,
                 offers = offers
                     .filter { prefs.showLocal || !it.providerId.isLocalProvider() }
-                    .filter { !prefs.filter.freeOnly() || it.freeStatus.isUsableFree() }
+                    .filter { !prefs.filter.freeOnly() || it.isConfirmedFree() }
                     .filter { !prefs.filter.compatibleOnly() || it.openCodeCompatible }
                     .filter { !prefs.filter.favoriteOnly() || it.favorite }
                     .filter { prefs.source.matches(it) }

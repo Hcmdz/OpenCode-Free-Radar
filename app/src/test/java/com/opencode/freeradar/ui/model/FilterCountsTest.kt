@@ -16,7 +16,8 @@ class FilterCountsTest {
         status: FreeStatus = FreeStatus.FREE,
         compatible: Boolean = true,
         favorite: Boolean = false,
-        providerId: String = "p"
+        providerId: String = "p",
+        confidence: Confidence = Confidence.OFFICIAL
     ) = Offer(
         remoteId = remoteId,
         providerId = providerId,
@@ -40,7 +41,7 @@ class FilterCountsTest {
         sourceUrl = null,
         retrievedAt = 1_000L,
         verifiedAt = 1_000L,
-        confidence = Confidence.OFFICIAL,
+        confidence = confidence,
         favorite = favorite
     )
 
@@ -104,6 +105,22 @@ class FilterCountsTest {
         )
         val counts = facetCounts(rows, OfferFilter.FAVORITE, SourceFilter.ALL_SOURCES)
         assertThat(counts.status[OfferFilter.FAVORITE]).isEqualTo(2)
+    }
+
+    @Test
+    fun `free view counts confirmed rows only`() {
+        // Unverified $0 (TO_VERIFY) and gated access (gitlab Premium,
+        // *-plan) are usable-free but never real free models.
+        val rows = listOf(
+            offer("ok/m", "opencode-data", FreeStatus.FREE, providerId = "kilo"),
+            offer("ghost/m", "opencode-data", FreeStatus.FREE, providerId = "kenari",
+                confidence = Confidence.TO_VERIFY),
+            offer("gl/m", "opencode-data", FreeStatus.LIMITED, providerId = "gitlab"),
+            offer("plan/m", "opencode-data", FreeStatus.LIMITED, providerId = "x-token-plan")
+        )
+        val counts = facetCounts(rows, OfferFilter.FREE, SourceFilter.ALL_SOURCES)
+        assertThat(counts.status[OfferFilter.FREE]).isEqualTo(1)
+        assertThat(counts.status[OfferFilter.ALL]).isEqualTo(4)
     }
 
     @Test

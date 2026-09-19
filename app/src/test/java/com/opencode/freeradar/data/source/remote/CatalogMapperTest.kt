@@ -114,6 +114,17 @@ class CatalogMapperTest {
     }
 
     @Test
+    fun `uncorroborated aggregator zero maps to UNKNOWN`() {
+        // kenari-style $0 with no first-party pipeline behind it.
+        val mapped = offer(
+            providerId = "kenari",
+            confidence = Confidence.TO_VERIFY,
+            sourceUrl = "https://models.dev/api.json"
+        ).toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.UNKNOWN)
+    }
+
+    @Test
     fun `plan and trial rules never touch PAID or UNKNOWN`() {
         assertThat(
             offer(inputPrice = 1.0, outputPrice = 1.0, providerId = "gitlab").toOffer(now = 1_000L).freeStatus

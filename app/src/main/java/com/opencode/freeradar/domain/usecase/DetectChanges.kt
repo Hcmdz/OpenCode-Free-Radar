@@ -6,14 +6,7 @@ import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.model.FreeStatus
 import com.opencode.freeradar.domain.model.Offer
-import com.opencode.freeradar.domain.model.isUsableFree
-
-/**
- * Usable at $0 AND confirmed by a source. Unverified rows (e.g. absent
- * from the Zen roster) are visible but never ring the bell on their own.
- */
-private fun Offer.isConfirmedFree(): Boolean =
-    freeStatus.isUsableFree() && confidence != Confidence.TO_VERIFY
+import com.opencode.freeradar.domain.model.isConfirmedFree
 
 fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEvent> {
     val oldById = old.associateBy { it.remoteId }
@@ -37,13 +30,14 @@ fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEve
             // Spark-style limited trial) are both new deals.
             events += ChangeEvent(id, ChangeType.BECAME_FREE, previous.freeStatus.name, current.freeStatus.name, now)
         }
-        if (previous.freeStatus.isUsableFree() &&
+        if (previous.isConfirmedFree() &&
             (current.freeStatus == FreeStatus.PAID || current.freeStatus == FreeStatus.EXPIRED)
         ) {
             // Missing cost maps to UNKNOWN, never expiry (fail-closed per spec FR-002).
             // Refinements between usable-free states (FREE→TEMPORARY and the
             // like) stay usable at $0 with conditions, so they never ring
-            // the expiry alarm either — only leaving usable-free does.
+            // the expiry alarm either — only a confirmed free leaving
+            // usable-free does. Gated rows never rang, never will.
             events += ChangeEvent(id, ChangeType.FREE_EXPIRED, previous.freeStatus.name, current.freeStatus.name, now)
         }
         if (previous.inputPrice != current.inputPrice || previous.outputPrice != current.outputPrice) {

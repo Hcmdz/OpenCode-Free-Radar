@@ -31,6 +31,12 @@ class ModelsDevSourceTest {
           }},
           "bothub": {"id": "bothub", "models": {
             "b-free": {"id": "b-free", "name": "B", "cost": {"input": 0, "output": 0}}
+          }},
+          "kenari": {"id": "kenari", "models": {
+            "k-free": {"id": "k-free", "name": "K", "cost": {"input": 0, "output": 0}}
+          }},
+          "nvidia": {"id": "nvidia", "models": {
+            "nv-free": {"id": "nv-free", "name": "N", "cost": {"input": 0, "output": 0}}
           }}
         }
     """.trimIndent()
@@ -100,11 +106,24 @@ class ModelsDevSourceTest {
         assertThat(result is Result.Success).isEqualTo(true)
         val rows = (result as Result.Success).value.offers
         assertThat(rows.map { "${it.providerId}/${it.modelId}" }.toSet()).isEqualTo(
-            setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
+            setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free",
+                "kenari/k-free", "nvidia/nv-free")
         )
         assertThat(rows.first { it.modelId == "ghost-free" }.confidence)
             .isEqualTo(Confidence.TO_VERIFY)
         assertThat(rows.first { it.modelId == "a-free" }.confidence).isNull()
+    }
+
+    @Test
+    fun `aggregator-only zero rows are demoted, trial programs safelisted`() = runTest {
+        // kenari serves flagships at $0 with stale updates and no
+        // corroboration; nvidia serves a $0 trial program.
+        val result = ModelsDevSource(client()).fetch()
+        assertThat(result is Result.Success).isEqualTo(true)
+        val rows = (result as Result.Success).value.offers.associateBy { "${it.providerId}/${it.modelId}" }
+        assertThat(rows.getValue("kenari/k-free").confidence).isEqualTo(Confidence.TO_VERIFY)
+        assertThat(rows.getValue("nvidia/nv-free").confidence).isNull()
+        assertThat(rows.getValue("bothub/b-free").confidence).isEqualTo(Confidence.TO_VERIFY)
     }
 
     @Test
@@ -113,7 +132,8 @@ class ModelsDevSourceTest {
         assertThat(result is Result.Success).isEqualTo(true)
         val ids = (result as Result.Success).value.offers.map { "${it.providerId}/${it.modelId}" }.toSet()
         assertThat(ids).isEqualTo(
-            setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
+            setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free",
+                "kenari/k-free", "nvidia/nv-free")
         )
     }
 

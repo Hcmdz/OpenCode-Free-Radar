@@ -104,7 +104,8 @@ fun sampleOffer(
     status: FreeStatus = FreeStatus.FREE,
     source: String = "opencode-data",
     name: String = "M",
-    providerId: String = "p"
+    providerId: String = "p",
+    confidence: Confidence = Confidence.OFFICIAL
 ) = Offer(
     remoteId = remoteId, providerId = providerId, modelId = "m", name = name,
     inputPrice = 0.0, outputPrice = 0.0, freeStatus = status,
@@ -113,7 +114,7 @@ fun sampleOffer(
     supportsVision = false, supportsStructuredOutput = false,
     openCodeCompatible = compatible, officialUrl = null, source = source,
     sourceUrl = null, retrievedAt = 1_000L, verifiedAt = 1_000L,
-    confidence = Confidence.OFFICIAL, favorite = false
+    confidence = confidence, favorite = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -362,6 +363,24 @@ class DashboardViewModelTest {
             assertThat(reset.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
             // other/m is LIMITED: usable-free, so visible in the default view.
             assertThat(reset.offers.map { it.remoteId }).isEqualTo(listOf("opencode/m", "other/m"))
+        }
+    }
+
+    @Test
+    fun `default free view hides unverified and gated rows`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(
+            sampleOffer("kilo/m", providerId = "kilo"),
+            sampleOffer("kenari/m", providerId = "kenari", confidence = Confidence.TO_VERIFY),
+            sampleOffer("gitlab/m", providerId = "gitlab", status = FreeStatus.LIMITED)
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            val shown = awaitItem()
+            assertThat(shown.offers.map { it.remoteId }).isEqualTo(listOf("kilo/m"))
         }
     }
 

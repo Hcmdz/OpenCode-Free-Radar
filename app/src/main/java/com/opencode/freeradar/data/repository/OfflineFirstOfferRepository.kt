@@ -4,7 +4,6 @@ package com.opencode.freeradar.data.repository
 import com.opencode.freeradar.data.local.RadarDatabase
 import com.opencode.freeradar.data.local.SourceHealthEntity
 import com.opencode.freeradar.data.local.SyncRunEntity
-import com.opencode.freeradar.data.source.remote.ModelsDevSource
 import com.opencode.freeradar.domain.usecase.OVERLAP_PINS
 import com.opencode.freeradar.data.local.SyncStateStore
 import com.opencode.freeradar.data.local.SyncSettings
@@ -284,9 +283,7 @@ class OfflineFirstOfferRepository(
             isSourceFresh(runs.recentRuns(source, FRESH_RUN_LOOKBACK), now)
         }.toSet()
         val ghosts = all.filter {
-            it.source == MODELS_DEV_SOURCE_ID &&
-                it.providerId == ModelsDevSource.ZEN_PROVIDER &&
-                it.confidence == Confidence.TO_VERIFY
+            it.source == MODELS_DEV_SOURCE_ID && it.confidence == Confidence.TO_VERIFY
         }.map { it.remoteId }.toSet()
         val result = crossCheck(all, OVERLAP_PINS, ghosts) { offer -> offer.source in freshSources }
         if (result.confirmed.isNotEmpty()) {

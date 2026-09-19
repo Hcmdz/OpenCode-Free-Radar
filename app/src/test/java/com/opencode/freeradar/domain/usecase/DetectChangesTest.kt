@@ -221,4 +221,19 @@ class DetectChangesTest {
         )
         assertThat(events).hasSize(0)
     }
+
+    @Test
+    fun `gated limited paywalled is silent`() {
+        // gitlab needs Premium: its LIMITED was never a real free model,
+        // so losing it rings nothing.
+        val old = offer(freeStatus = FreeStatus.LIMITED, confidence = Confidence.OFFICIAL)
+        val new = offer(
+            freeStatus = FreeStatus.PAID, confidence = Confidence.OFFICIAL,
+            inputPrice = 2.0, outputPrice = 2.0
+        )
+        val gitlabOld = old.copy(remoteId = "gitlab/m", providerId = "gitlab")
+        val gitlabNew = new.copy(remoteId = "gitlab/m", providerId = "gitlab")
+        val events = detectChanges(old = listOf(gitlabOld), new = listOf(gitlabNew), now = 2_000L)
+        assertThat(types(events)).isEqualTo(setOf(ChangeType.PRICE_CHANGED))
+    }
 }

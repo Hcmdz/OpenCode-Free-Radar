@@ -5,6 +5,7 @@ import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.error.safeCall
 import com.opencode.freeradar.domain.error.toSourceError
+import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.repository.FetchResult
 import com.opencode.freeradar.domain.repository.OfferSource
 import com.opencode.freeradar.util.sha256Hex
@@ -38,7 +39,9 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
             val mdx = zenMdxFree()
             // Composite hash: roster and MDX are extra inputs fetched every run.
             val hash = sha256Hex(catalogBody + "\n" + (roster.second ?: "") + "\n" + (mdx.second ?: ""))
-            val merged = mergeZenFreeSignals(parseCatalog(catalogBody), roster.first, mdx.first)
+            val merged = mergeZenFreeSignals(
+                demoteAggregators(parseCatalog(catalogBody)), roster.first, mdx.first
+            )
             Result.Success(FetchResult(synthesizeZenFreeMissing(merged, roster.first, mdx.first), hash))
         } catch (e: CancellationException) {
             throw e
@@ -55,6 +58,29 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
      * open — a Zen outage changes nothing. Fusion with the MDX pricing
      * signal lives in mergeZenFreeSignals (ZenMdxParser.kt).
      */
+
+    /**
+     * Aggregator-only $0 rows with no corroboration are ghosts: models.dev
+     * prices unknown costs at $0 (proven 2026-09-19: 23 unserved opencode
+     * rows, kenari serving flagships at $0 with stale updates, a literal
+     * "nan" provider). First-party pipelines confirm their own rows
+     * (OpenRouter API, LiteLLM explicit zeros, Zen roster×MDX); nvidia
+     * trial endpoints are safelisted (served $0 trial program). The rest
+     * without conditions is TO_VERIFY — silent, UNKNOWN downstream.
+     * `opencode` keeps its own fusion below; dated TRIAL rows are untouched.
+     */
+    private fun demoteAggregators(offers: List<SourceOffer>): List<SourceOffer> =
+        offers.map { offer ->
+            if (offer.providerId != ZEN_PROVIDER && offer.providerId !in AGGREGATOR_SAFE_PROVIDERS &&
+                offer.inputPrice == 0.0 && offer.outputPrice == 0.0 && offer.conditions == null &&
+                offer.confidence == null
+            ) {
+                offer.copy(confidence = Confidence.TO_VERIFY)
+            } else {
+                offer
+            }
+        }
+
     private suspend fun zenRoster(): Pair<Set<String>?, String?> {
         return when (val response = safeCall { client.get(ZEN_MODELS_URL).bodyAsText() }) {
             is Result.Success -> try {
@@ -97,5 +123,8 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
         /** Documented public endpoint ("fetch the full list of available models"). */
         const val ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models"
         const val ZEN_PROVIDER = "opencode"
+
+        /** Aggregator $0 rows trusted without corroboration (served trial programs). */
+        private val AGGREGATOR_SAFE_PROVIDERS = setOf("nvidia")
     }
 }
