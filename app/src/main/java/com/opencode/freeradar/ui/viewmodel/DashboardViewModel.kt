@@ -3,6 +3,7 @@ package com.opencode.freeradar.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.opencode.freeradar.data.local.DashboardFilterPrefs
 import com.opencode.freeradar.data.local.SyncSettings
 import com.opencode.freeradar.domain.error.RefreshResult
 import com.opencode.freeradar.domain.model.ChangeType
@@ -31,8 +32,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -92,6 +95,7 @@ class DashboardViewModel(
     private val gate: SyncNotifier,
     private val syncSettings: SyncSettings? = null,
     private val network: NetworkMonitor? = null,
+    private val filterPrefs: DashboardFilterPrefs? = null,
 ) : ViewModel() {
 
     companion object {
@@ -135,6 +139,29 @@ class DashboardViewModel(
         viewModelScope.launch {
             seenEventBaseline.value = repository.latestEventId()
         }
+        viewModelScope.launch {
+            // Restore last session: unknown names (renamed enum) fall back
+            // to the current defaults instead of crashing the launch.
+            val stored = filterPrefs ?: return@launch
+            filter.value = enumOrDefault(stored.filterName.first(), OfferFilter.FREE)
+            sourceFilter.value = enumOrDefault(stored.sourceName.first(), SourceFilter.ALL_SOURCES)
+            sort.value = enumOrDefault(stored.sortName.first(), OfferSort.RECENT)
+            showLocal.value = stored.showLocal.first()
+            recents.value = stored.recentQueries.first().take(MAX_RECENTS)
+        }
+        viewModelScope.launch {
+            // Persist every selection change, debounced like the search
+            // field; distinct skips the no-op write the restore triggers.
+            val stored = filterPrefs ?: return@launch
+            combine(filter, sourceFilter, sort, showLocal, recents) { f, s, so, l, r ->
+                StoredFilters(f.name, s.name, so.name, l, r)
+            }
+                .debounce(300)
+                .distinctUntilChanged()
+                .collectLatest {
+                    stored.save(it.filter, it.source, it.sort, it.showLocal, it.recents)
+                }
+        }
     }
 
     private suspend fun autoSyncAllowed(): Boolean {
@@ -152,6 +179,17 @@ class DashboardViewModel(
         val query: String,
         val recentSearches: List<String> = emptyList()
     )
+
+    private data class StoredFilters(
+        val filter: String,
+        val source: String,
+        val sort: String,
+        val showLocal: Boolean,
+        val recents: List<String>
+    )
+
+    private inline fun <reified E : Enum<E>> enumOrDefault(name: String?, default: E): E =
+        runCatching { enumValueOf<E>(name ?: "") }.getOrDefault(default)
 
     private val prefsFlow = combine(
         combine(filter, sourceFilter, sort, ::Triple),

@@ -152,6 +152,7 @@ fun FilterSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag("source_option_${entry.name.lowercase()}")
                             .selectable(
                                 selected = selected,
                                 role = Role.RadioButton,
@@ -180,6 +181,7 @@ fun FilterSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag("sort_option_${entry.name.lowercase()}")
                             .selectable(
                                 selected = selected,
                                 role = Role.RadioButton,

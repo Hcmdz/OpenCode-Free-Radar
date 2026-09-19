@@ -19,6 +19,7 @@ import com.opencode.freeradar.domain.model.Offer
 import com.opencode.freeradar.domain.model.SourceHealth
 import com.opencode.freeradar.domain.model.SyncRun
 import com.opencode.freeradar.domain.repository.OfferRepository
+import com.opencode.freeradar.data.local.DashboardFilterPrefs
 import com.opencode.freeradar.notifications.SyncNotifier
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferSort
@@ -95,6 +96,45 @@ class NoopSyncNotifier : SyncNotifier {
 
     override suspend fun afterSync(watermark: Long) {
         afterSyncCalls++
+    }
+}
+
+class FakeDashboardFilterPrefs(
+    filterName: String? = null,
+    sourceName: String? = null,
+    sortName: String? = null,
+    showLocal: Boolean = false,
+    recents: List<String> = emptyList()
+) : DashboardFilterPrefs {
+    val filterFlow = MutableStateFlow(filterName)
+    val sourceFlow = MutableStateFlow(sourceName)
+    val sortFlow = MutableStateFlow(sortName)
+    val localFlow = MutableStateFlow(showLocal)
+    val recentsFlow = MutableStateFlow(recents)
+    var saved: SavedFilters? = null
+
+    data class SavedFilters(
+        val filter: String,
+        val source: String,
+        val sort: String,
+        val showLocal: Boolean,
+        val recents: List<String>
+    )
+
+    override val filterName: Flow<String?> = filterFlow
+    override val sourceName: Flow<String?> = sourceFlow
+    override val sortName: Flow<String?> = sortFlow
+    override val showLocal: Flow<Boolean> = localFlow
+    override val recentQueries: Flow<List<String>> = recentsFlow
+
+    override suspend fun save(
+        filterName: String,
+        sourceName: String,
+        sortName: String,
+        showLocal: Boolean,
+        recentQueries: List<String>
+    ) {
+        saved = SavedFilters(filterName, sourceName, sortName, showLocal, recentQueries)
     }
 }
 
@@ -381,6 +421,96 @@ class DashboardViewModelTest {
             testScheduler.advanceUntilIdle()
             val shown = awaitItem()
             assertThat(shown.offers.map { it.remoteId }).isEqualTo(listOf("kilo/m"))
+        }
+    }
+
+    @Test
+    fun `stored filters restore on launch`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(sampleOffer())
+        val prefs = FakeDashboardFilterPrefs(
+            filterName = OfferFilter.FAVORITE.name,
+            sourceName = SourceFilter.OPENROUTER.name,
+            sortName = OfferSort.NAME.name,
+            showLocal = true,
+            recents = listOf("q1", "q2")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier(), filterPrefs = prefs)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            var restored = awaitItem()
+            while (restored.filter != OfferFilter.FAVORITE) restored = awaitItem()
+            assertThat(restored.sourceFilter).isEqualTo(SourceFilter.OPENROUTER)
+            assertThat(restored.sort).isEqualTo(OfferSort.NAME)
+            assertThat(restored.showLocal).isTrue()
+            assertThat(restored.recentSearches).isEqualTo(listOf("q1", "q2"))
+        }
+    }
+
+    @Test
+    fun `selection changes persist debounced`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(sampleOffer())
+        val prefs = FakeDashboardFilterPrefs()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier(), filterPrefs = prefs)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            vm.onAction(DashboardAction.SelectFilter(OfferFilter.COMPATIBLE))
+            vm.onAction(DashboardAction.SelectSource(SourceFilter.LITELLM))
+            testScheduler.advanceTimeBy(400)
+            testScheduler.advanceUntilIdle()
+            var shown = awaitItem()
+            while (shown.filter != OfferFilter.COMPATIBLE ||
+                shown.sourceFilter != SourceFilter.LITELLM
+            ) {
+                shown = awaitItem()
+            }
+            assertThat(prefs.saved?.filter).isEqualTo("COMPATIBLE")
+            assertThat(prefs.saved?.source).isEqualTo("LITELLM")
+            assertThat(prefs.saved?.sort).isEqualTo("RECENT")
+            assertThat(prefs.saved?.showLocal).isEqualTo(false)
+        }
+    }
+
+    @Test
+    fun `unknown stored names fall back to defaults`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(sampleOffer())
+        // recents prove the restore ran; names prove the fallback.
+        val prefs = FakeDashboardFilterPrefs(
+            filterName = "NOPE", sourceName = "NOPE", sortName = "NOPE",
+            recents = listOf("x")
+        )
+        val vm = DashboardViewModel(repo, NoopSyncNotifier(), filterPrefs = prefs)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            var restored = awaitItem()
+            while (restored.recentSearches != listOf("x")) restored = awaitItem()
+            assertThat(restored.filter).isEqualTo(OfferFilter.FREE)
+            assertThat(restored.sourceFilter).isEqualTo(SourceFilter.ALL_SOURCES)
+            assertThat(restored.sort).isEqualTo(OfferSort.RECENT)
+        }
+    }
+
+    @Test
+    fun `restored recents keep order and cap`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        repo.offersFlow.value = listOf(sampleOffer())
+        val prefs = FakeDashboardFilterPrefs(recents = listOf("a", "b", "c", "d"))
+        val vm = DashboardViewModel(repo, NoopSyncNotifier(), filterPrefs = prefs)
+        vm.state.test {
+            awaitItem()
+            testScheduler.advanceUntilIdle()
+            var restored = awaitItem()
+            while (restored.recentSearches != listOf("a", "b", "c")) restored = awaitItem()
+            assertThat(restored.recentSearches).isEqualTo(listOf("a", "b", "c"))
         }
     }
 

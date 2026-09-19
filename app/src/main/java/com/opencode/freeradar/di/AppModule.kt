@@ -2,6 +2,8 @@
 package com.opencode.freeradar.di
 
 import androidx.room3.Room
+import com.opencode.freeradar.data.local.DashboardFilterPrefs
+import com.opencode.freeradar.data.local.DataStoreDashboardFilterPrefs
 import com.opencode.freeradar.data.local.MIGRATION_1_2
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.RadarDatabase
@@ -73,6 +75,7 @@ val appModule = module {
     single<NetworkMonitor> { AndroidNetworkMonitor(androidContext()) }
     single { NotificationPrefs(androidContext()) }
     single<UpdateCheckStore> { UpdatePrefs(androidContext()) }
+    single<DashboardFilterPrefs> { DataStoreDashboardFilterPrefs(androidContext()) }
     single { UpdateManager(createHttpClient(), get()) }
     single { OfferNotifier(androidContext()) }
     singleOf(::NotificationGate) bind SyncNotifier::class
