@@ -43,6 +43,8 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 
 ### Catalog
 - **Every free offer on record.** Daily catalog sync from public model indexes (models.dev, OpenRouter, LiteLLM price map, OpenCode Zen roster).
+- **Only real free models.** Free views show confirmed offers only — first-party pricing or cross-source agreement. Unverified $0 rows and gated tiers stay out, silently.
+- **Zen covered.** OpenCode Zen free trials tracked via the live roster and pricing doc, with expiry alerts; the opencode filter matches the Zen provider, not the pipeline.
 - **Know what's actually usable.** Usable-free status per model (FREE / LIMITED / TRIAL / TEMPORARY); paid and expired offers filtered out.
 - **Know what runs where.** OpenCode compatibility flags (tool calling, vision, reasoning).
 - **Local stays local.** Third catalog source (LiteLLM) with local and self-hosted rows hidden by default behind a switch and marked with a Local pill.
@@ -54,6 +56,7 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 
 ### App
 - **Your shortlist.** Favorites with dedicated filter, status/source views, sort by recent, name, or context.
+- **Picks up where you left off.** Filters, sort, local switch, and recent searches persist across restarts.
 - **Always up to date.** In-app updates via GitHub Releases (daily check, SHA-256 verified download).
 - **Offline-first.** Room database, compact pinned top bar with count and sync age.
 - **Speaks your language.** English, French, and Arabic UI with RTL layout support.
@@ -77,7 +80,7 @@ Fine-tune sources, appearance, and sync behavior in one place.
 
 | Category | Library | Version |
 |---|---|---|
-| **Language** | Kotlin | 2.4.10 |
+| **Language** | Kotlin | 2.4.20 |
 | **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.00 / Nav 1.1.7 |
 | **Architecture** | Single `:app` module, MVI with StateFlow | — |
 | **DI** | Koin | 4.2.2 (BOM) |
@@ -89,7 +92,7 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | **Logging** | Kermit | 2.2.0 |
 | **Async** | Kotlin Coroutines | 1.11.0 |
 | **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 |
-| **Build** | AGP 9.4.0, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
+| **Build** | AGP 9.4.1, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
 
 ## Getting started
 
@@ -159,6 +162,12 @@ Then run:
 ---
 
 ## Changelog (v0.1.0 → v0.3.0)
+
+### Unreleased
+
+- **Confirmed-only free views** — unverified $0 rows demote silently, gated tiers leave the free views, one shared confirmed-free definition
+- **Zen free detection** — live roster × pricing doc fusion, synth rows for catalog lag, expiry alerts on trial end
+- **Remembered filters** — dashboard filters, sort, local switch, and recent searches survive restarts
 
 ### v0.3.0
 
