@@ -1,6 +1,6 @@
 [versions]
-agp = "9.4.1"
-kotlin = "2.4.20"
+agp = "9.4.0"
+kotlin = "2.4.10"
 ksp = "2.3.12"
 composeBomAlpha = "2026.09.00"
 composeUiTest = "1.13.0-alpha03"
