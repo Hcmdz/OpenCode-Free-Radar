@@ -168,6 +168,7 @@ Then run:
 - **Confirmed-only free views** — unverified $0 rows demote silently, gated tiers leave the free views, one shared confirmed-free definition
 - **Zen free detection** — live roster × pricing doc fusion, synth rows for catalog lag, expiry alerts on trial end
 - **Remembered filters** — dashboard filters, sort, local switch, and recent searches survive restarts
+- **Pricing evidence** — Kenari $0 rows mapped to paid (IDR prepaid-wallet policy proven via models.dev history); evidence log in `docs/sources/models-dev-evidence.md`
 
 ### v0.3.0
 
