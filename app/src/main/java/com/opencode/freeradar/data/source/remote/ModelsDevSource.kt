@@ -65,7 +65,9 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
      * rows, kenari serving flagships at $0 with stale updates, a literal
      * "nan" provider). First-party pipelines confirm their own rows
      * (OpenRouter API, LiteLLM explicit zeros, Zen roster×MDX); nvidia
-     * trial endpoints are safelisted (served $0 trial program). The rest
+     * trial endpoints are safelisted (each $0 entry cites the NVIDIA API
+     * Trial Terms free tier and is validated via live endpoint tests —
+     * models.dev commits 5d582f6d, b6e99de4, d1b84739). The rest
      * without conditions is TO_VERIFY — silent, UNKNOWN downstream.
      * `opencode` keeps its own fusion below; dated TRIAL rows are untouched.
      */

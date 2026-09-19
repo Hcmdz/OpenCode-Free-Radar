@@ -17,6 +17,11 @@ import com.opencode.freeradar.domain.model.isGatedProvider
 fun SourceOffer.toOffer(now: Long, source: String = "opencode-data"): Offer {
     val freeStatus = when {
         inputPrice == 0.0 && outputPrice == 0.0 && conditions != null -> FreeStatus.TRIAL
+        // Kenari bills through an IDR prepaid wallet: its $0 rows are
+        // paid offers mispriced at zero, not free ones (models.dev
+        // commit 83040e03: "Cost stays 0 by policy (IDR prepaid
+        // wallet)"). Dated TRIAL rows above keep precedence.
+        inputPrice == 0.0 && outputPrice == 0.0 && providerId == "kenari" -> FreeStatus.PAID
         // Unconfirmed $0 rows are ghosts no source serves (roster absence
         // for Zen, aggregator-only everywhere else): UNKNOWN drops them
         // from the free views without ringing expiry (UNKNOWN never

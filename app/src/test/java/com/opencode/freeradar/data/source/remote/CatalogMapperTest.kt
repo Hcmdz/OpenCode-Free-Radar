@@ -115,13 +115,35 @@ class CatalogMapperTest {
 
     @Test
     fun `uncorroborated aggregator zero maps to UNKNOWN`() {
-        // kenari-style $0 with no first-party pipeline behind it.
+        // kilo-style $0 with no first-party pipeline behind it (kenari
+        // has its own PAID rule below).
         val mapped = offer(
-            providerId = "kenari",
+            providerId = "kilo",
             confidence = Confidence.TO_VERIFY,
             sourceUrl = "https://models.dev/api.json"
         ).toOffer(now = 1_000L)
         assertThat(mapped.freeStatus).isEqualTo(FreeStatus.UNKNOWN)
+    }
+
+    @Test
+    fun `kenari zero maps to PAID`() {
+        // models.dev commit 83040e03: cost stays 0 by policy (IDR prepaid
+        // wallet) — paid offers mispriced at zero, never free.
+        val mapped = offer(
+            providerId = "kenari",
+            sourceUrl = "https://models.dev/api.json"
+        ).toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.PAID)
+    }
+
+    @Test
+    fun `kenari with conditions stays TRIAL`() {
+        val mapped = offer(
+            providerId = "kenari",
+            conditions = "Free trial ends 2026-09-30.",
+            sourceUrl = "https://models.dev/api.json"
+        ).toOffer(now = 1_000L)
+        assertThat(mapped.freeStatus).isEqualTo(FreeStatus.TRIAL)
     }
 
     @Test
