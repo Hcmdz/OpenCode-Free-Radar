@@ -80,7 +80,7 @@ Fine-tune sources, appearance, and sync behavior in one place.
 
 | Category | Library | Version |
 |---|---|---|
-| **Language** | Kotlin | 2.4.20 |
+| **Language** | Kotlin | 2.4.10 |
 | **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.00 / Nav 1.1.7 |
 | **Architecture** | Single `:app` module, MVI with StateFlow | — |
 | **DI** | Koin | 4.2.2 (BOM) |
@@ -92,7 +92,7 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | **Logging** | Kermit | 2.2.0 |
 | **Async** | Kotlin Coroutines | 1.11.0 |
 | **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 |
-| **Build** | AGP 9.4.1, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
+| **Build** | AGP 9.4.0, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
 
 ## Getting started
 
