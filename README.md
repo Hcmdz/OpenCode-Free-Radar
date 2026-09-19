@@ -24,17 +24,17 @@ Unofficial community project — not affiliated with, endorsed, or sponsored
 by Anomaly Innovations, Inc.
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.3.0
+- **Version**: 0.3.1
 - **Author**: HcmDZ &lt;[REDACTED]&gt;
 
 ---
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.3.0.apk`, ~4.1 MB).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.3.1.apk`, ~4.1 MB).
 
 - Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
-- Verify integrity: `sha256sum -c OFR-release.v0.3.0.apk.sha256` (sidecar next to the APK).
+- Verify integrity: `sha256sum -c OFR-release.v0.3.1.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily and verify the SHA-256 before install.
 
 ---
@@ -161,9 +161,9 @@ Then run:
 
 ---
 
-## Changelog (v0.1.0 → v0.3.0)
+## Changelog (v0.1.0 → v0.3.1)
 
-### Unreleased
+### v0.3.1
 
 - **Confirmed-only free views** — unverified $0 rows demote silently, gated tiers leave the free views, one shared confirmed-free definition
 - **Zen free detection** — live roster × pricing doc fusion, synth rows for catalog lag, expiry alerts on trial end
