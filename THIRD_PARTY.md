@@ -37,3 +37,8 @@ third-party code arrives as versioned Gradle dependencies declared in
 - Data sources are public HTTPS model catalogs (models.dev, OpenRouter,
   LiteLLM price map); they are services, not bundled software — see
   `docs/sources/`.
+- OpenCode docs source (`packages/web/src/content/docs/zen.mdx`,
+  `anomalyco/opencode`, MIT © 2025 opencode): fetched live from
+  `raw.githubusercontent.com`, never bundled; pricing facts joined with the
+  Endpoints table to confirm Zen free models — see
+  `docs/sources/zen-mdx.md`.

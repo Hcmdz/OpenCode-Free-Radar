@@ -99,6 +99,18 @@ class DetectChangesTest {
     }
 
     @Test
+    fun `temporary to paid emits FREE_EXPIRED`() {
+        // Every Zen free model is TEMPORARY (limited time): its paywalling
+        // must ring the expiry bell, not slip through silently.
+        val events = detectChanges(
+            old = listOf(offer(freeStatus = FreeStatus.TEMPORARY)),
+            new = listOf(offer(freeStatus = FreeStatus.PAID, inputPrice = 2.0)),
+            now = 2_000L
+        )
+        assertThat(types(events)).isEqualTo(setOf(ChangeType.FREE_EXPIRED, ChangeType.PRICE_CHANGED))
+    }
+
+    @Test
     fun `context change emits CONTEXT_CHANGED`() {
         val events = detectChanges(
             old = listOf(offer()),

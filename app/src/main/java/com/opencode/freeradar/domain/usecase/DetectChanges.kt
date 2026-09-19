@@ -37,12 +37,13 @@ fun detectChanges(old: List<Offer>, new: List<Offer>, now: Long): List<ChangeEve
             // Spark-style limited trial) are both new deals.
             events += ChangeEvent(id, ChangeType.BECAME_FREE, previous.freeStatus.name, current.freeStatus.name, now)
         }
-        if (previous.freeStatus == FreeStatus.FREE &&
+        if (previous.freeStatus.isUsableFree() &&
             (current.freeStatus == FreeStatus.PAID || current.freeStatus == FreeStatus.EXPIRED)
         ) {
             // Missing cost maps to UNKNOWN, never expiry (fail-closed per spec FR-002).
-            // Refinements to LIMITED/TRIAL/TEMPORARY stay usable at $0 with
-            // conditions, so they never ring the expiry alarm either.
+            // Refinements between usable-free states (FREE→TEMPORARY and the
+            // like) stay usable at $0 with conditions, so they never ring
+            // the expiry alarm either — only leaving usable-free does.
             events += ChangeEvent(id, ChangeType.FREE_EXPIRED, previous.freeStatus.name, current.freeStatus.name, now)
         }
         if (previous.inputPrice != current.inputPrice || previous.outputPrice != current.outputPrice) {

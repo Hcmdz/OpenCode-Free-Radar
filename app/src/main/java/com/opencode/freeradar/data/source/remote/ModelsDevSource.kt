@@ -5,7 +5,6 @@ import com.opencode.freeradar.domain.error.Result
 import com.opencode.freeradar.domain.error.SourceError
 import com.opencode.freeradar.domain.error.safeCall
 import com.opencode.freeradar.domain.error.toSourceError
-import com.opencode.freeradar.domain.model.Confidence
 import com.opencode.freeradar.domain.repository.FetchResult
 import com.opencode.freeradar.domain.repository.OfferSource
 import com.opencode.freeradar.util.sha256Hex
@@ -36,10 +35,11 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
         }
         return try {
             val roster = zenRoster()
-            val offers = dropZenGhosts(parseCatalog(catalogBody), roster.first)
-            // Composite hash: the roster is a second input fetched every run.
-            val hash = sha256Hex(catalogBody + "\n" + (roster.second ?: ""))
-            Result.Success(FetchResult(offers, hash))
+            val mdx = zenMdxFree()
+            // Composite hash: roster and MDX are extra inputs fetched every run.
+            val hash = sha256Hex(catalogBody + "\n" + (roster.second ?: "") + "\n" + (mdx.second ?: ""))
+            val merged = mergeZenFreeSignals(parseCatalog(catalogBody), roster.first, mdx.first)
+            Result.Success(FetchResult(synthesizeZenFreeMissing(merged, roster.first, mdx.first), hash))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -52,30 +52,32 @@ class ModelsDevSource(private val client: HttpClient) : OfferSource {
      * entries — 24 of 31 on 2026-09-15). The live Zen roster is the truth:
      * ghosts stay visible but marked TO_VERIFY — silent on arrival, and a
      * roster confirmation later rings BECAME_FREE. A dead roster fails
-     * open — a Zen outage changes nothing.
+     * open — a Zen outage changes nothing. Fusion with the MDX pricing
+     * signal lives in mergeZenFreeSignals (ZenMdxParser.kt).
      */
-    private suspend fun dropZenGhosts(
-        offers: List<SourceOffer>,
-        roster: Set<String>?
-    ): List<SourceOffer> {
-        if (roster == null) return offers
-        return offers.map { offer ->
-            if (offer.providerId == ZEN_PROVIDER && offer.isFree() && offer.modelId !in roster) {
-                offer.copy(confidence = Confidence.TO_VERIFY)
-            } else {
-                offer
-            }
-        }
-    }
-
-    private fun SourceOffer.isFree(): Boolean =
-        inputPrice == 0.0 && outputPrice == 0.0
-
     private suspend fun zenRoster(): Pair<Set<String>?, String?> {
         return when (val response = safeCall { client.get(ZEN_MODELS_URL).bodyAsText() }) {
             is Result.Success -> try {
                 zenJson.decodeFromString<ZenIndex>(response.value).data.map { it.id }.toSet() to
                     response.value
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null to null
+            }
+            is Result.Error -> null to null
+        }
+    }
+
+    /**
+     * MIT-licensed docs source on a third-party host (raw.githubusercontent),
+     * same pattern as the LiteLLM price map — no automated request ever hits
+     * opencode.ai pages. Dead MDX fails open like a dead roster.
+     */
+    private suspend fun zenMdxFree(): Pair<Set<String>?, String?> {
+        return when (val response = safeCall { client.get(ZEN_MDX_URL).bodyAsText() }) {
+            is Result.Success -> try {
+                parseZenFreeIds(response.value) to response.value
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

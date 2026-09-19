@@ -163,6 +163,17 @@ class OfflineFirstOfferRepository(
                                 now - HISTORY_RETENTION_MILLIS
                             ) > 0
                     }
+                    .filterNot { event ->
+                        // Symmetric expiry flap guard: a flickering $0
+                        // (TEMPORARY→PAID→TEMPORARY across syncs) must not
+                        // re-ring FREE_EXPIRED every cycle.
+                        event.type == ChangeType.FREE_EXPIRED &&
+                            events.countTypeSince(
+                                event.offerRemoteId,
+                                ChangeType.FREE_EXPIRED.name,
+                                now - HISTORY_RETENTION_MILLIS
+                            ) > 0
+                    }
                 val removals = plan.remove.map { ChangeEvent(it, ChangeType.MODEL_REMOVED, null, null, now) }
                 offers.replaceSource(
                     incoming.map { it.toEntity() },

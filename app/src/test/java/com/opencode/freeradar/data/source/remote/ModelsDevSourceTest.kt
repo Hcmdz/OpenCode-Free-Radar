@@ -41,7 +41,28 @@ class ModelsDevSourceTest {
         ]}
     """.trimIndent()
 
-    private fun client(rosterStatus: HttpStatusCode = HttpStatusCode.OK) = HttpClient(
+    private fun rosterWithSynth() = """
+        {"object": "list", "data": [
+          {"id": "a-free", "object": "model", "created": 1, "owned_by": "opencode"},
+          {"id": "deepseek-v4-flash-free", "object": "model", "created": 1, "owned_by": "opencode"}
+        ]}
+    """.trimIndent()
+
+    private fun mdx() = """
+        | Model | Model ID | Endpoint | AI SDK Package |
+        | --- | --- | --- | --- |
+        | A | a-free | `https://x` | `@ai-sdk/openai` |
+
+        | Model | Input | Output | Cached Read | Cached Write |
+        | --- | --- | --- | --- | --- |
+        | A | Free | Free | Free | - |
+    """.trimIndent()
+
+    private fun client(
+        rosterStatus: HttpStatusCode = HttpStatusCode.OK,
+        mdx: String? = null,
+        rosterBody: String = roster()
+    ) = HttpClient(
         MockEngine { request ->
             when {
                 request.url.toString() == ModelsDevSource.CATALOG_URL ->
@@ -49,10 +70,16 @@ class ModelsDevSourceTest {
                 request.url.toString() == ModelsDevSource.ZEN_MODELS_URL ->
                     // A real outage serves an error page, never the roster.
                     respond(
-                        if (rosterStatus == HttpStatusCode.OK) roster() else "boom",
+                        if (rosterStatus == HttpStatusCode.OK) rosterBody else "boom",
                         rosterStatus,
                         headersOf(HttpHeaders.ContentType, "application/json")
                     )
+                request.url.toString() == ZEN_MDX_URL ->
+                    if (mdx != null) {
+                        respond(mdx, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "text/plain"))
+                    } else {
+                        respond("nope", HttpStatusCode.NotFound)
+                    }
                 else -> respond("nope", HttpStatusCode.NotFound)
             }
         }
@@ -88,5 +115,23 @@ class ModelsDevSourceTest {
         assertThat(ids).isEqualTo(
             setOf("opencode/a-free", "opencode/ghost-free", "opencode/paid", "bothub/b-free")
         )
+    }
+
+    @Test
+    fun `roster free missing from catalog is synthesized silent`() = runTest {
+        val result = ModelsDevSource(client(mdx = mdx(), rosterBody = rosterWithSynth())).fetch()
+        assertThat(result is Result.Success).isEqualTo(true)
+        val rows = (result as Result.Success).value.offers.associateBy { "${it.providerId}/${it.modelId}" }
+        val synth = rows.getValue("opencode/deepseek-v4-flash-free")
+        assertThat(synth.confidence).isEqualTo(Confidence.TO_VERIFY)
+        assertThat(synth.conditions).isNull()
+        assertThat(synth.sourceUrl).isEqualTo(ZEN_MDX_URL)
+    }
+
+    @Test
+    fun `composite hash covers the mdx body`() = runTest {
+        val without = (ModelsDevSource(client()).fetch() as Result.Success).value.bodyHash
+        val with = (ModelsDevSource(client(mdx = mdx())).fetch() as Result.Success).value.bodyHash
+        assertThat((without == with)).isEqualTo(false)
     }
 }
