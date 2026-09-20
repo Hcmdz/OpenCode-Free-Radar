@@ -34,7 +34,7 @@ by Anomaly Innovations, Inc.
 
 - **Package**: `com.opencode.freeradar`
 - **Version**: 0.3.1
-- **Author**: HcmDZ &lt;[REDACTED]&gt;
+- **Author**: HcmDZ &lt;[RHcmDz.Dev@gmail.com]&gt;
 
 <details>
 <summary>Table of Contents</summary>
