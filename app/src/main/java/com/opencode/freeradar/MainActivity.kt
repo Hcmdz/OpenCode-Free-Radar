@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.IntentCompat
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
 import com.opencode.freeradar.ui.theme.ThemeMode
@@ -163,12 +164,9 @@ class MainActivity : ComponentActivity() {
         intent.action = null
         when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -1)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                } else {
-                    @Suppress("DEPRECATION")
-                    intent.getParcelableExtra(Intent.EXTRA_INTENT) as? Intent
-                }
+                val confirm = IntentCompat.getParcelableExtra(
+                    intent, Intent.EXTRA_INTENT, Intent::class.java
+                )
                 confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let(::startActivity)
             }
             PackageInstaller.STATUS_SUCCESS ->
