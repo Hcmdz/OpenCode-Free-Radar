@@ -3,9 +3,11 @@ package com.opencode.freeradar
 
 import android.app.LocaleManager
 import android.content.Intent
+import android.content.pm.PackageInstaller
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -51,11 +53,13 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         intent.toNewModelsKey()?.let { pendingNotifKey = it }
+        handleInstallStatus(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingNotifKey = intent?.toNewModelsKey()
+        intent?.let { handleInstallStatus(it) }
         enableEdgeToEdge()
         window.isNavigationBarContrastEnforced = false
         lifecycleScope.launch {
@@ -151,6 +155,26 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun handleInstallStatus(intent: Intent) {
+        if (intent.action != UpdateManager.ACTION_INSTALL_STATUS) return
+        intent.action = null
+        when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -1)) {
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(Intent.EXTRA_INTENT) as? Intent
+                }
+                confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let(::startActivity)
+            }
+            PackageInstaller.STATUS_SUCCESS ->
+                Toast.makeText(this, getString(R.string.update_up_to_date), Toast.LENGTH_SHORT).show()
+            else ->
+                Toast.makeText(this, getString(R.string.update_check_failed), Toast.LENGTH_SHORT).show()
         }
     }
 

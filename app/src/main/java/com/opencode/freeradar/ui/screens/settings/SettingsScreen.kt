@@ -210,7 +210,6 @@ fun SettingsRoot(onBack: () -> Unit) {
                     }
                     if (file != null) {
                         updateManager.installApk(appContext, file)
-                        updateRowRes = R.string.update_up_to_date
                     } else {
                         updateRowRes = R.string.update_check_failed
                     }

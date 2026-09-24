@@ -1,11 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.util
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInstaller
 import android.os.Build
 import android.provider.Settings
-import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -18,6 +19,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
 import java.io.File
 import java.security.MessageDigest
+import com.opencode.freeradar.MainActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -174,16 +176,30 @@ class UpdateManager(
             )
             return
         }
-        val uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            apkFile
-        )
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/vnd.android.package-archive")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+        val packageInstaller = context.packageManager.packageInstaller
+        val params = PackageInstaller.SessionParams(
+            PackageInstaller.SessionParams.MODE_FULL_INSTALL
+        ).apply { setSize(apkFile.length()) }
+        var sessionId = -1
+        try {
+            sessionId = packageInstaller.createSession(params)
+            packageInstaller.openSession(sessionId).use { session ->
+                session.openWrite(SESSION_APK_NAME, 0, apkFile.length()).use { out ->
+                    apkFile.inputStream().use { input -> input.copyTo(out) }
+                    session.fsync(out)
+                }
+                val statusIntent = Intent(context, MainActivity::class.java).apply {
+                    action = ACTION_INSTALL_STATUS
+                }
+                val pending = PendingIntent.getActivity(
+                    context, REQUEST_CODE_INSTALL_STATUS, statusIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                session.commit(pending.intentSender)
+            }
+        } catch (_: Exception) {
+            if (sessionId != -1) runCatching { packageInstaller.abandonSession(sessionId) }
         }
-        context.startActivity(intent)
     }
 
     internal fun isAllowedDownloadUrl(url: String): Boolean {
@@ -206,10 +222,13 @@ class UpdateManager(
         return false
     }
 
-    private companion object {
+    companion object {
         const val API_URL = "https://api.github.com/repos/Hcmdz/OpenCode-Free-Radar/releases/latest"
         const val USER_AGENT = "OFR-Android"
         const val CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000L
+        const val ACTION_INSTALL_STATUS = "com.opencode.freeradar.action.INSTALL_STATUS"
+        const val REQUEST_CODE_INSTALL_STATUS = 1002
+        const val SESSION_APK_NAME = "package"
         val SHA_PATTERN = Regex("SHA-256:\\s*([a-fA-F0-9]{64})")
         val ALLOWED_DOWNLOAD_HOSTS = setOf(
             "github.com",
