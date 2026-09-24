@@ -1,4 +1,5 @@
 # OpenCode Free Radar
+<a id="readme-top"></a>
 
 [![OpenCode Free Radar](docs/assets/feature-graphic.png)](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)
 
@@ -23,9 +24,38 @@ free offer tracked once, changes surfaced in seconds, history kept on device.
 Unofficial community project — not affiliated with, endorsed, or sponsored
 by Anomaly Innovations, Inc.
 
+<p align="center">
+  <a href="#screenshots">View Demo</a>
+  ·
+  <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/issues/new?labels=bug">Report Bug</a>
+  ·
+  <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/issues/new?labels=enhancement">Request Feature</a>
+</p>
+
 - **Package**: `com.opencode.freeradar`
 - **Version**: 0.3.1
-- **Author**: HcmDZ &lt;[REDACTED]&gt;
+- **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
+
+<details>
+<summary>Table of Contents</summary>
+
+- [📦 Downloads](#-downloads)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Testing](#testing)
+- [Project structure](#project-structure)
+- [Contributing](#contributing)
+- [Release signing](#release-signing)
+- [Changelog](#changelog-v010--v031)
+- [Privacy](#privacy)
+- [Legal](#legal)
+- [License](#license)
+- [Roadmap](#️-roadmap)
+- [Related Docs](#related-docs)
+- [Contact](#-contact)
+</details>
 
 ---
 
@@ -36,6 +66,8 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 - Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Verify integrity: `sha256sum -c OFR-release.v0.3.1.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily and verify the SHA-256 before install.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -62,6 +94,8 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 - **Speaks your language.** English, French, and Arabic UI with RTL layout support.
 - **Looks at home.** Material 3 dynamic color with dark and high-contrast themes.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Screenshots
 
 Every free offer at a glance, light or dark — dashboard, filters, and settings.
@@ -75,6 +109,8 @@ Every free offer at a glance, light or dark — dashboard, filters, and settings
 | <img src="screenshots/settings-v2.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet-v2.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
 
 Fine-tune sources, appearance, and sync behavior in one place.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Tech stack
 
@@ -94,15 +130,27 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 |
 | **Build** | AGP 9.4.0, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Getting started
 
-Prerequisites: JDK 17 and the Android SDK with platform 37.
+Prerequisites: JDK 17 ([Gradle toolchain](https://docs.gradle.org/current/userguide/build_java_projects.html)) and the Android SDK with platform 37 ([install](https://developer.android.com/studio#downloads)).
+
+### Installation
 
 ```bash
 git clone https://github.com/Hcmdz/OpenCode-Free-Radar.git
 cd OpenCode-Free-Radar
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug
+```
+
+### Everyday use
+
+```bash
+./gradlew :app:installDebug          # run on device
+./gradlew :app:testDebugUnitTest     # unit tests
+./gradlew :app:lintDebug             # static analysis
 ```
 
 Run checks:
@@ -119,6 +167,28 @@ Run checks:
 - UI tests on emulator (Compose + orchestrator):
   `./gradlew :app:connectedDebugAndroidTest`
 - CI runs unit tests, lint, and CodeQL on every push/PR to `main`.
+
+### CI & Quality
+
+- GitHub Actions: `.github/workflows/ci.yml` (unit tests + lint + language gate), `codeql.yml`, Dependabot.
+- Required CI variable **names** (values stay in repo/environment secrets, never committed): release keystore credentials (`RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`).
+
+## Permissions
+
+- `INTERNET`, `ACCESS_NETWORK_STATE` — catalog sync (Ktor) and update check.
+- `POST_NOTIFICATIONS` — new/expired offer alerts.
+- `REQUEST_INSTALL_PACKAGES` — in-app update install.
+
+Entry points: `RadarApp` (Application), `MainActivity` (launcher), `FileProvider` (`${applicationId}.fileprovider`, not exported).
+
+## Security
+
+| Control | Implementation |
+|---|---|
+| **Network security** | Cleartext blocked (`network_security_config.xml`); user CAs trusted in debug builds only |
+| **Backup disabled** | `allowBackup="false"` |
+| **Update integrity** | SHA-256 verified before install (pinned `api.github.com` metadata, sidecar fallback, fail-closed) |
+| **Log hygiene** | R8 log stripping in release builds |
 
 ## Project structure
 
@@ -163,6 +233,8 @@ Then run:
 
 ## Changelog (v0.1.0 → v0.3.1)
 
+Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
+
 ### v0.3.1
 
 - **Confirmed-only free views** — unverified $0 rows demote silently, gated tiers leave the free views, one shared confirmed-free definition
@@ -192,6 +264,8 @@ Then run:
 - **App shell** — pull-to-refresh, collapsible settings, about section, adaptive launcher icon
 - **Sources hygiene** — NVIDIA Build source dropped over website ToS; rejections documented in `docs/sources/`
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ---
 
 ## Privacy
@@ -214,10 +288,20 @@ Copyright holders are listed in the git history.
 This program is free software under the GNU General Public License v3.0 or
 later. See [LICENSE](LICENSE) for the full text.
 
+## 🗺️ Roadmap
+
+Planned work is tracked in the [open issues](https://github.com/Hcmdz/OpenCode-Free-Radar/issues) — propose features there.
+
 ## Related Docs
 
 - [Contributing](CONTRIBUTING.md) · [Third-Party Components](THIRD_PARTY.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Privacy Policy](https://hcmdz.github.io/OpenCode-Free-Radar/privacy/) · [Terms](https://hcmdz.github.io/OpenCode-Free-Radar/terms/) · [Sources](docs/sources/)
+
+## 📬 Contact
+
+HcmDZ — [@Hcmdz](https://github.com/Hcmdz)
+
+Project link: [https://github.com/Hcmdz/OpenCode-Free-Radar](https://github.com/Hcmdz/OpenCode-Free-Radar)
 
 ---
 
