@@ -248,7 +248,7 @@ class OfflineFirstOfferRepository(
     }
 
     private suspend fun isWifiBlocked(): Boolean {
-        if (syncPrefs?.wifiOnly() != true) return false
+        if (syncPrefs?.autoSync()?.wifiOnly != true) return false
         return network?.isMetered() == true
     }
 

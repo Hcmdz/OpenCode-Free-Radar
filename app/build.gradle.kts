@@ -123,6 +123,7 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
     androidTestImplementation(platform(libs.compose.bom.alpha))
     androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.test.rules)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.room3.testing)

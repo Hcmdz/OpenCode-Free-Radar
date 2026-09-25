@@ -1,10 +1,16 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar.ui.screens.dashboard
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.text.format.DateUtils
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -83,6 +89,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
@@ -100,6 +107,7 @@ import com.opencode.freeradar.ui.components.StatusPill
 import com.opencode.freeradar.ui.components.StatusTone
 import com.opencode.freeradar.ui.components.freeStatusTone
 import com.opencode.freeradar.data.local.FilterFabPrefs
+import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.ui.components.activeSummary
 import com.opencode.freeradar.ui.model.OfferFilter
 import com.opencode.freeradar.ui.model.OfferSort
@@ -131,6 +139,29 @@ fun DashboardRoot(
     val appContext = LocalContext.current.applicationContext
     val fabPrefs = remember { FilterFabPrefs(appContext) }
     val persistScope = rememberCoroutineScope()
+    val notificationPrefs = remember { NotificationPrefs(appContext) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) persistScope.launch { notificationPrefs.setEnabled(true) }
+    }
+    // Without the grant the notifier silently drops every alert, so the whole
+    // background sync becomes invisible. Asked once: the OS ignores a second
+    // system dialog, which would leave a permanently dead toggle.
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !notificationPrefs.permissionAsked.first()
+        ) {
+            notificationPrefs.setPermissionAsked()
+            if (ContextCompat.checkSelfPermission(
+                    appContext,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
     val peekDelayMs by fabPrefs.peekDelayMillis.collectAsStateWithLifecycle(
         initialValue = FilterFabPrefs.DEFAULT_DELAY_MILLIS
     )

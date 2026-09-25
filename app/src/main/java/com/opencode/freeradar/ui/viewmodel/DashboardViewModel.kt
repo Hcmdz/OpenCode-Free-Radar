@@ -165,7 +165,7 @@ class DashboardViewModel(
     }
 
     private suspend fun autoSyncAllowed(): Boolean {
-        if (syncSettings?.wifiOnly() != true) return true
+        if (syncSettings?.autoSync()?.wifiOnly != true) return true
         return network?.isMetered() != true
     }
 

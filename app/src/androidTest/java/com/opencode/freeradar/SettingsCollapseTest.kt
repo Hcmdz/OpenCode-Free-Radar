@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.ui.screens.settings.SettingsScreen
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.theme.ThemeState
@@ -28,12 +29,14 @@ class SettingsCollapseTest {
                     localeTag = "",
                     notifEnabled = false,
                     notifDenied = false,
-                    wifiOnly = true,
+                    autoSync = AutoSync.WIFI,
+                    autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
                     onMode = {},
                     onBlack = {},
                     onLocale = {},
                     onNotifToggle = {},
-                    onWifiOnlyToggle = {},
+                    onAutoSyncSelect = {},
+                    onIntervalSelect = {},
                     onOpenNotifSettings = {},
                     onOpenLink = onOpenLink,
                     updateRowText = "Check for updates",

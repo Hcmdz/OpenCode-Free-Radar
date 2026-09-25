@@ -6,6 +6,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
+import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.data.local.SyncSettings
 import com.opencode.freeradar.util.NetworkMonitor
 import kotlinx.coroutines.Dispatchers
@@ -19,14 +20,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 private class FakeSyncSettings(
-    var wifiOnly: Boolean = false,
+    var mode: AutoSync = AutoSync.ALWAYS,
     var warnOnMetered: Boolean = true,
     var firstSyncDone: Boolean = true,
 ) : SyncSettings {
-    override suspend fun wifiOnly(): Boolean = wifiOnly
-    override suspend fun setWifiOnly(enabled: Boolean) {
-        wifiOnly = enabled
+    val wifiOnly: Boolean get() = mode.wifiOnly
+    override suspend fun autoSync(): AutoSync = mode
+    override suspend fun setAutoSync(mode: AutoSync) {
+        this.mode = mode
     }
+    override suspend fun autoSyncIntervalHours(): Int = AutoSync.DEFAULT_INTERVAL_HOURS
+    override suspend fun setAutoSyncIntervalHours(hours: Int) = Unit
     override suspend fun warnOnMetered(): Boolean = warnOnMetered
     override suspend fun setWarnOnMetered(enabled: Boolean) {
         warnOnMetered = enabled

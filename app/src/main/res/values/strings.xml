@@ -112,8 +112,18 @@
     </plurals>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_sync">Sync</string>
-    <string name="sync_wifi_only">Wi-Fi only sync</string>
-    <string name="sync_wifi_benefit">Skip automatic downloads on mobile data. Manual refresh always asks first.</string>
+    <string name="sync_mode_title">When to sync automatically</string>
+    <string name="sync_mode_wifi">Wi-Fi only</string>
+    <string name="sync_mode_wifi_desc">Never downloads on mobile data</string>
+    <string name="sync_mode_wifi_battery">Wi-Fi, while charging</string>
+    <string name="sync_mode_wifi_battery_desc">Unmetered and plugged in</string>
+    <string name="sync_mode_battery">Any network, while charging</string>
+    <string name="sync_mode_battery_desc">Mobile data allowed if plugged in</string>
+    <string name="sync_mode_always">Any network, anytime</string>
+    <string name="sync_mode_always_desc">Uses mobile data, drains battery</string>
+    <string name="sync_interval_title">How often</string>
+    <string name="sync_interval_hours_FORMAT">Every %1$d h</string>
+    <string name="sync_wifi_benefit">Automatic checks run in the background. Manual refresh always asks first on mobile data.</string>
     <string name="metered_title">Sync over mobile data?</string>
     <string name="metered_message">The catalog is large and a connection is required. Syncing now will use mobile data.</string>
     <string name="metered_sync_once">Sync once</string>

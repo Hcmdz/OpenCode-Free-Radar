@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Description
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -80,12 +82,14 @@ import android.provider.Settings as SystemSettings
 import com.opencode.freeradar.BuildConfig
 import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AppLocalePrefs
+import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.SyncPrefs
 import com.opencode.freeradar.ui.components.OptionRow
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.util.UpdateManager
+import com.opencode.freeradar.worker.SyncScheduler
 import org.koin.compose.koinInject
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.theme.ThemeMode
@@ -106,7 +110,10 @@ fun SettingsRoot(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val localeTag by localePrefs.tag.collectAsStateWithLifecycle(initialValue = "")
     val notifEnabled by notifPrefs.enabled.collectAsStateWithLifecycle(initialValue = false)
-    val wifiOnly by syncPrefs.wifiOnlyFlow.collectAsStateWithLifecycle(initialValue = true)
+    val autoSync by syncPrefs.autoSyncFlow.collectAsStateWithLifecycle(initialValue = AutoSync.WIFI)
+    val autoSyncIntervalHours by syncPrefs.autoSyncIntervalHoursFlow.collectAsStateWithLifecycle(
+        initialValue = AutoSync.DEFAULT_INTERVAL_HOURS
+    )
     val peekDelayMs by fabPrefs.peekDelayMillis.collectAsStateWithLifecycle(
         initialValue = FilterFabPrefs.DEFAULT_DELAY_MILLIS
     )
@@ -150,7 +157,8 @@ fun SettingsRoot(onBack: () -> Unit) {
         localeTag = localeTag,
         notifEnabled = notifEnabled,
         notifDenied = notifDenied,
-        wifiOnly = wifiOnly,
+        autoSync = autoSync,
+        autoSyncIntervalHours = autoSyncIntervalHours,
         peekDelayMs = peekDelayMs,
         peekSliverDp = peekSliverDp,
         onMode = { scope.launch { themePrefs.setMode(it) } },
@@ -170,7 +178,21 @@ fun SettingsRoot(onBack: () -> Unit) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         },
-        onWifiOnlyToggle = { scope.launch { syncPrefs.setWifiOnly(it) } },
+        // force=true: the stored schedule is stale the moment a setting changes.
+        // Without the rewrite the WorkManager constraint and period keep their
+        // old values and the settings screen silently does nothing.
+        onAutoSyncSelect = { mode ->
+            scope.launch {
+                syncPrefs.setAutoSync(mode)
+                SyncScheduler.schedule(appContext, mode, autoSyncIntervalHours, force = true)
+            }
+        },
+        onIntervalSelect = { hours ->
+            scope.launch {
+                syncPrefs.setAutoSyncIntervalHours(hours)
+                SyncScheduler.schedule(appContext, autoSync, hours, force = true)
+            }
+        },
         onPeekDelay = { scope.launch { fabPrefs.setPeekDelayMillis(it) } },
         onPeekSliver = { scope.launch { fabPrefs.setPeekSliverDp(it) } },
         onOpenNotifSettings = {
@@ -235,14 +257,16 @@ fun SettingsScreen(
     localeTag: String,
     notifEnabled: Boolean,
     notifDenied: Boolean,
-    wifiOnly: Boolean,
+    autoSync: AutoSync,
+    autoSyncIntervalHours: Int,
     peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
     peekSliverDp: Int = FilterFabPrefs.DEFAULT_SLIVER_DP,
     onMode: (ThemeMode) -> Unit,
     onBlack: (Boolean) -> Unit,
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
-    onWifiOnlyToggle: (Boolean) -> Unit,
+    onAutoSyncSelect: (AutoSync) -> Unit,
+    onIntervalSelect: (Int) -> Unit,
     onPeekDelay: (Long) -> Unit = {},
     onPeekSliver: (Int) -> Unit = {},
     onOpenNotifSettings: () -> Unit,
@@ -337,22 +361,38 @@ fun SettingsScreen(
                 }
             }
             CollapsibleSection(titleRes = R.string.settings_sync) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Sync,
-                        contentDescription = null
+                Text(
+                    text = stringResource(R.string.sync_mode_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                AutoSync.entries.forEach { mode ->
+                    OptionRow(
+                        icon = when (mode) {
+                            AutoSync.WIFI -> Icons.Filled.Wifi
+                            AutoSync.WIFI_BATTERY -> Icons.Filled.Wifi
+                            AutoSync.BATTERY -> Icons.Filled.BatteryChargingFull
+                            AutoSync.ALWAYS -> Icons.Filled.Sync
+                        },
+                        title = stringResource(mode.labelRes()),
+                        subtitle = stringResource(mode.subtitleRes()),
+                        modifier = Modifier.testTag(mode.testTag()),
+                        selected = mode == autoSync,
+                        onClick = { onAutoSyncSelect(mode) }
                     )
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.sync_wifi_only)
-                    )
-                    Switch(
-                        modifier = Modifier.testTag("settings_sync_switch"),
-                        checked = wifiOnly,
-                        onCheckedChange = onWifiOnlyToggle
+                }
+                Text(
+                    text = stringResource(R.string.sync_interval_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                AutoSync.INTERVAL_OPTIONS_HOURS.forEach { hours ->
+                    OptionRow(
+                        icon = Icons.Filled.Timer,
+                        title = stringResource(R.string.sync_interval_hours_FORMAT, hours),
+                        modifier = Modifier.testTag("sync_interval_$hours"),
+                        selected = hours == autoSyncIntervalHours,
+                        onClick = { onIntervalSelect(hours) }
                     )
                 }
                 Text(
@@ -548,6 +588,23 @@ private fun LanguageOption(
 }
 
 @Composable
+private fun AutoSync.labelRes(): Int = when (this) {
+    AutoSync.WIFI -> R.string.sync_mode_wifi
+    AutoSync.WIFI_BATTERY -> R.string.sync_mode_wifi_battery
+    AutoSync.BATTERY -> R.string.sync_mode_battery
+    AutoSync.ALWAYS -> R.string.sync_mode_always
+}
+
+private fun AutoSync.subtitleRes(): Int = when (this) {
+    AutoSync.WIFI -> R.string.sync_mode_wifi_desc
+    AutoSync.WIFI_BATTERY -> R.string.sync_mode_wifi_battery_desc
+    AutoSync.BATTERY -> R.string.sync_mode_battery_desc
+    AutoSync.ALWAYS -> R.string.sync_mode_always_desc
+}
+
+private fun AutoSync.testTag(): String = "sync_mode_${name.lowercase()}"
+
+@Composable
 private fun PeekDelayOption(
     delayMs: Long,
     labelRes: Int,
@@ -586,13 +643,14 @@ private fun SettingsPreview() {
             localeTag = "",
             notifEnabled = false,
             notifDenied = false,
-            wifiOnly = true,
+            autoSync = AutoSync.WIFI,
+            autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
             onMode = {},
             onBlack = {},
             onLocale = {},
             onNotifToggle = {},
-            onWifiOnlyToggle = {},
-            onOpenNotifSettings = {},
+            onAutoSyncSelect = {},
+            onIntervalSelect = {},            onOpenNotifSettings = {},
             onOpenLink = {},
             updateRowText = "Check for updates",
             onCheckUpdate = {},

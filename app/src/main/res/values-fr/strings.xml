@@ -113,8 +113,18 @@
     </plurals>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_sync">Synchronisation</string>
-    <string name="sync_wifi_only">Synchro Wi-Fi uniquement</string>
-    <string name="sync_wifi_benefit">Ignore les téléchargements auto sur données mobiles. L’actualisation manuelle demande toujours.</string>
+    <string name="sync_mode_title">Quand synchroniser automatiquement</string>
+    <string name="sync_mode_wifi">Wi-Fi uniquement</string>
+    <string name="sync_mode_wifi_desc">Jamais de téléchargement en données mobiles</string>
+    <string name="sync_mode_wifi_battery">Wi-Fi, en charge</string>
+    <string name="sync_mode_wifi_battery_desc">Réseau non facturé et branché</string>
+    <string name="sync_mode_battery">Tout réseau, en charge</string>
+    <string name="sync_mode_battery_desc">Données mobiles autorisées si branché</string>
+    <string name="sync_mode_always">Tout réseau, à tout moment</string>
+    <string name="sync_mode_always_desc">Utilise les données mobiles, consomme la batterie</string>
+    <string name="sync_interval_title">Fréquence</string>
+    <string name="sync_interval_hours_FORMAT">Toutes les %1$d h</string>
+    <string name="sync_wifi_benefit">Les vérifications automatiques tournent en arrière-plan. L’actualisation manuelle demande toujours en données mobiles.</string>
     <string name="metered_title">Synchro sur données mobiles ?</string>
     <string name="metered_message">Le catalogue est volumineux et une connexion est requise. Continuer utilisera vos données mobiles.</string>
     <string name="metered_sync_once">Synchroniser</string>

@@ -16,11 +16,24 @@ class NotificationPrefs(private val context: Context) {
 
     private object Keys {
         val ENABLED = booleanPreferencesKey("enabled")
+        val PERMISSION_ASKED = booleanPreferencesKey("permission_asked")
     }
 
     val enabled: Flow<Boolean> = context.notificationStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
-        .map { prefs -> prefs[Keys.ENABLED] ?: false }
+        .map { prefs -> prefs[Keys.ENABLED] ?: true }
+
+    /**
+     * Asked once per install: the OS only shows the system dialog the first
+     * time, so re-asking later is a silent no-op and a nagging prompt instead.
+     */
+    val permissionAsked: Flow<Boolean> = context.notificationStore.data
+        .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
+        .map { prefs -> prefs[Keys.PERMISSION_ASKED] ?: false }
+
+    suspend fun setPermissionAsked() {
+        context.notificationStore.edit { it[Keys.PERMISSION_ASKED] = true }
+    }
 
     suspend fun setEnabled(enabled: Boolean) {
         context.notificationStore.edit { it[Keys.ENABLED] = enabled }

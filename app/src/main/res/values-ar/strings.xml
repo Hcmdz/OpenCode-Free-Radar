@@ -119,8 +119,18 @@
     </plurals>
     <string name="settings_notifications">الإشعارات</string>
     <string name="settings_sync">المزامنة</string>
-    <string name="sync_wifi_only">المزامنة عبر Wi-Fi فقط</string>
-    <string name="sync_wifi_benefit">تجاهل التنزيلات التلقائية على بيانات الهاتف. التحديث اليدوي يطلب دائمًا.</string>
+    <string name="sync_mode_title">متى تتم المزامنة تلقائيًا</string>
+    <string name="sync_mode_wifi">شبكة Wi-Fi فقط</string>
+    <string name="sync_mode_wifi_desc">لا تنزيل على بيانات الهاتف</string>
+    <string name="sync_mode_wifi_battery">Wi-Fi أثناء الشحن</string>
+    <string name="sync_mode_wifi_battery_desc">شبكة غير محدودة والجهاز موصول</string>
+    <string name="sync_mode_battery">أي شبكة أثناء الشحن</string>
+    <string name="sync_mode_battery_desc">يسمح ببيانات الهاتف عند الشحن</string>
+    <string name="sync_mode_always">أي شبكة في أي وقت</string>
+    <string name="sync_mode_always_desc">يستهلك بيانات الهاتف والبطارية</string>
+    <string name="sync_interval_title">التكرار</string>
+    <string name="sync_interval_hours_FORMAT">كل %1$d س</string>
+    <string name="sync_wifi_benefit">تجري الفحوص التلقائية في الخلفية. أما التحديث اليدوي فيطلب دائمًا على بيانات الهاتف.</string>
     <string name="metered_title">المزامنة عبر بيانات الهاتف؟</string>
     <string name="metered_message">الكتالوج كبير ويتطلب اتصالاً. المتابعة ستستخدم بيانات هاتفك.</string>
     <string name="metered_sync_once">مزامنة</string>
