@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 class RadarApp : Application() {
@@ -23,7 +24,7 @@ class RadarApp : Application() {
         // DataStore reads are suspend, so the schedule cannot be built inside
         // onCreate the way a synchronous preference read would allow.
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            val prefs = SyncPrefs(this@RadarApp)
+            val prefs = GlobalContext.get().get<SyncPrefs>()
             SyncScheduler.schedule(
                 this@RadarApp,
                 prefs.autoSync(),
