@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar
 
+import android.Manifest
 import android.os.ParcelFileDescriptor
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
 import com.opencode.freeradar.data.local.SyncPrefs
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -31,7 +33,15 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MeteredDialogTest {
 
-    @get:Rule
+    // order 1 runs outermost: this class launches MainActivity by hand, and
+    // the dashboard asks for POST_NOTIFICATIONS on its first composition. That
+    // system dialog takes the compose hierarchy away from the test, so the
+    // grant has to land before the launch.
+    @get:Rule(order = 1)
+    val notificationPermission =
+        GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS)
+
+    @get:Rule(order = 0)
     val rule = createEmptyComposeRule()
 
     private fun shell(cmd: String): String {
