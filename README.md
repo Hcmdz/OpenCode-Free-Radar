@@ -33,7 +33,7 @@ by Anomaly Innovations, Inc.
 </p>
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.3.1
+- **Version**: 0.4.0 (versionCode 40000)
 - **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
 
 <details>
@@ -48,7 +48,8 @@ by Anomaly Innovations, Inc.
 - [Project structure](#project-structure)
 - [Contributing](#contributing)
 - [Release signing](#release-signing)
-- [Changelog](#changelog-v010--v031)
+- [APK size](#-apk-size)
+- [Changelog](#changelog-v010--v040)
 - [Privacy](#privacy)
 - [Legal](#legal)
 - [License](#license)
@@ -61,11 +62,13 @@ by Anomaly Innovations, Inc.
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.0.apk`, ~4.1 MB).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.0.apk`, ~4.1 MB, universal APK).
 
 - Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
-- Verify integrity: `sha256sum -c OFR-release.v0.3.1.apk.sha256` (sidecar next to the APK).
+- Architectures: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (one APK, no per-ABI download).
+- Verify integrity: `sha256sum -c OFR-release.v0.4.0.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily and verify the SHA-256 before install.
+- A signing-key change would require uninstalling before reinstalling: Android refuses in-place updates across certificates.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -82,12 +85,13 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 - **Local stays local.** Third catalog source (LiteLLM) with local and self-hosted rows hidden by default behind a switch and marked with a Local pill.
 
 ### Sync & alerts
-- **Never miss a new freebie.** Daily background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers.
-- **Your data plan survives.** Wi-Fi-only mode, metered-data guard, and auto first sync on install.
+- **Never miss a new freebie.** Background sync via WorkManager; tapping an alert opens a snapshot card of new/expired offers.
+- **You set the rhythm.** Auto-sync on Wi-Fi, Wi-Fi on battery, battery only, or always, with a cadence from 8 to 72 hours; the choice survives restarts.
+- **Your data plan survives.** Metered-data guard, auto first sync on install, and alerts enabled by default with a one-time permission prompt.
 - **History on device.** Price history and change log per model, stored on device.
 
 ### App
-- **Your shortlist.** Favorites with dedicated filter, status/source views, sort by recent, name, or context.
+- **Your shortlist.** Favorites with dedicated filter, status/source views, sort by recent, name, or context; a starred model stays pinned above the active sort.
 - **Picks up where you left off.** Filters, sort, local switch, and recent searches persist across restarts.
 - **Always up to date.** In-app updates via GitHub Releases (daily check, SHA-256 verified download).
 - **Offline-first.** Room database, compact pinned top bar with count and sync age.
@@ -121,13 +125,13 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | **Architecture** | Single `:app` module, MVI with StateFlow | — |
 | **DI** | Koin | 4.2.2 (BOM) |
 | **Database** | Room (source of truth) | 3.0.3 |
-| **Networking** | Ktor + kotlinx.serialization | 3.5.2 / 1.11.0 |
+| **Networking** | Ktor + kotlinx.serialization | 3.6.0 / 1.11.0 |
 | **Storage** | DataStore (settings) | 1.2.1 |
-| **Scheduling** | WorkManager (daily sync) | 2.11.2 |
-| **Image** | Coil | 3.6.2 |
+| **Scheduling** | WorkManager (configurable sync) | 2.11.2 |
+| **Image** | Coil | 3.6.3 |
 | **Logging** | Kermit | 2.2.0 |
 | **Async** | Kotlin Coroutines | 1.11.0 |
-| **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 |
+| **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 / 1.2.1 / 0.28.1 |
 | **Build** | AGP 9.4.0, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -229,6 +233,26 @@ Then run:
 ./gradlew :app:assembleRelease
 ```
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📏 APK Size
+
+Release APK: **~4.1 MB** compressed (4,333,975 bytes), 132 entries, one universal binary.
+
+| Component | Uncompressed |
+|---|---|
+| `classes.dex` (app + libraries, R8-shrunk) | ~3.9 MB |
+| Resources and assets | ~207 KB |
+| Native libraries (4 ABIs) | ~70 KB |
+| Signature and packaging metadata | ~156 KB |
+
+Release builds run `isMinifyEnabled` with `isShrinkResources`, which collapses the
+library graph into a single dex. There is no ABI filtering: one APK covers
+`arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` rather than shipping per-architecture
+downloads.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ---
 
 ## Changelog (v0.1.0 → v0.4.0)
@@ -294,6 +318,16 @@ https://hcmdz.github.io/OpenCode-Free-Radar/terms/ — see also
 Copyright holders are listed in the git history.
 This program is free software under the GNU General Public License v3.0 or
 later. See [LICENSE](LICENSE) for the full text.
+
+### Trademark Notice
+
+The application name "OpenCode Free Radar", along with all original branding
+artwork, logos, and custom launcher icons, are the exclusive intellectual
+property and trademarks of the author. Redistribution or modification of the
+source code under the GPL v3 does not grant permission to use these brand assets
+in derivative works. All forks must be entirely rebranded. This project is
+unofficial and is not affiliated with, endorsed by, or sponsored by the
+provider whose name appears in the app name.
 
 ## 🗺️ Roadmap
 
