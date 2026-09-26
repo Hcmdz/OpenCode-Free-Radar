@@ -61,7 +61,7 @@ by Anomaly Innovations, Inc.
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.3.1.apk`, ~4.1 MB).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.0.apk`, ~4.1 MB).
 
 - Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Verify integrity: `sha256sum -c OFR-release.v0.3.1.apk.sha256` (sidecar next to the APK).
@@ -231,9 +231,16 @@ Then run:
 
 ---
 
-## Changelog (v0.1.0 → v0.3.1)
+## Changelog (v0.1.0 → v0.4.0)
 
 Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
+
+### v0.4.0
+
+- **Auto-sync on a schedule** — pick the network constraint (Wi-Fi, Wi-Fi on battery, battery only, always) and the cadence from 8 to 72 hours; the choice survives restarts
+- **Alerts on by default** — a sync that spots new free models raises a notification, and the permission is asked once at first launch instead of being buried in settings
+- **Favorites pinned to the top** — a starred model stays above the rest of the list whatever sort is active, and models tied on the same key keep a stable order
+- **Self-update repaired** — the in-app update flow installs the new build again and reports the outcome correctly
 
 ### v0.3.1
 
