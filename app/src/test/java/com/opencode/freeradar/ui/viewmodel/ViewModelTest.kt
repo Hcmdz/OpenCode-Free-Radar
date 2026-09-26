@@ -145,7 +145,9 @@ fun sampleOffer(
     source: String = "opencode-data",
     name: String = "M",
     providerId: String = "p",
-    confidence: Confidence = Confidence.OFFICIAL
+    confidence: Confidence = Confidence.OFFICIAL,
+    favorite: Boolean = false,
+    verifiedAt: Long = 1_000L
 ) = Offer(
     remoteId = remoteId, providerId = providerId, modelId = "m", name = name,
     inputPrice = 0.0, outputPrice = 0.0, freeStatus = status,
@@ -153,8 +155,8 @@ fun sampleOffer(
     contextLength = 1000, maxOutputTokens = null, supportsTools = true,
     supportsVision = false, supportsStructuredOutput = false,
     openCodeCompatible = compatible, officialUrl = null, source = source,
-    sourceUrl = null, retrievedAt = 1_000L, verifiedAt = 1_000L,
-    confidence = confidence, favorite = false
+    sourceUrl = null, retrievedAt = 1_000L, verifiedAt = verifiedAt,
+    confidence = confidence, favorite = favorite
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -178,6 +180,57 @@ class DashboardViewModelTest {
             val loaded = awaitItem()
             assertThat(loaded.isLoading).isFalse()
             assertThat(loaded.offers.map { it.remoteId }).isEqualTo(listOf("p/m"))
+        }
+    }
+
+    @Test
+    fun `favorite is listed first even when a fresher row is not starred`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem() // initial loading state, before the flow has a value
+            // The starred row is the oldest of the two, so RECENT alone would
+            // put "p/fresh" first: only the pin can reverse them.
+            repo.offersFlow.value = listOf(
+                sampleOffer("p/fresh", verifiedAt = 9_000L),
+                sampleOffer("p/pinned", favorite = true, verifiedAt = 1_000L)
+            )
+            testScheduler.advanceUntilIdle()
+            var state = awaitItem()
+            while (state.offers.size < 2) state = awaitItem()
+            assertThat(state.offers.map { it.remoteId })
+                .isEqualTo(listOf("p/pinned", "p/fresh"))
+        }
+    }
+
+    @Test
+    fun `unstarred row leaves the pin and returns to its own sort position`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = FakeOfferRepository()
+        val vm = DashboardViewModel(repo, NoopSyncNotifier())
+        vm.state.test {
+            awaitItem()
+            repo.offersFlow.value = listOf(
+                sampleOffer("p/pinned", favorite = true, verifiedAt = 1_000L),
+                sampleOffer("p/fresh", verifiedAt = 9_000L)
+            )
+            testScheduler.advanceUntilIdle()
+            var pinned = awaitItem()
+            while (pinned.offers.size < 2) pinned = awaitItem()
+            assertThat(pinned.offers.map { it.remoteId })
+                .isEqualTo(listOf("p/pinned", "p/fresh"))
+
+            // Same rows, star removed: both are back on recency order.
+            repo.offersFlow.value = listOf(
+                sampleOffer("p/pinned", favorite = false, verifiedAt = 1_000L),
+                sampleOffer("p/fresh", verifiedAt = 9_000L)
+            )
+            testScheduler.advanceUntilIdle()
+            var plain = awaitItem()
+            while (plain.offers.size < 2) plain = awaitItem()
+            assertThat(plain.offers.map { it.remoteId })
+                .isEqualTo(listOf("p/fresh", "p/pinned"))
         }
     }
 
