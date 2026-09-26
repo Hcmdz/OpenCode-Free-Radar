@@ -20,10 +20,9 @@ class SyncWorker(context: Context, params: WorkerParameters) :
     override suspend fun doWork(): Result {
         return try {
             val watermark = gate.beforeSync()
-            // force=true: the period is the only throttle. Without it the
-            // repository's 6 h freshness window skips every source, so a
-            // schedule shorter than that window would wake up and do nothing.
-            when (repository.refreshAll(force = true)) {
+            // No freshness or network re-check here: the WorkManager
+            // constraint gates the schedule, so a run means a real fetch.
+            when (repository.refreshAll()) {
                 RefreshResult.Ok, is RefreshResult.Partial -> {
                     gate.afterSync(watermark)
                     Result.success()

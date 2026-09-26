@@ -14,7 +14,8 @@ class SortTest {
         remoteId: String,
         name: String = "M",
         verifiedAt: Long = 1_000L,
-        contextLength: Int? = null
+        contextLength: Int? = null,
+        favorite: Boolean = false
     ) = Offer(
         remoteId = remoteId,
         providerId = "p",
@@ -39,7 +40,7 @@ class SortTest {
         retrievedAt = 1_000L,
         verifiedAt = verifiedAt,
         confidence = Confidence.OFFICIAL,
-        favorite = false
+        favorite = favorite
     )
 
     @Test
@@ -80,5 +81,50 @@ class SortTest {
         )
         assertThat(rows.sortedWith(sortComparator(OfferSort.CONTEXT)).map { it.remoteId })
             .isEqualTo(listOf("big", "small", "null"))
+    }
+
+    @Test
+    fun `favorite outranks a fresher row on recent`() {
+        val rows = listOf(
+            offer("fresh", verifiedAt = 900L),
+            offer("pinned", verifiedAt = 100L, favorite = true)
+        )
+        assertThat(rows.sortedWith(sortComparator(OfferSort.RECENT)).map { it.remoteId })
+            .isEqualTo(listOf("pinned", "fresh"))
+    }
+
+    @Test
+    fun `favorite outranks the name order too`() {
+        val rows = listOf(
+            offer("aaa", name = "Aaa"),
+            offer("pinned", name = "Zzz", favorite = true)
+        )
+        assertThat(rows.sortedWith(sortComparator(OfferSort.NAME)).map { it.remoteId })
+            .isEqualTo(listOf("pinned", "aaa"))
+    }
+
+    @Test
+    fun `order is total regardless of input order`() {
+        val rows = listOf(
+            offer("c", verifiedAt = 100L),
+            offer("a", verifiedAt = 100L),
+            offer("b", verifiedAt = 100L)
+        )
+        val expected = listOf("a", "b", "c")
+        assertThat(rows.sortedWith(sortComparator(OfferSort.RECENT)).map { it.remoteId })
+            .isEqualTo(expected)
+        assertThat(rows.reversed().sortedWith(sortComparator(OfferSort.RECENT)).map { it.remoteId })
+            .isEqualTo(expected)
+    }
+
+    @Test
+    fun `sort still applies inside the favorite group`() {
+        val rows = listOf(
+            offer("old-pinned", verifiedAt = 100L, favorite = true),
+            offer("new-pinned", verifiedAt = 900L, favorite = true),
+            offer("plain", verifiedAt = 950L)
+        )
+        assertThat(rows.sortedWith(sortComparator(OfferSort.RECENT)).map { it.remoteId })
+            .isEqualTo(listOf("new-pinned", "old-pinned", "plain"))
     }
 }

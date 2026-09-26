@@ -460,10 +460,11 @@ fun SettingsScreen(
                     text = "${stringResource(R.string.about_developer)}: HcmDZ",
                     onClick = null
                 )
+                val contact = stringResource(R.string.about_contact)
                 AboutRow(
                     icon = Icons.Filled.Email,
-                    text = "HcmDz.Dev@gmail.com",
-                    onClick = { onOpenLink("mailto:HcmDz.Dev@gmail.com") }
+                    text = contact,
+                    onClick = { onOpenLink("mailto:$contact") }
                 )
                 AboutRow(
                     icon = Icons.Filled.Link,

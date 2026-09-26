@@ -134,7 +134,7 @@ class DashboardViewModel(
                 return@launch
             }
             prefs.setFirstSyncDone()
-            if (autoSyncAllowed()) doRefresh(force = true)
+            if (autoSyncAllowed()) doRefresh()
         }
         viewModelScope.launch {
             seenEventBaseline.value = repository.latestEventId()
@@ -272,7 +272,7 @@ class DashboardViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
 
-    private suspend fun doRefresh(force: Boolean) {
+    private suspend fun doRefresh() {
         // A second pull while the spinner is up would start a second
         // full sync: double watermark, double afterSync, and the first
         // finisher drops the flag while work is still in flight.
@@ -282,7 +282,7 @@ class DashboardViewModel(
         refreshing.value = true
         try {
             val watermark = gate.beforeSync()
-            when (val result = repository.refreshAll(force = force)) {
+            when (val result = repository.refreshAll()) {
                 RefreshResult.Ok, is RefreshResult.Partial -> {
                     manualError.value = null
                     gate.afterSync(watermark)
@@ -302,7 +302,7 @@ class DashboardViewModel(
                     meteredWarning.value = true
                     return@launch
                 }
-                doRefresh(force = true)
+                doRefresh()
             }
             is DashboardAction.SelectFilter -> filter.value = action.filter
             is DashboardAction.SelectSource -> sourceFilter.value = action.source
@@ -336,12 +336,12 @@ class DashboardViewModel(
     DashboardAction.DismissError -> manualError.value = null
     DashboardAction.MeteredSyncOnce -> viewModelScope.launch {
         meteredWarning.value = false
-        doRefresh(force = true)
+        doRefresh()
     }
     DashboardAction.MeteredNeverWarn -> viewModelScope.launch {
         syncSettings?.setWarnOnMetered(false)
         meteredWarning.value = false
-        doRefresh(force = true)
+        doRefresh()
     }
     DashboardAction.MeteredLater -> {
         meteredWarning.value = false

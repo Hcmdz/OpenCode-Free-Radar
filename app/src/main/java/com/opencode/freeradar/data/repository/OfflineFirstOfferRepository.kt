@@ -6,8 +6,6 @@ import com.opencode.freeradar.data.local.SourceHealthEntity
 import com.opencode.freeradar.data.local.SyncRunEntity
 import com.opencode.freeradar.domain.usecase.OVERLAP_PINS
 import com.opencode.freeradar.data.local.SyncStateStore
-import com.opencode.freeradar.data.local.SyncSettings
-import com.opencode.freeradar.util.NetworkMonitor
 import com.opencode.freeradar.data.source.remote.SourceOffer
 import com.opencode.freeradar.data.source.remote.toOffer
 import com.opencode.freeradar.domain.error.RefreshResult
@@ -42,8 +40,6 @@ class OfflineFirstOfferRepository(
     private val mappers: Map<String, (SourceOffer, Long) -> Offer> = emptyMap(),
     private val clock: Clock = Clock.systemUTC(),
     private val syncState: SyncStateStore? = null,
-    private val syncPrefs: SyncSettings? = null,
-    private val network: NetworkMonitor? = null,
 ) : OfferRepository {
 
     private val offers = database.offerDao()
@@ -216,22 +212,12 @@ class OfflineFirstOfferRepository(
         }
     }
 
-    override suspend fun refreshAll(force: Boolean): RefreshResult = refreshMutex.withLock {
+    override suspend fun refreshAll(): RefreshResult = refreshMutex.withLock {
         // Deterministic order: map iteration follows DI registration.
-        // A fresh-enough source is skipped (recorded, not fetched): pull and
-        // worker share this gate, manual pulls bypass it with force.
-        val now = clock.millis()
-        val results = sources.keys.associateWith { source ->
-            if (!force && isFresh(source, now)) {
-                recordSkip(source, now, "skipped-fresh")
-                RefreshResult.Ok
-            } else if (!force && isWifiBlocked()) {
-                recordSkip(source, now, "skipped-metered")
-                RefreshResult.Ok
-            } else {
-                refresh(source)
-            }
-        }
+        // The worker is gated by its WorkManager constraint and the manual pull
+        // by the metered dialog, so both always fetch: no freshness or network
+        // re-check here, only the skip bookkeeping it used to record.
+        val results = sources.keys.associateWith { source -> refresh(source) }
         applyCrossCheck()
         return combineResults(results)
     }
@@ -240,30 +226,6 @@ class OfflineFirstOfferRepository(
         if (incomingHash == null) return false
         val store = syncState ?: return false
         return shouldSkipHash(store.bodyHash(source), incomingHash)
-    }
-
-    private suspend fun isFresh(source: String, now: Long): Boolean {
-        val last = runs.recentRuns(source, 1).firstOrNull() ?: return false
-        return shouldSkipFresh(last.result, last.completedAt, now)
-    }
-
-    private suspend fun isWifiBlocked(): Boolean {
-        if (syncPrefs?.autoSync()?.wifiOnly != true) return false
-        return network?.isMetered() == true
-    }
-
-    private suspend fun recordSkip(source: String, now: Long, reason: String) {
-        val runId = runs.insert(
-            SyncRunEntity(
-                source = source,
-                startedAt = now,
-                completedAt = null,
-                result = null,
-                error = null
-            )
-        )
-        runs.finishRun(runId, now, SyncResult.OK.name, reason)
-        runs.pruneKeepLast(source, MAX_SYNC_RUNS)
     }
 
     /**
@@ -339,12 +301,6 @@ class OfflineFirstOfferRepository(
 
         internal fun shouldSkipHash(storedHash: String?, incomingHash: String?): Boolean =
             incomingHash != null && storedHash == incomingHash
-
-        internal fun shouldSkipFresh(result: String?, completedAt: Long?, now: Long): Boolean {
-            if (result != SyncResult.OK.name) return false
-            if (completedAt == null) return false
-            return now - completedAt < FRESHNESS_WINDOW_MILLIS
-        }
 
         /**
          * Pure aggregation over per-source results: all ok → Ok, mixed →

@@ -72,6 +72,11 @@
     <string name="about_privacy">Privacy Policy</string>
     <string name="about_terms">Terms of Service</string>
     <string name="about_version">Version</string>
+    <!-- Keep the contact address here, not inline in SettingsScreen.kt: a
+         literal in source is what got rewritten into a "[REDACTED]" placeholder
+         once already, and the E2E test then had nothing to assert on.
+         translatable="false": the same address serves every locale. -->
+    <string name="about_contact" translatable="false">HcmDz.Dev@gmail.com</string>
     <string name="update_check">Check for updates</string>
     <string name="update_checking">Checking for updates…</string>
     <string name="update_up_to_date">Up to date</string>

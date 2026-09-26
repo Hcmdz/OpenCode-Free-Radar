@@ -6,10 +6,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.ui.screens.settings.SettingsScreen
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.theme.ThemeState
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,13 +62,18 @@ class SettingsCollapseTest {
 
     @Test
     fun aboutSectionRevealsContactAndEmitsLink() {
+        val contact = InstrumentationRegistry.getInstrumentation().targetContext
+            .getString(R.string.about_contact)
+        // Guards the wiring: an empty resource would render a blank contact
+        // row and a mailto with no target, which must never be published.
+        assertTrue("about_contact must be filled", contact.isNotBlank())
         val opened = mutableListOf<String>()
         content(onOpenLink = opened::add)
-        rule.onNodeWithText("[REDACTED]").assertDoesNotExist()
+        rule.onNodeWithText(contact).assertDoesNotExist()
         rule.onNodeWithText("About").performClick()
-        rule.onNodeWithText("[REDACTED]").assertIsDisplayed()
-        rule.onNodeWithText("[REDACTED]").performClick()
-        rule.runOnIdle { assert(opened == listOf("mailto:[REDACTED]")) }
+        rule.onNodeWithText(contact).assertIsDisplayed()
+        rule.onNodeWithText(contact).performClick()
+        rule.runOnIdle { assert(opened == listOf("mailto:$contact")) }
     }
 
     @Test

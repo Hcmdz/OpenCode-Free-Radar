@@ -66,8 +66,6 @@ val appModule = module {
             get<Set<OfferSource>>().associateBy { it.id },
             get(),
             syncState = get(),
-            syncPrefs = get(),
-            network = get(),
         )
     }
     singleOf(::SyncStatePrefs) bind SyncStateStore::class
