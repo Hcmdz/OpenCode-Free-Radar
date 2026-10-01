@@ -303,14 +303,14 @@ Versions follow [semver](https://semver.org/); full history lives in [GitHub Rel
 All data stays on device. The app fetches the public model catalog over
 HTTPS, stores it in a local Room database, and runs syncs in the background.
 No account, no analytics, no third-party tracking SDK. Full policy:
-https://hcmdz.github.io/OpenCode-Free-Radar/privacy/ and terms:
-https://hcmdz.github.io/OpenCode-Free-Radar/terms/ — see also
+https://hcmdz.github.io/opencode-free-radar/privacy/ and terms:
+https://hcmdz.github.io/opencode-free-radar/terms/ — see also
 [SECURITY.md](SECURITY.md) and [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Legal
 
-- [Terms of Service](https://hcmdz.github.io/OpenCode-Free-Radar/terms/)
-- [Privacy Policy](https://hcmdz.github.io/OpenCode-Free-Radar/privacy/)
+- [Terms of Service](https://hcmdz.github.io/opencode-free-radar/terms/)
+- [Privacy Policy](https://hcmdz.github.io/opencode-free-radar/privacy/)
 
 ## License
 
@@ -335,7 +335,7 @@ Planned work is tracked in the [open issues](https://github.com/Hcmdz/OpenCode-F
 ## Related Docs
 
 - [Contributing](CONTRIBUTING.md) · [Third-Party Components](THIRD_PARTY.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Privacy Policy](https://hcmdz.github.io/OpenCode-Free-Radar/privacy/) · [Terms](https://hcmdz.github.io/OpenCode-Free-Radar/terms/) · [Sources](docs/sources/)
+- [Privacy Policy](https://hcmdz.github.io/opencode-free-radar/privacy/) · [Terms](https://hcmdz.github.io/opencode-free-radar/terms/) · [Sources](docs/sources/)
 
 ## 📬 Contact
 
