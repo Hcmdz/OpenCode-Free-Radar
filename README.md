@@ -189,7 +189,7 @@ Entry points: `RadarApp` (Application), `MainActivity` (launcher).
 |---|---|
 | **Network security** | Cleartext blocked (`network_security_config.xml`); user CAs trusted in debug builds only |
 | **Backup disabled** | `allowBackup="false"` |
-| **Update integrity** | SHA-256 verified before install (pinned `api.github.com` metadata, sidecar fallback, fail-closed) |
+| **Update integrity** | Pinned `api.github.com` metadata, HTTPS-only download host allowlist, SHA-256 compared against the digest in the release body (skipped when the release carries none) |
 | **Log hygiene** | R8 log stripping in release builds |
 
 ## Project structure
