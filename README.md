@@ -121,13 +121,13 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | Category | Library | Version |
 |---|---|---|
 | **Language** | Kotlin | 2.4.20 |
-| **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.00 / Nav 1.1.7 |
+| **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.01 / Nav 1.1.7 |
 | **Architecture** | Single `:app` module, MVI with StateFlow | — |
 | **DI** | Koin | 4.2.2 (BOM) |
 | **Database** | Room (source of truth) | 3.0.3 |
 | **Networking** | Ktor + kotlinx.serialization | 3.6.0 / 1.11.0 |
 | **Storage** | DataStore (settings) | 1.2.1 |
-| **Scheduling** | WorkManager (configurable sync) | 2.11.2 |
+| **Scheduling** | WorkManager (configurable sync) | 2.12.0 |
 | **Image** | Coil | 3.6.3 |
 | **Logging** | Kermit | 2.2.0 |
 | **Async** | Kotlin Coroutines | 1.11.0 |
