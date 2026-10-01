@@ -32,7 +32,7 @@
 <body>
     <header>
         <h1>Privacy Policy</h1>
-        <p>Last updated: September 16, 2026 &middot; for App: OpenCode Free Radar</p>
+        <p>Last updated: October 1, 2026 &middot; for App: OpenCode Free Radar</p>
     </header>
     <nav>
         <ul>
@@ -60,9 +60,10 @@
                 <p>OpenCode Free Radar stores the following data locally in app-private storage on your device:</p>
                 <ul>
                     <li><strong>Cached model offers</strong> &mdash; public listings (names, providers, prices, capabilities) kept for offline use</li>
+                    <li><strong>Price and status change history</strong> &mdash; when a model became free, stopped being free, or changed tier, kept per model</li>
                     <li><strong>Favorites</strong> &mdash; the models you starred</li>
                     <li><strong>Recent searches</strong> &mdash; your last few search queries, for suggestions</li>
-                    <li><strong>Settings</strong> &mdash; language, theme, filters, and notification preferences</li>
+                    <li><strong>Settings</strong> &mdash; language, theme, filters, sync schedule, and notification preferences</li>
                 </ul>
                 <p>None of this data leaves your device. There is no account to link it to and no server that receives it.</p>
             </section>
@@ -73,10 +74,13 @@
                 <ul>
                     <li>models.dev (open model catalog)</li>
                     <li>OpenRouter (public model index)</li>
-                    <li>LiteLLM price map (public model index)</li>
-                    <li>opencode.ai Zen model roster</li>
+                    <li>LiteLLM price map, served from <code>raw.githubusercontent.com</code> (public model index)</li>
+                    <li>opencode.ai, for the Zen model roster and pricing document</li>
+                    <li><code>raw.githubusercontent.com</code>, for that same OpenCode documentation file</li>
+                    <li><code>api.github.com</code>, once a day, to check whether a newer app release exists</li>
                 </ul>
                 <p>These requests contain no account, no identifier, and no personal data &mdash; anyone on the internet can fetch the same public listings. Refreshes run in the background while the app is installed.</p>
+                <p>Update downloads, when you accept one, come from GitHub release hosts only (<code>github.com</code> and <code>*.githubusercontent.com</code>) over HTTPS. Any other host is rejected.</p>
             </section>
 
             <section id="permissions">
@@ -85,7 +89,8 @@
                 <ul>
                     <li><strong>Internet</strong> &mdash; to fetch the public model catalogs</li>
                     <li><strong>Access Network State</strong> &mdash; lets the background sync scheduler wait for connectivity (contributed by libraries)</li>
-                    <li><strong>Post Notifications</strong> &mdash; to alert you about newly free models, only if you enable alerts</li>
+                    <li><strong>Post Notifications</strong> &mdash; to alert you about newly free models. Alerts are on by default; you are asked for permission once, at first launch, and can turn them off in Settings</li>
+                    <li><strong>Request Install Packages</strong> &mdash; used only if you choose to update the app from inside it. Without it the app opens your system settings and you install the release yourself</li>
                 </ul>
                 <p>The app does not request access to your camera, microphone, contacts, location, or any other sensitive data.</p>
             </section>
@@ -102,7 +107,9 @@
                     <li>All data stays in app-private storage on your device</li>
                     <li>App backup is disabled, so app data cannot be extracted via ADB backup</li>
                     <li>Release builds are minified and strip all log calls</li>
+                    <li>A downloaded update is checked against the SHA-256 digest published in the release before it is offered for install</li>
                 </ul>
+                <p>How to report a vulnerability is described in <a href="https://github.com/Hcmdz/OpenCode-Free-Radar/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>. Please do not open a public issue for one.</p>
             </section>
 
             <section>
