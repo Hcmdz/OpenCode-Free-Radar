@@ -6,6 +6,7 @@
 /memory/
 /specs/
 /docs/decisions/
+/.opencode/
 
 # Build / local secrets (standard Android)
 local.properties
