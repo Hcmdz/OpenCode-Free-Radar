@@ -121,15 +121,13 @@ Fine-tune sources, appearance, and sync behavior in one place.
 | Category | Library | Version |
 |---|---|---|
 | **Language** | Kotlin | 2.4.20 |
-| **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3 | BOM 2026.09.01 / Nav 1.1.7 |
+| **UI** | Jetpack Compose + Material 3 Expressive, Navigation 3, Material Kolor (dynamic color) | BOM 2026.09.01 / Nav 1.1.7 / Kolor 5.0.1 |
 | **Architecture** | Single `:app` module, MVI with StateFlow | — |
 | **DI** | Koin | 4.2.2 (BOM) |
 | **Database** | Room (source of truth) | 3.0.3 |
 | **Networking** | Ktor + kotlinx.serialization | 3.6.0 / 1.11.0 |
 | **Storage** | DataStore (settings) | 1.2.1 |
 | **Scheduling** | WorkManager (configurable sync) | 2.12.0 |
-| **Image** | Coil | 3.6.3 |
-| **Logging** | Kermit | 2.2.0 |
 | **Async** | Kotlin Coroutines | 1.11.0 |
 | **Testing** | JUnit 6 + Turbine + AssertK (unit), Compose UI tests + orchestrator (E2E) | 6.1.3 / 1.2.1 / 0.28.1 |
 | **Build** | AGP 9.4.1, KSP 2.3.12, JDK 17, minSdk 29 / targetSdk 36 | — |
@@ -138,7 +136,7 @@ Fine-tune sources, appearance, and sync behavior in one place.
 
 ## Getting started
 
-Prerequisites: JDK 17 ([Gradle toolchain](https://docs.gradle.org/current/userguide/build_java_projects.html)) and the Android SDK with platform 37 ([install](https://developer.android.com/studio#downloads)).
+Prerequisites: JDK 17 ([Gradle toolchain](https://docs.gradle.org/current/userguide/build_java_projects.html)) and the Android SDK with API 37 minor 1 (`compileSdk 37` + `compileSdkMinor 1`; [install](https://developer.android.com/studio#downloads)).
 
 ### Installation
 
@@ -170,11 +168,11 @@ Run checks:
 - Static analysis: `./gradlew :app:lintDebug`
 - UI tests on emulator (Compose + orchestrator):
   `./gradlew :app:connectedDebugAndroidTest`
-- CI runs unit tests, lint, and CodeQL on every push/PR to `main`.
+- CI runs unit tests, lint, and CodeQL on every push/PR to `main`; instrumented tests run locally on an emulator.
 
 ### CI & Quality
 
-- GitHub Actions: `.github/workflows/ci.yml` (unit tests + lint + language gate), `codeql.yml`, Dependabot.
+- GitHub Actions: `.github/workflows/ci.yml` (unit tests, lint, English-only language gate, gitleaks secret scan + sensitive-filename gate), `codeql.yml`, Dependabot (weekly, grouped).
 - Required CI variable **names** (values stay in repo/environment secrets, never committed): release keystore credentials (`RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`).
 
 ## Permissions
@@ -183,7 +181,7 @@ Run checks:
 - `POST_NOTIFICATIONS` — new/expired offer alerts.
 - `REQUEST_INSTALL_PACKAGES` — in-app update install.
 
-Entry points: `RadarApp` (Application), `MainActivity` (launcher), `FileProvider` (`${applicationId}.fileprovider`, not exported).
+Entry points: `RadarApp` (Application), `MainActivity` (launcher).
 
 ## Security
 
@@ -203,6 +201,7 @@ app/src/main/java/com/opencode/freeradar/
 ├── ui/              # Compose screens, ViewModels, components, theme, navigation
 ├── worker/          # WorkManager daily sync (SyncWorker, SyncScheduler)
 ├── notifications/   # Alert channels and gates
+├── util/            # UpdateManager (in-app updates), NetworkMonitor, Hash
 └── di/              # Koin modules
 docs/sources/        # Per-source notes (models.dev, OpenRouter, LiteLLM, Zen roster, rejected candidates)
 ```
