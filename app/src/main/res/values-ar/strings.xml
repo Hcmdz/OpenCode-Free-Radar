@@ -143,6 +143,8 @@
     <string name="notif_open_settings">فتح إعدادات النظام</string>
     <string name="notif_channel_events">تنبيهات العروض</string>
     <string name="notif_title">رادار العروض المجانية</string>
+    <string name="notif_section_new">عروض مجانية جديدة</string>
+    <string name="notif_section_expired">لم تعد مجانية</string>
     <plurals name="notif_new_free">
         <item quantity="zero">لا عروض جديدة</item>
         <item quantity="one">عرض مجاني جديد واحد</item>

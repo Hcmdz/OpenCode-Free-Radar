@@ -89,6 +89,13 @@ class NotificationAlertTest {
         notification?.notification?.extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
             ?: ""
 
+    /** The expanded body: what the user sees after pulling the shade down. */
+    private fun linesOf(notification: StatusBarNotification?): List<String> =
+        notification?.notification?.extras
+            ?.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+            ?.map { it.toString() }
+            .orEmpty()
+
     private fun offer(id: String, name: String) = Offer(
         remoteId = id,
         providerId = "opencode-data",
@@ -245,6 +252,76 @@ class NotificationAlertTest {
         gate().afterSync(watermark)
 
         assertTrue("a new free offer must alert regardless of the expiry switch", posted() != null)
+    }
+
+    /**
+     * The collapsed summary already counted the expiry, but the expanded body
+     * listed new offers only, so an expiry-only alert pulled down to nothing.
+     */
+    @Test
+    fun expiryOnlyNotificationNamesTheOffer() = runBlocking {
+        prefs.setEnabled(true)
+        prefs.setExpiryEnabled(true)
+        repository.offers = listOf(offer("opencode-data/muse-flash", "Muse Flash"))
+        repository.events = listOf(
+            ChangeEvent(
+                offerRemoteId = "opencode-data/muse-flash",
+                type = ChangeType.FREE_EXPIRED,
+                beforeJson = FreeStatus.FREE.name,
+                afterJson = FreeStatus.PAID.name,
+                createdAt = 0L,
+            )
+        )
+
+        val watermark = gate().beforeSync()
+        gate().afterSync(watermark)
+
+        // Assert arrival first: linesOf() is empty for a missing notification
+        // too, so without this the assertion could not tell the two apart.
+        val notification = posted()
+        assertTrue("an expiry-only alert must post a notification", notification != null)
+        val lines = linesOf(notification)
+        assertTrue(
+            "an expiry-only alert must name the expired offer, lines were: $lines",
+            lines.any { it.contains("Muse Flash") }
+        )
+    }
+
+    /**
+     * A shared line budget let a busy sync fill the body with new offers and
+     * push the expiring ones out again, which is the symptom this fixes.
+     */
+    @Test
+    fun busySyncStillNamesTheExpiredOffer() = runBlocking {
+        prefs.setEnabled(true)
+        prefs.setExpiryEnabled(true)
+        val fresh = (1..6).map { "opencode-data/new-$it" to "New Model $it" }
+        val gone = "opencode-data/gone" to "Gone Model"
+        repository.offers = (fresh + gone).map { (id, name) -> offer(id, name) }
+        repository.events = fresh.map { (id, _) ->
+            ChangeEvent(
+                offerRemoteId = id,
+                type = ChangeType.NEW_MODEL,
+                beforeJson = null,
+                afterJson = FreeStatus.FREE.name,
+                createdAt = 0L,
+            )
+        } + ChangeEvent(
+            offerRemoteId = gone.first,
+            type = ChangeType.FREE_EXPIRED,
+            beforeJson = FreeStatus.FREE.name,
+            afterJson = FreeStatus.PAID.name,
+            createdAt = 0L,
+        )
+
+        val watermark = gate().beforeSync()
+        gate().afterSync(watermark)
+
+        val lines = linesOf(posted())
+        assertTrue(
+            "a busy sync must not crowd the expired offer out of the body, lines were: $lines",
+            lines.any { it.contains("Gone Model") }
+        )
     }
 
     /** Round-trip: the DataStore must hand back what the switch wrote. */

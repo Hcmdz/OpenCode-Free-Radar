@@ -137,6 +137,8 @@
     <string name="notif_open_settings">Ouvrir les paramètres système</string>
     <string name="notif_channel_events">Alertes d’offres</string>
     <string name="notif_title">Radar des offres gratuites</string>
+    <string name="notif_section_new">Nouvelles offres gratuites</string>
+    <string name="notif_section_expired">Plus gratuits</string>
     <plurals name="notif_new_free">
         <item quantity="one">%1$d nouvelle offre gratuite</item>
         <item quantity="many">%1$d de nouvelles offres gratuites</item>
