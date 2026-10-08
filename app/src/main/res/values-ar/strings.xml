@@ -71,6 +71,8 @@
     <string name="about_privacy">سياسة الخصوصية</string>
     <string name="about_terms">شروط الاستخدام</string>
     <string name="about_version">الإصدار</string>
+    <string name="about_open_source_notices">تراخيص المصادر المفتوحة</string>
+    <string name="action_close">إغلاق</string>
     <string name="update_check">التحقق من وجود تحديثات</string>
     <string name="update_checking">جارٍ التحقق…</string>
     <string name="update_up_to_date">محدّث</string>

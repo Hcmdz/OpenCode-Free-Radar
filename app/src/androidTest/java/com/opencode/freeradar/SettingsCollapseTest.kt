@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -24,6 +26,10 @@ class SettingsCollapseTest {
 
     @get:Rule
     val rule = createComposeRule()
+
+    /** Asserts the translated label, never an English literal: the app ships fr+ar. */
+    private fun str(@StringRes id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
     private fun content(
         onOpenLink: (String) -> Unit = {},
@@ -95,6 +101,38 @@ class SettingsCollapseTest {
                 "https://hcmdz.github.io/OpenCode-Free-Radar/privacy/",
                 "https://hcmdz.github.io/OpenCode-Free-Radar/terms/"
             ))
+        }
+    }
+
+    @Test
+    fun aboutSectionOpensAndClosesTheOpenSourceNotices() {
+        content()
+        rule.onNodeWithTag("about_open_source_notices_row").assertDoesNotExist()
+        rule.onNodeWithText(str(R.string.settings_about)).performClick()
+        rule.onNodeWithTag("about_open_source_notices_row").performClick()
+        rule.onNodeWithTag("open_source_notices_body").assertIsDisplayed()
+        rule.onNodeWithTag("open_source_notices_close").performClick()
+        rule.onNodeWithTag("open_source_notices_body").assertDoesNotExist()
+    }
+
+    /**
+     * The notice body is only meaningful if the raw resource actually loaded and
+     * every bundled MIT copyright survives into it, and if the body scrolls —
+     * otherwise the disclaimer at the end is unreachable.
+     */
+    @Test
+    fun openSourceNoticesCarryEveryBundledMitCopyrightAndScroll() {
+        content()
+        rule.onNodeWithText(str(R.string.settings_about)).performClick()
+        rule.onNodeWithTag("about_open_source_notices_row").performClick()
+
+        val body = rule.onNodeWithTag("open_source_notices_body").fetchSemanticsNode()
+        assertTrue(
+            "notice body must be scrollable, else its closing disclaimer is unreachable",
+            body.config.contains(SemanticsProperties.VerticalScrollAxisRange)
+        )
+        listOf("Jordon de Hoog", "AJ Alt", "QOS.ch").forEach { copyright ->
+            rule.onNodeWithText(copyright, substring = true).assertIsDisplayed()
         }
     }
 

@@ -30,6 +30,7 @@ orchestrator = "1.6.1"
 turbine = "1.2.1"
 assertk = "0.28.1"
 securityLint = "1.0.4"
+licensee = "1.14.1"
 
 [libraries]
 compose-bom-alpha = { group = "androidx.compose", name = "compose-bom-alpha", version.ref = "composeBomAlpha" }
@@ -90,3 +91,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+licensee = { id = "app.cash.licensee", version.ref = "licensee" }

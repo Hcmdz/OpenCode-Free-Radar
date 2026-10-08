@@ -66,17 +66,45 @@ None of these are packaged in the APK.
 
 ## Notice obligations
 
-Apache-2.0 §4(d), MIT, and BSD-3-Clause each require the licence notice to
-travel with the distribution. **The release APK does not carry them**: R8 drops
-`META-INF` from AARs, and the shipped `classes.dex` contains zero occurrences of
-any licence text. No `NOTICE` file exists in this repository, and the app has no
-in-app notices screen — so the three MIT components and the BSD-3-Clause
-DataStore protobuf runtime are currently shipped without their notice text
-reachable by a user.
+Measured against the built release APK, not assumed:
 
-Reproducing those notices in an app-reachable location is an open obligation,
-tracked separately from this inventory. This file is the source inventory, not
-the discharge.
+* **Apache-2.0 and BSD-3-Clause texts already ship**, as `LICENSE.txt` files
+  under `META-INF/` in the APK: nine copies of the Apache-2.0 text (10,175 bytes
+  each, from the AndroidX AARs) and the BSD-3-Clause text (1,434 bytes) from
+  `androidx.datastore:datastore-preferences-external-protobuf`. They survive
+  because the build sets no `packaging { resources { excludes } }`, so AGP keeps
+  AAR `META-INF/**`.
+* **No MIT text ships anywhere in the APK.** Three bundled components are MIT
+  and their notice is missing.
+
+The three MIT components ship code — R8 retains 89 `com.materialkolor.*`, 36
+`com.github.ajalt.colormath.*`, and 18 `org.slf4j.*` classes, per
+`app/build/outputs/mapping/release/mapping.txt`.
+
+Their notices are reproduced in full in `app/src/main/res/raw/open_source_notices.txt`
+and shown in-app from Settings → About → Open source notices. Each body is copied
+byte-for-byte from the upstream `LICENSE` at the released tag, never retyped.
+
+Whether these licences bind the maintainer is a judgement for the maintainer;
+this section reports what is present and what is not.
+
+## Licence gate
+
+`app.cash.licensee` runs over the resolved graph and is wired into `check`, so a
+dependency introducing a licence outside the allow-list fails the build. The
+allow-list in `app/build.gradle.kts` is the measured set: `Apache-2.0`, `MIT`,
+`BSD-3-Clause`, plus two `allowUrl` entries for POMs that declare MIT by URL
+instead of SPDX (Material Kolor and SLF4J).
+
+The plugin registers tasks per Android variant (`licenseeAndroidDebug`,
+`licenseeAndroidRelease`), so **the gate covers the runtime graph only** — the
+"Build and test only" table above is not machine-checked. Licensee resolves the
+licence of a POM that has no `<licenses>` block by following its parent POM,
+which is why SLF4J and Guava need no `allowDependency` entry.
+
+Adding a dependency means re-running `./gradlew :app:licensee`; if it reports an
+unresolved licence, add it to the allow-list *and* to the table above, and add
+its notice text to the in-app file if the licence requires one.
 
 ## Notes
 

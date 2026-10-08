@@ -72,6 +72,8 @@
     <string name="about_privacy">Privacy Policy</string>
     <string name="about_terms">Terms of Service</string>
     <string name="about_version">Version</string>
+    <string name="about_open_source_notices">Open source notices</string>
+    <string name="action_close">Close</string>
     <!-- Keep the contact address here, not inline in SettingsScreen.kt: a
          literal in source is what got rewritten into a "[REDACTED]" placeholder
          once already, and the E2E test then had nothing to assert on.

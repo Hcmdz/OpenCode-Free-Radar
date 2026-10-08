@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Link
@@ -86,6 +87,7 @@ import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.SyncPrefs
+import com.opencode.freeradar.ui.components.OpenSourceNoticesDialog
 import com.opencode.freeradar.ui.components.OptionRow
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.util.UpdateManager
@@ -282,6 +284,7 @@ fun SettingsScreen(
     onCheckUpdate: () -> Unit,
     onBack: () -> Unit
 ) {
+    var showNotices by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.testTag("settings_screen"),
         topBar = {
@@ -512,6 +515,12 @@ fun SettingsScreen(
                     onClick = { onOpenLink("https://hcmdz.github.io/OpenCode-Free-Radar/terms/") }
                 )
                 AboutRow(
+                    icon = Icons.Filled.Gavel,
+                    text = stringResource(R.string.about_open_source_notices),
+                    onClick = { showNotices = true },
+                    testTag = "about_open_source_notices_row"
+                )
+                AboutRow(
                     icon = Icons.Filled.Info,
                     text = "${stringResource(R.string.about_version)}: ${BuildConfig.VERSION_NAME}",
                     onClick = null
@@ -523,6 +532,9 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+    if (showNotices) {
+        OpenSourceNoticesDialog(onDismiss = { showNotices = false })
     }
 }
 
@@ -577,12 +589,14 @@ private fun CollapsibleSection(
 private fun AboutRow(
     icon: ImageVector,
     text: String,
-    onClick: (() -> Unit)?
+    onClick: (() -> Unit)?,
+    testTag: String? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
