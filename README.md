@@ -44,7 +44,7 @@ by Anomaly Innovations, Inc.
 </p>
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.4.0 (versionCode 40000)
+- **Version**: 0.4.1 (versionCode 40100)
 - **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
 
 <details>
@@ -60,7 +60,7 @@ by Anomaly Innovations, Inc.
 - [Contributing](#contributing)
 - [Release signing](#release-signing)
 - [APK size](#-apk-size)
-- [Changelog](#changelog-v010--v040)
+- [Changelog](#changelog-v010--v041)
 - [Privacy](#privacy)
 - [Legal](#legal)
 - [License](#license)
@@ -73,11 +73,11 @@ by Anomaly Innovations, Inc.
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.0.apk`, ~4.1 MB, universal APK).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.1.apk`, ~4.3 MB, universal APK).
 
-- Requires Android 9+ (API 29); allow *Install unknown apps* for your browser when prompted.
+- Requires Android 10+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Architectures: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (one APK, no per-ABI download).
-- Verify integrity: `sha256sum -c OFR-release.v0.4.0.apk.sha256` (sidecar next to the APK).
+- Verify integrity: `sha256sum -c OFR-release.v0.4.1.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily and verify the SHA-256 before install.
 - A signing-key change would require uninstalling before reinstalling: Android refuses in-place updates across certificates.
 
@@ -247,14 +247,18 @@ Then run:
 
 ## 📏 APK Size
 
-Release APK: **~4.1 MB** compressed (4,333,975 bytes), 132 entries, one universal binary.
+Release APK: **~4.3 MB** compressed (4,503,419 bytes), 133 entries, one universal binary.
 
 | Component | Uncompressed |
 |---|---|
 | `classes.dex` (app + libraries, R8-shrunk) | ~3.9 MB |
-| Resources and assets | ~207 KB |
+| Resources and assets | ~232 KB |
+| Packaging metadata (`resources.arsc`, Kotlin builtins) | ~202 KB |
+| Signature (`META-INF`) | ~92 KB |
 | Native libraries (4 ABIs) | ~70 KB |
-| Signature and packaging metadata | ~156 KB |
+
+The launcher icon artwork is the largest single resource (~166 KB): the radar
+render is a photographic-style gradient, which PNG compresses poorly.
 
 Release builds run `isMinifyEnabled` with `isShrinkResources`, which collapses the
 library graph into a single dex. There is no ABI filtering: one APK covers
@@ -265,9 +269,14 @@ downloads.
 
 ---
 
-## Changelog (v0.1.0 → v0.4.0)
+## Changelog (v0.1.0 → v0.4.1)
 
 Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
+
+### v0.4.1
+
+- **Expiry alerts on their own switch** — "Alert me about new free offers" no longer bundles expiry alerts; a second toggle follows new freebies without pinging you when an offer turns paid or lapses. On by default, so existing installs keep today's behaviour
+- **New launcher icon** — the radar artwork is redrawn as a full-bleed adaptive icon, and a line-art monochrome layer keeps themed icons working on Android 13+
 
 ### v0.4.0
 

@@ -12,7 +12,7 @@
 - Android Studio latest stable
 - JDK 17+
 - Android SDK with platform 37 (compileSdk 37)
-- Device or emulator running Android 9+ (minSdk 29)
+- Device or emulator running Android 10+ (minSdk 29)
 
 ## Build
 
