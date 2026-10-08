@@ -351,6 +351,11 @@ fun SettingsScreen(
                         onCheckedChange = onNotifToggle
                     )
                 }
+                Text(
+                    text = stringResource(R.string.notif_benefit),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -369,11 +374,6 @@ fun SettingsScreen(
                         onCheckedChange = onNotifExpiryToggle
                     )
                 }
-                Text(
-                    text = stringResource(R.string.notif_benefit),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
                 Text(
                     text = stringResource(R.string.notif_expiry_benefit),
                     style = MaterialTheme.typography.bodySmall,
