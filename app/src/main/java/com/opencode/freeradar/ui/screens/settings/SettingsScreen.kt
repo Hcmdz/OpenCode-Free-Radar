@@ -110,6 +110,7 @@ fun SettingsRoot(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val localeTag by localePrefs.tag.collectAsStateWithLifecycle(initialValue = "")
     val notifEnabled by notifPrefs.enabled.collectAsStateWithLifecycle(initialValue = false)
+    val notifExpiryEnabled by notifPrefs.expiryEnabled.collectAsStateWithLifecycle(initialValue = true)
     val autoSync by syncPrefs.autoSyncFlow.collectAsStateWithLifecycle(initialValue = AutoSync.WIFI)
     val autoSyncIntervalHours by syncPrefs.autoSyncIntervalHoursFlow.collectAsStateWithLifecycle(
         initialValue = AutoSync.DEFAULT_INTERVAL_HOURS
@@ -157,6 +158,7 @@ fun SettingsRoot(onBack: () -> Unit) {
         localeTag = localeTag,
         notifEnabled = notifEnabled,
         notifDenied = notifDenied,
+        notifExpiryEnabled = notifExpiryEnabled,
         autoSync = autoSync,
         autoSyncIntervalHours = autoSyncIntervalHours,
         peekDelayMs = peekDelayMs,
@@ -178,6 +180,9 @@ fun SettingsRoot(onBack: () -> Unit) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         },
+        // No permission launcher: the master switch already owns it, and this
+        // one is inert while it is off.
+        onNotifExpiryToggle = { enabled -> scope.launch { notifPrefs.setExpiryEnabled(enabled) } },
         // force=true: the stored schedule is stale the moment a setting changes.
         // Without the rewrite the WorkManager constraint and period keep their
         // old values and the settings screen silently does nothing.
@@ -257,6 +262,7 @@ fun SettingsScreen(
     localeTag: String,
     notifEnabled: Boolean,
     notifDenied: Boolean,
+    notifExpiryEnabled: Boolean = true,
     autoSync: AutoSync,
     autoSyncIntervalHours: Int,
     peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
@@ -265,6 +271,7 @@ fun SettingsScreen(
     onBlack: (Boolean) -> Unit,
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
+    onNotifExpiryToggle: (Boolean) -> Unit = {},
     onAutoSyncSelect: (AutoSync) -> Unit,
     onIntervalSelect: (Int) -> Unit,
     onPeekDelay: (Long) -> Unit = {},
@@ -344,8 +351,31 @@ fun SettingsScreen(
                         onCheckedChange = onNotifToggle
                     )
                 }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = null
+                    )
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.notif_expiry)
+                    )
+                    Switch(
+                        modifier = Modifier.testTag("settings_notifications_expiry_switch"),
+                        checked = notifExpiryEnabled,
+                        onCheckedChange = onNotifExpiryToggle
+                    )
+                }
                 Text(
                     text = stringResource(R.string.notif_benefit),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.notif_expiry_benefit),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -644,12 +674,14 @@ private fun SettingsPreview() {
             localeTag = "",
             notifEnabled = false,
             notifDenied = false,
+            notifExpiryEnabled = true,
             autoSync = AutoSync.WIFI,
             autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
             onMode = {},
             onBlack = {},
             onLocale = {},
             onNotifToggle = {},
+            onNotifExpiryToggle = {},
             onAutoSyncSelect = {},
             onIntervalSelect = {},            onOpenNotifSettings = {},
             onOpenLink = {},

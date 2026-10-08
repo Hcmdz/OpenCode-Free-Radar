@@ -135,8 +135,10 @@
     <string name="metered_message">الكتالوج كبير ويتطلب اتصالاً. المتابعة ستستخدم بيانات هاتفك.</string>
     <string name="metered_sync_once">مزامنة</string>
     <string name="metered_never_warn">عدم التحذير مجددًا</string>
-    <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة والمنتهية</string>
+    <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة</string>
     <string name="notif_benefit">احصل على تنبيه عند ظهور عرض مجاني جديد أو انخفاض سعر إلى 0.</string>
+    <string name="notif_expiry">تنبيهي عندما يصبح العرض المجاني مدفوعًا</string>
+    <string name="notif_expiry_benefit">احصل على تنبيه عندما يصبح العرض المجاني مدفوعًا أو تنتهي صلاحيته.</string>
     <string name="notif_denied_hint">الإشعارات محظورة. فعّلها في إعدادات النظام لتلقي التنبيهات.</string>
     <string name="notif_open_settings">فتح إعدادات النظام</string>
     <string name="notif_channel_events">تنبيهات العروض</string>

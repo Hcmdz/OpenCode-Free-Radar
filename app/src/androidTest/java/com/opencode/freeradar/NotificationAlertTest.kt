@@ -22,10 +22,12 @@ import com.opencode.freeradar.notifications.NotificationGate
 import com.opencode.freeradar.notifications.OfferNotifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -60,6 +62,12 @@ class NotificationAlertTest {
         // Clear the shade first: a leftover from another class would pass the
         // negative assertion below for the wrong reason.
         clearShade()
+        // DataStore survives between tests in a class: reset both switches so
+        // the expiry-off case cannot leak into a later test.
+        runBlocking {
+            prefs.setEnabled(false)
+            prefs.setExpiryEnabled(true)
+        }
     }
 
     @After
@@ -179,6 +187,7 @@ class NotificationAlertTest {
     @Test
     fun expiryAlertsOnItsOwn() = runBlocking {
         prefs.setEnabled(true)
+        prefs.setExpiryEnabled(true)
         repository.offers = listOf(offer("opencode-data/muse-flash", "Muse Flash"))
         repository.events = listOf(
             ChangeEvent(
@@ -194,6 +203,63 @@ class NotificationAlertTest {
         gate().afterSync(watermark)
 
         assertTrue("an expired free offer must alert", posted() != null)
+    }
+
+    @Test
+    fun expiryToggleSilencesOnlyExpiries() = runBlocking {
+        prefs.setEnabled(true)
+        prefs.setExpiryEnabled(false)
+        repository.offers = listOf(offer("opencode-data/muse-flash", "Muse Flash"))
+        repository.events = listOf(
+            ChangeEvent(
+                offerRemoteId = "opencode-data/muse-flash",
+                type = ChangeType.FREE_EXPIRED,
+                beforeJson = FreeStatus.FREE.name,
+                afterJson = FreeStatus.PAID.name,
+                createdAt = 0L,
+            )
+        )
+
+        val watermark = gate().beforeSync()
+        gate().afterSync(watermark)
+
+        assertNull("expiry alerts off must post nothing", posted())
+    }
+
+    @Test
+    fun expiryToggleOffKeepsNewFreeAlerts() = runBlocking {
+        prefs.setEnabled(true)
+        prefs.setExpiryEnabled(false)
+        repository.offers = listOf(offer("opencode-data/muse-flash", "Muse Flash"))
+        repository.events = listOf(
+            ChangeEvent(
+                offerRemoteId = "opencode-data/muse-flash",
+                type = ChangeType.BECAME_FREE,
+                beforeJson = FreeStatus.PAID.name,
+                afterJson = FreeStatus.FREE.name,
+                createdAt = 0L,
+            )
+        )
+
+        val watermark = gate().beforeSync()
+        gate().afterSync(watermark)
+
+        assertTrue("a new free offer must alert regardless of the expiry switch", posted() != null)
+    }
+
+    /** Round-trip: the DataStore must hand back what the switch wrote. */
+    @Test
+    fun expiryTogglePersistsAcrossReads() = runBlocking {
+        prefs.setExpiryEnabled(false)
+        assertFalse(
+            "a disabled expiry toggle must survive the write",
+            prefs.expiryEnabled.first()
+        )
+        prefs.setExpiryEnabled(true)
+        assertTrue(
+            "a re-enabled expiry toggle must survive the write",
+            prefs.expiryEnabled.first()
+        )
     }
 
     @Test
@@ -217,7 +283,10 @@ class NotificationAlertTest {
         override suspend fun refresh(source: String): RefreshResult = RefreshResult.Ok
         override suspend fun refreshAll(): RefreshResult = RefreshResult.Ok
         override suspend fun setFavorite(remoteId: String, favorite: Boolean) = Unit
-        override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> = events
+        // Honors the type filter like the DAO's `IN (:types)`, otherwise a
+        // per-type preference would look like it works here and never fire.
+        override suspend fun eventsSince(sinceId: Long, types: List<String>): List<ChangeEvent> =
+            events.filter { it.type.name in types }
         override suspend fun latestEventId(): Long = latestId
     }
 }

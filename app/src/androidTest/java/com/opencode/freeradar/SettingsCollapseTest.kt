@@ -3,6 +3,7 @@ package com.opencode.freeradar
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,7 +25,11 @@ class SettingsCollapseTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun content(onOpenLink: (String) -> Unit = {}, onCheckUpdate: () -> Unit = {}) {
+    private fun content(
+        onOpenLink: (String) -> Unit = {},
+        onCheckUpdate: () -> Unit = {},
+        onNotifExpiryToggle: (Boolean) -> Unit = {}
+    ) {
         rule.setContent {
             AppThemePreview {
                 SettingsScreen(
@@ -32,12 +37,14 @@ class SettingsCollapseTest {
                     localeTag = "",
                     notifEnabled = false,
                     notifDenied = false,
+                    notifExpiryEnabled = true,
                     autoSync = AutoSync.WIFI,
                     autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
                     onMode = {},
                     onBlack = {},
                     onLocale = {},
                     onNotifToggle = {},
+                    onNotifExpiryToggle = onNotifExpiryToggle,
                     onAutoSyncSelect = {},
                     onIntervalSelect = {},
                     onOpenNotifSettings = {},
@@ -111,4 +118,22 @@ class SettingsCollapseTest {
         rule.onNodeWithText("Filter button").performClick()
         rule.onNodeWithText("5 s").assertDoesNotExist()
     }
+
+    /** The expiry switch rides the existing notifications section. */
+    @Test
+    fun expirySwitchLivesInTheNotificationsSection() {
+        val emitted = mutableListOf<Boolean>()
+        content(onNotifExpiryToggle = emitted::add)
+        val section = targetContext().getString(R.string.settings_notifications)
+        val label = targetContext().getString(R.string.notif_expiry)
+
+        rule.onNodeWithText(section).performClick()
+        rule.onNodeWithTag("settings_notifications_expiry_switch").assertIsDisplayed()
+        rule.onNodeWithText(label).assertIsDisplayed()
+        rule.onNodeWithTag("settings_notifications_expiry_switch").performClick()
+        rule.runOnIdle { assert(emitted == listOf(false)) }
+    }
+
+    private fun targetContext() =
+        InstrumentationRegistry.getInstrumentation().targetContext
 }
