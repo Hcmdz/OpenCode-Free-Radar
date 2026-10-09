@@ -1,8 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.opencode.freeradar
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,7 +27,15 @@ class SettingsCollapseTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun content(onOpenLink: (String) -> Unit = {}, onCheckUpdate: () -> Unit = {}) {
+    /** Asserts the translated label, never an English literal: the app ships fr+ar. */
+    private fun str(@StringRes id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
+
+    private fun content(
+        onOpenLink: (String) -> Unit = {},
+        onCheckUpdate: () -> Unit = {},
+        onNotifExpiryToggle: (Boolean) -> Unit = {}
+    ) {
         rule.setContent {
             AppThemePreview {
                 SettingsScreen(
@@ -32,12 +43,14 @@ class SettingsCollapseTest {
                     localeTag = "",
                     notifEnabled = false,
                     notifDenied = false,
+                    notifExpiryEnabled = true,
                     autoSync = AutoSync.WIFI,
                     autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
                     onMode = {},
                     onBlack = {},
                     onLocale = {},
                     onNotifToggle = {},
+                    onNotifExpiryToggle = onNotifExpiryToggle,
                     onAutoSyncSelect = {},
                     onIntervalSelect = {},
                     onOpenNotifSettings = {},
@@ -92,6 +105,38 @@ class SettingsCollapseTest {
     }
 
     @Test
+    fun aboutSectionOpensAndClosesTheOpenSourceNotices() {
+        content()
+        rule.onNodeWithTag("about_open_source_notices_row").assertDoesNotExist()
+        rule.onNodeWithText(str(R.string.settings_about)).performClick()
+        rule.onNodeWithTag("about_open_source_notices_row").performClick()
+        rule.onNodeWithTag("open_source_notices_body").assertIsDisplayed()
+        rule.onNodeWithTag("open_source_notices_close").performClick()
+        rule.onNodeWithTag("open_source_notices_body").assertDoesNotExist()
+    }
+
+    /**
+     * The notice body is only meaningful if the raw resource actually loaded and
+     * every bundled MIT copyright survives into it, and if the body scrolls —
+     * otherwise the disclaimer at the end is unreachable.
+     */
+    @Test
+    fun openSourceNoticesCarryEveryBundledMitCopyrightAndScroll() {
+        content()
+        rule.onNodeWithText(str(R.string.settings_about)).performClick()
+        rule.onNodeWithTag("about_open_source_notices_row").performClick()
+
+        val body = rule.onNodeWithTag("open_source_notices_body").fetchSemanticsNode()
+        assertTrue(
+            "notice body must be scrollable, else its closing disclaimer is unreachable",
+            body.config.contains(SemanticsProperties.VerticalScrollAxisRange)
+        )
+        listOf("Jordon de Hoog", "AJ Alt", "QOS.ch").forEach { copyright ->
+            rule.onNodeWithText(copyright, substring = true).assertIsDisplayed()
+        }
+    }
+
+    @Test
     fun aboutSectionRevealsUpdateRowAndEmitsCheck() {
         var checks = 0
         content(onCheckUpdate = { checks++ })
@@ -111,4 +156,22 @@ class SettingsCollapseTest {
         rule.onNodeWithText("Filter button").performClick()
         rule.onNodeWithText("5 s").assertDoesNotExist()
     }
+
+    /** The expiry switch rides the existing notifications section. */
+    @Test
+    fun expirySwitchLivesInTheNotificationsSection() {
+        val emitted = mutableListOf<Boolean>()
+        content(onNotifExpiryToggle = emitted::add)
+        val section = targetContext().getString(R.string.settings_notifications)
+        val label = targetContext().getString(R.string.notif_expiry)
+
+        rule.onNodeWithText(section).performClick()
+        rule.onNodeWithTag("settings_notifications_expiry_switch").assertIsDisplayed()
+        rule.onNodeWithText(label).assertIsDisplayed()
+        rule.onNodeWithTag("settings_notifications_expiry_switch").performClick()
+        rule.runOnIdle { assert(emitted == listOf(false)) }
+    }
+
+    private fun targetContext() =
+        InstrumentationRegistry.getInstrumentation().targetContext
 }

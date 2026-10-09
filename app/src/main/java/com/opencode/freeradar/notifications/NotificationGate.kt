@@ -2,6 +2,7 @@
 package com.opencode.freeradar.notifications
 
 import com.opencode.freeradar.data.local.NotificationPrefs
+import com.opencode.freeradar.domain.model.ChangeType
 import com.opencode.freeradar.domain.repository.OfferRepository
 import com.opencode.freeradar.domain.usecase.V1_NOTIFY_TYPES
 import com.opencode.freeradar.domain.usecase.notifiedIds
@@ -18,7 +19,12 @@ class NotificationGate(
 
     override suspend fun afterSync(watermark: Long) {
         if (prefs.enabled.first()) {
-            val events = repository.eventsSince(watermark, V1_NOTIFY_TYPES.map { it.name })
+            // Never empty: V1_NOTIFY_TYPES holds 3 types and only the expiry
+            // one is filterable, so the DAO's `IN (:types)` keeps 2+ entries.
+            val types = V1_NOTIFY_TYPES
+                .filter { it != ChangeType.FREE_EXPIRED || prefs.expiryEnabled.first() }
+                .map { it.name }
+            val events = repository.eventsSince(watermark, types)
             val summary = summarizeEvents(events) ?: return
             val ids = notifiedIds(events)
             // Names are best-effort: a model deleted since the sync has no row.

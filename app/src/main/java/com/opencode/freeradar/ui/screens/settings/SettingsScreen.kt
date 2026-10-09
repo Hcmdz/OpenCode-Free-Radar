@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Link
@@ -86,6 +87,7 @@ import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.SyncPrefs
+import com.opencode.freeradar.ui.components.OpenSourceNoticesDialog
 import com.opencode.freeradar.ui.components.OptionRow
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.util.UpdateManager
@@ -110,6 +112,7 @@ fun SettingsRoot(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val localeTag by localePrefs.tag.collectAsStateWithLifecycle(initialValue = "")
     val notifEnabled by notifPrefs.enabled.collectAsStateWithLifecycle(initialValue = false)
+    val notifExpiryEnabled by notifPrefs.expiryEnabled.collectAsStateWithLifecycle(initialValue = true)
     val autoSync by syncPrefs.autoSyncFlow.collectAsStateWithLifecycle(initialValue = AutoSync.WIFI)
     val autoSyncIntervalHours by syncPrefs.autoSyncIntervalHoursFlow.collectAsStateWithLifecycle(
         initialValue = AutoSync.DEFAULT_INTERVAL_HOURS
@@ -157,6 +160,7 @@ fun SettingsRoot(onBack: () -> Unit) {
         localeTag = localeTag,
         notifEnabled = notifEnabled,
         notifDenied = notifDenied,
+        notifExpiryEnabled = notifExpiryEnabled,
         autoSync = autoSync,
         autoSyncIntervalHours = autoSyncIntervalHours,
         peekDelayMs = peekDelayMs,
@@ -178,6 +182,9 @@ fun SettingsRoot(onBack: () -> Unit) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         },
+        // No permission launcher: the master switch already owns it, and this
+        // one is inert while it is off.
+        onNotifExpiryToggle = { enabled -> scope.launch { notifPrefs.setExpiryEnabled(enabled) } },
         // force=true: the stored schedule is stale the moment a setting changes.
         // Without the rewrite the WorkManager constraint and period keep their
         // old values and the settings screen silently does nothing.
@@ -257,6 +264,7 @@ fun SettingsScreen(
     localeTag: String,
     notifEnabled: Boolean,
     notifDenied: Boolean,
+    notifExpiryEnabled: Boolean = true,
     autoSync: AutoSync,
     autoSyncIntervalHours: Int,
     peekDelayMs: Long = FilterFabPrefs.DEFAULT_DELAY_MILLIS,
@@ -265,6 +273,7 @@ fun SettingsScreen(
     onBlack: (Boolean) -> Unit,
     onLocale: (String) -> Unit,
     onNotifToggle: (Boolean) -> Unit,
+    onNotifExpiryToggle: (Boolean) -> Unit = {},
     onAutoSyncSelect: (AutoSync) -> Unit,
     onIntervalSelect: (Int) -> Unit,
     onPeekDelay: (Long) -> Unit = {},
@@ -275,6 +284,7 @@ fun SettingsScreen(
     onCheckUpdate: () -> Unit,
     onBack: () -> Unit
 ) {
+    var showNotices by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.testTag("settings_screen"),
         topBar = {
@@ -346,6 +356,29 @@ fun SettingsScreen(
                 }
                 Text(
                     text = stringResource(R.string.notif_benefit),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = null
+                    )
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.notif_expiry)
+                    )
+                    Switch(
+                        modifier = Modifier.testTag("settings_notifications_expiry_switch"),
+                        checked = notifExpiryEnabled,
+                        onCheckedChange = onNotifExpiryToggle
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.notif_expiry_benefit),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -482,6 +515,12 @@ fun SettingsScreen(
                     onClick = { onOpenLink("https://hcmdz.github.io/OpenCode-Free-Radar/terms/") }
                 )
                 AboutRow(
+                    icon = Icons.Filled.Gavel,
+                    text = stringResource(R.string.about_open_source_notices),
+                    onClick = { showNotices = true },
+                    testTag = "about_open_source_notices_row"
+                )
+                AboutRow(
                     icon = Icons.Filled.Info,
                     text = "${stringResource(R.string.about_version)}: ${BuildConfig.VERSION_NAME}",
                     onClick = null
@@ -493,6 +532,9 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+    if (showNotices) {
+        OpenSourceNoticesDialog(onDismiss = { showNotices = false })
     }
 }
 
@@ -547,12 +589,14 @@ private fun CollapsibleSection(
 private fun AboutRow(
     icon: ImageVector,
     text: String,
-    onClick: (() -> Unit)?
+    onClick: (() -> Unit)?,
+    testTag: String? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -644,12 +688,14 @@ private fun SettingsPreview() {
             localeTag = "",
             notifEnabled = false,
             notifDenied = false,
+            notifExpiryEnabled = true,
             autoSync = AutoSync.WIFI,
             autoSyncIntervalHours = AutoSync.DEFAULT_INTERVAL_HOURS,
             onMode = {},
             onBlack = {},
             onLocale = {},
             onNotifToggle = {},
+            onNotifExpiryToggle = {},
             onAutoSyncSelect = {},
             onIntervalSelect = {},            onOpenNotifSettings = {},
             onOpenLink = {},

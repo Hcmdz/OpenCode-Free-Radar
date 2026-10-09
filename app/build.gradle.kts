@@ -7,6 +7,19 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.licensee)
+}
+
+// Allow-list is the measured licence set of the resolved graph; THIRD_PARTY.md
+// carries the inventory and the reason for each entry.
+licensee {
+    allow("Apache-2.0")
+    allow("MIT")
+    allow("BSD-3-Clause")
+    // Material Kolor declares "The MIT License" in its POM but as a URL, not SPDX.
+    allowUrl("https://github.com/jordond/materialkolor/blob/master/LICENSE")
+    // SLF4J API declares MIT in slf4j-parent as a URL, not SPDX.
+    allowUrl("https://opensource.org/license/mit")
 }
 
 ksp {
@@ -135,4 +148,10 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// Fail the build when a dependency introduces a licence outside the allow-list.
+// `licensee` aggregates every Android variant the plugin registers.
+tasks.named("check") {
+    dependsOn("licensee")
 }

@@ -72,6 +72,8 @@
     <string name="about_privacy">Privacy Policy</string>
     <string name="about_terms">Terms of Service</string>
     <string name="about_version">Version</string>
+    <string name="about_open_source_notices">Open source notices</string>
+    <string name="action_close">Close</string>
     <!-- Keep the contact address here, not inline in SettingsScreen.kt: a
          literal in source is what got rewritten into a "[REDACTED]" placeholder
          once already, and the E2E test then had nothing to assert on.
@@ -133,12 +135,16 @@
     <string name="metered_message">The catalog is large and a connection is required. Syncing now will use mobile data.</string>
     <string name="metered_sync_once">Sync once</string>
     <string name="metered_never_warn">Don\'t warn again</string>
-    <string name="notif_enable">Alert me about new and expired free offers</string>
+    <string name="notif_enable">Alert me about new free offers</string>
     <string name="notif_benefit">Get alerted when a new free model appears or a price drops to $0.</string>
+    <string name="notif_expiry">Alert me when a free offer becomes paid</string>
+    <string name="notif_expiry_benefit">Get alerted when a free offer turns paid or expires.</string>
     <string name="notif_denied_hint">Notifications are blocked. Enable them in system settings to receive alerts.</string>
     <string name="notif_open_settings">Open system settings</string>
     <string name="notif_channel_events">Offer alerts</string>
     <string name="notif_title">Free offer radar</string>
+    <string name="notif_section_new">New free offers</string>
+    <string name="notif_section_expired">No longer free</string>
     <plurals name="notif_new_free">
         <item quantity="one">%1$d new free offer</item>
         <item quantity="other">%1$d new free offers</item>

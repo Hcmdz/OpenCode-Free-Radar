@@ -16,12 +16,21 @@ class NotificationPrefs(private val context: Context) {
 
     private object Keys {
         val ENABLED = booleanPreferencesKey("enabled")
+        val EXPIRY_ENABLED = booleanPreferencesKey("expiry_enabled")
         val PERMISSION_ASKED = booleanPreferencesKey("permission_asked")
     }
 
     val enabled: Flow<Boolean> = context.notificationStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { prefs -> prefs[Keys.ENABLED] ?: true }
+
+    /**
+     * Expiry alerts are on by default: a missing key means an install that
+     * predates the toggle, and those users already received them.
+     */
+    val expiryEnabled: Flow<Boolean> = context.notificationStore.data
+        .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
+        .map { prefs -> prefs[Keys.EXPIRY_ENABLED] ?: true }
 
     /**
      * Asked once per install: the OS only shows the system dialog the first
@@ -37,5 +46,9 @@ class NotificationPrefs(private val context: Context) {
 
     suspend fun setEnabled(enabled: Boolean) {
         context.notificationStore.edit { it[Keys.ENABLED] = enabled }
+    }
+
+    suspend fun setExpiryEnabled(enabled: Boolean) {
+        context.notificationStore.edit { it[Keys.EXPIRY_ENABLED] = enabled }
     }
 }

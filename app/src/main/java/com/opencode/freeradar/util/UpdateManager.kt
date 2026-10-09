@@ -191,9 +191,12 @@ class UpdateManager(
                 val statusIntent = Intent(context, MainActivity::class.java).apply {
                     action = ACTION_INSTALL_STATUS
                 }
+                // Mutable by contract: the platform delivers the install
+                // confirmation as Intent.EXTRA_INTENT through this sender and
+                // rejects an immutable one outright (IllegalArgumentException).
                 val pending = PendingIntent.getActivity(
                     context, REQUEST_CODE_INSTALL_STATUS, statusIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
                 )
                 session.commit(pending.intentSender)
             }

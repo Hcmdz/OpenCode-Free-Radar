@@ -71,6 +71,8 @@
     <string name="about_privacy">سياسة الخصوصية</string>
     <string name="about_terms">شروط الاستخدام</string>
     <string name="about_version">الإصدار</string>
+    <string name="about_open_source_notices">تراخيص المصادر المفتوحة</string>
+    <string name="action_close">إغلاق</string>
     <string name="update_check">التحقق من وجود تحديثات</string>
     <string name="update_checking">جارٍ التحقق…</string>
     <string name="update_up_to_date">محدّث</string>
@@ -135,12 +137,16 @@
     <string name="metered_message">الكتالوج كبير ويتطلب اتصالاً. المتابعة ستستخدم بيانات هاتفك.</string>
     <string name="metered_sync_once">مزامنة</string>
     <string name="metered_never_warn">عدم التحذير مجددًا</string>
-    <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة والمنتهية</string>
+    <string name="notif_enable">تنبيهي بالعروض المجانية الجديدة</string>
     <string name="notif_benefit">احصل على تنبيه عند ظهور عرض مجاني جديد أو انخفاض سعر إلى 0.</string>
+    <string name="notif_expiry">تنبيهي عندما يصبح العرض المجاني مدفوعًا</string>
+    <string name="notif_expiry_benefit">احصل على تنبيه عندما يصبح العرض المجاني مدفوعًا أو تنتهي صلاحيته.</string>
     <string name="notif_denied_hint">الإشعارات محظورة. فعّلها في إعدادات النظام لتلقي التنبيهات.</string>
     <string name="notif_open_settings">فتح إعدادات النظام</string>
     <string name="notif_channel_events">تنبيهات العروض</string>
     <string name="notif_title">رادار العروض المجانية</string>
+    <string name="notif_section_new">عروض مجانية جديدة</string>
+    <string name="notif_section_expired">لم تعد مجانية</string>
     <plurals name="notif_new_free">
         <item quantity="zero">لا عروض جديدة</item>
         <item quantity="one">عرض مجاني جديد واحد</item>
