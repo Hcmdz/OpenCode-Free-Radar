@@ -44,7 +44,7 @@ by Anomaly Innovations, Inc.
 </p>
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.4.2 (versionCode 40200)
+- **Version**: 0.4.3 (versionCode 40300)
 - **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
 
 <details>
@@ -60,7 +60,7 @@ by Anomaly Innovations, Inc.
 - [Contributing](#contributing)
 - [Release signing](#release-signing)
 - [APK size](#-apk-size)
-- [Changelog](#changelog-v010--v042)
+- [Changelog](#changelog-v010--v043)
 - [Privacy](#privacy)
 - [Legal](#legal)
 - [License](#license)
@@ -73,11 +73,11 @@ by Anomaly Innovations, Inc.
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.2.apk`, ~4.3 MB, universal APK).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.4.3.apk`, ~4.3 MB, universal APK).
 
 - Requires Android 10+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Architectures: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (one APK, no per-ABI download).
-- Verify integrity: `sha256sum -c OFR-release.v0.4.2.apk.sha256` (sidecar next to the APK).
+- Verify integrity: `sha256sum -c OFR-release.v0.4.3.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily and verify the SHA-256 before install.
 - A signing-key change would require uninstalling before reinstalling: Android refuses in-place updates across certificates.
 
@@ -247,7 +247,7 @@ Then run:
 
 ## 📏 APK Size
 
-Release APK: **~4.3 MB** compressed (4,503,419 bytes), 133 entries, one universal binary.
+Release APK: **~4.3 MB** compressed (4,505,515 bytes), 134 entries, one universal binary.
 
 | Component | Uncompressed |
 |---|---|
@@ -269,9 +269,16 @@ downloads.
 
 ---
 
-## Changelog (v0.1.0 → v0.4.2)
+## Changelog (v0.1.0 → v0.4.3)
 
 Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
+
+### v0.4.3
+
+- **Third-party notices in-app** — Settings → About → Open source notices lists the licence of every bundled component. Three of them (Material Kolor, colormath, SLF4J) are MIT and require their notice text to travel with the app; it previously did not
+- **Dependency licences are gated in CI** — a new dependency carrying a licence outside the measured allow-list fails the build instead of shipping unnoticed
+- **Expiry alerts name the offers that lapsed** — the alert body listed a generic count and nothing else; the models that stopped being free are now listed by name
+- **Alert hints sit under their own switch** — the expiry hint had drifted below the *new freebies* switch, describing the wrong setting
 
 ### v0.4.2
 
