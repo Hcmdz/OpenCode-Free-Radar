@@ -294,7 +294,7 @@ Versions follow [semver](https://semver.org/); full history lives in [GitHub Rel
 - **Auto-sync on a schedule** — pick the network constraint (Wi-Fi, Wi-Fi on battery, battery only, always) and the cadence from 8 to 72 hours; the choice survives restarts
 - **Alerts on by default** — a sync that spots new free models raises a notification, and the permission is asked once at first launch instead of being buried in settings
 - **Favorites pinned to the top** — a starred model stays above the rest of the list whatever sort is active, and models tied on the same key keep a stable order
-- **Self-update repaired** — the in-app update flow installs the new build again and reports the outcome correctly
+- **Self-update reported its outcome — but did not install** — this release's changelog originally claimed the update flow was repaired. It was not: the download completed and the install silently did nothing. The actual fix landed in v0.4.2
 
 ### v0.3.1
 

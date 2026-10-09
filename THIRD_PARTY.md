@@ -2,8 +2,14 @@
 
 No third-party code is vendored into this repository: no `app/libs/` jars, no
 `jniLibs/`, no prebuilt binaries. Every dependency arrives as a versioned
-Gradle coordinate declared in `gradle/libs.versions.toml`, and the versions
-below match that catalog.
+Gradle coordinate declared in `gradle/libs.versions.toml`.
+
+Versions below are the ones the **resolved runtime graph** actually carries,
+read from `app/build/reports/licensee/androidDebug/artifacts.json`. Where they
+differ from the catalog, the graph wins — Gradle conflict resolution upgrades
+past the declared pin. `androidx.sqlite:sqlite` is the one such case: the
+catalog declares `2.7.0`, and the shipped version is `2.7.1`, pulled up by
+Room. It reaches the APK transitively, not through a declared dependency.
 
 The APK does ship native code — two libraries, each pulled in transitively by
 an AndroidX artifact and reproduced for `arm64-v8a`, `armeabi-v7a`, `x86`, and
@@ -63,6 +69,7 @@ None of these are packaged in the APK.
 | Compose UI test | 1.13.0-alpha03 | Apache 2.0 | `Apache-2.0` |
 | Room testing / WorkManager testing | 3.0.3 / 2.12.0 | Apache 2.0 | `Apache-2.0` |
 | AndroidX security lint checks | 1.0.4 | Apache 2.0 | `Apache-2.0` |
+| Licensee Gradle plugin (licence gate) | 1.14.1 | Apache 2.0 | `Apache-2.0` |
 
 ## Notice obligations
 
