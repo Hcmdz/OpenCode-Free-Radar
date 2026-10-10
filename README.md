@@ -44,7 +44,7 @@ by Anomaly Innovations, Inc.
 </p>
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.4.3 (versionCode 40300)
+- **Version**: 0.5.0 (versionCode 50000)
 - **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
 
 <details>
@@ -78,7 +78,7 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 - Requires Android 10+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Architectures: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (one APK, no per-ABI download).
 - Verify integrity: `sha256sum -c OFR-release.v0.4.3.apk.sha256` (sidecar next to the APK).
-- In-app updates check GitHub Releases daily and verify the SHA-256 before install.
+- In-app updates check GitHub Releases daily. The install itself is signature-checked by the platform: Android refuses an update signed by a different key, so a tampered artifact cannot replace the app.
 - A signing-key change would require uninstalling before reinstalling: Android refuses in-place updates across certificates.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -269,9 +269,16 @@ downloads.
 
 ---
 
-## Changelog (v0.1.0 → v0.4.3)
+## Changelog (v0.1.0 → v0.5.0)
 
 Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
+
+### v0.5.0
+
+- **Licence texts travel with the app** — the notice previously named each licence but linked out instead of reproducing it, which does not satisfy Apache-2.0 §4(d) in a distributed APK. Settings → About → Open source notices now lists every bundled component and reproduces the full text of each licence
+- **One file per licence, not per component** — 273 resolved artifacts under three licences embed three texts, so Apache-2.0 is carried once instead of 265 times
+- **An unmapped licence fails the build** — a licence id with no body used to degrade to a quietly shorter notice; it now stops the build
+- **Notices read correctly in Arabic** — licence prose and artifact identifiers are Latin, so both the list and the body are laid out left-to-right instead of inheriting the locale's right-to-left paragraph direction
 
 ### v0.4.3
 
