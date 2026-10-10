@@ -3,18 +3,23 @@ package com.opencode.freeradar
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.opencode.freeradar.R
 import com.opencode.freeradar.data.local.AutoSync
+import com.opencode.freeradar.ui.screens.settings.LicensesRoot
 import com.opencode.freeradar.ui.screens.settings.SettingsScreen
 import com.opencode.freeradar.ui.theme.AppThemePreview
 import com.opencode.freeradar.ui.theme.ThemeState
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -34,7 +39,8 @@ class SettingsCollapseTest {
     private fun content(
         onOpenLink: (String) -> Unit = {},
         onCheckUpdate: () -> Unit = {},
-        onNotifExpiryToggle: (Boolean) -> Unit = {}
+        onNotifExpiryToggle: (Boolean) -> Unit = {},
+        onOpenLicenses: () -> Unit = {}
     ) {
         rule.setContent {
             AppThemePreview {
@@ -57,9 +63,17 @@ class SettingsCollapseTest {
                     onOpenLink = onOpenLink,
                     updateRowText = "Check for updates",
                     onCheckUpdate = onCheckUpdate,
+                    onOpenLicenses = onOpenLicenses,
                     onBack = {}
                 )
             }
+        }
+    }
+
+    /** Renders the real screen, so the notices come from the shipped raw resources. */
+    private fun licensesContent() {
+        rule.setContent {
+            AppThemePreview { LicensesRoot(onBack = {}) }
         }
     }
 
@@ -105,30 +119,34 @@ class SettingsCollapseTest {
     }
 
     @Test
-    fun aboutSectionOpensAndClosesTheOpenSourceNotices() {
-        content()
+    fun aboutSectionEmitsTheOpenSourceNoticesNavigation() {
+        var opened = 0
+        content(onOpenLicenses = { opened++ })
         rule.onNodeWithTag("about_open_source_notices_row").assertDoesNotExist()
         rule.onNodeWithText(str(R.string.settings_about)).performClick()
         rule.onNodeWithTag("about_open_source_notices_row").performClick()
-        rule.onNodeWithTag("open_source_notices_body").assertIsDisplayed()
-        rule.onNodeWithTag("open_source_notices_close").performClick()
-        rule.onNodeWithTag("open_source_notices_body").assertDoesNotExist()
+        assertEquals(1, opened)
     }
 
     /**
-     * The notice body is only meaningful if the raw resource actually loaded and
-     * every bundled MIT copyright survives into it, and if the body scrolls —
-     * otherwise the disclaimer at the end is unreachable.
+     * The notices are only worth showing if the generated index actually opened and
+     * every bundled MIT copyright reaches the screen — otherwise a licence obligation
+     * is discharged by a blank page.
      */
     @Test
-    fun openSourceNoticesCarryEveryBundledMitCopyrightAndScroll() {
-        content()
-        rule.onNodeWithText(str(R.string.settings_about)).performClick()
-        rule.onNodeWithTag("about_open_source_notices_row").performClick()
+    fun licensesIndexOpensTheBundledMitTextAndScrolls() {
+        licensesContent()
+        rule.onNodeWithTag("licenses_screen").assertIsDisplayed()
+        // 273 artifacts + one header per licence: the generated index really loaded.
+        rule.onNodeWithTag("licenses_list")
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo))
+        // MIT sorts last, so its rows are not composed until the list is scrolled there.
+        rule.onNodeWithTag("licenses_list").performScrollToIndex(275)
+        rule.onNodeWithTag("license_row_org.slf4j_slf4j-api").performClick()
 
-        val body = rule.onNodeWithTag("open_source_notices_body").fetchSemanticsNode()
+        val body = rule.onNodeWithTag("license_body_text").fetchSemanticsNode()
         assertTrue(
-            "notice body must be scrollable, else its closing disclaimer is unreachable",
+            "licence body must be scrollable, else its closing terms are unreachable",
             body.config.contains(SemanticsProperties.VerticalScrollAxisRange)
         )
         listOf("Jordon de Hoog", "AJ Alt", "QOS.ch").forEach { copyright ->

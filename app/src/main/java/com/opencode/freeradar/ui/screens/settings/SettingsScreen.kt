@@ -87,7 +87,6 @@ import com.opencode.freeradar.data.local.AutoSync
 import com.opencode.freeradar.data.local.FilterFabPrefs
 import com.opencode.freeradar.data.local.NotificationPrefs
 import com.opencode.freeradar.data.local.SyncPrefs
-import com.opencode.freeradar.ui.components.OpenSourceNoticesDialog
 import com.opencode.freeradar.ui.components.OptionRow
 import com.opencode.freeradar.ui.components.UpdateDialog
 import com.opencode.freeradar.util.UpdateManager
@@ -100,7 +99,7 @@ import com.opencode.freeradar.ui.theme.ThemeState
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsRoot(onBack: () -> Unit) {
+fun SettingsRoot(onBack: () -> Unit, onOpenLicenses: () -> Unit = {}) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val themePrefs = remember { ThemePrefs(appContext) }
@@ -219,6 +218,7 @@ fun SettingsRoot(onBack: () -> Unit) {
         },
         updateRowText = stringResource(updateRowRes),
         onCheckUpdate = { launchUpdateCheck() },
+        onOpenLicenses = onOpenLicenses,
         onBack = onBack
     )
     val info = updateInfo
@@ -282,9 +282,9 @@ fun SettingsScreen(
     onOpenLink: (String) -> Unit,
     updateRowText: String,
     onCheckUpdate: () -> Unit,
+    onOpenLicenses: () -> Unit,
     onBack: () -> Unit
 ) {
-    var showNotices by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.testTag("settings_screen"),
         topBar = {
@@ -517,7 +517,7 @@ fun SettingsScreen(
                 AboutRow(
                     icon = Icons.Filled.Gavel,
                     text = stringResource(R.string.about_open_source_notices),
-                    onClick = { showNotices = true },
+                    onClick = onOpenLicenses,
                     testTag = "about_open_source_notices_row"
                 )
                 AboutRow(
@@ -532,9 +532,6 @@ fun SettingsScreen(
                 )
             }
         }
-    }
-    if (showNotices) {
-        OpenSourceNoticesDialog(onDismiss = { showNotices = false })
     }
 }
 
@@ -701,6 +698,7 @@ private fun SettingsPreview() {
             onOpenLink = {},
             updateRowText = "Check for updates",
             onCheckUpdate = {},
+            onOpenLicenses = {},
             onBack = {}
         )
     }

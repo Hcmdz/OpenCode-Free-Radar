@@ -73,24 +73,39 @@ None of these are packaged in the APK.
 
 ## Notice obligations
 
-Measured against the built release APK, not assumed:
+Every licence in the runtime graph is now shipped in full and reachable in-app.
+Settings → About → Open source notices lists all **273** bundled artifacts,
+grouped by licence; tapping one opens its text.
 
-* **Apache-2.0 and BSD-3-Clause texts already ship**, as `LICENSE.txt` files
-  under `META-INF/` in the APK: nine copies of the Apache-2.0 text (10,175 bytes
-  each, from the AndroidX AARs) and the BSD-3-Clause text (1,434 bytes) from
-  `androidx.datastore:datastore-preferences-external-protobuf`. They survive
-  because the build sets no `packaging { resources { excludes } }`, so AGP keeps
-  AAR `META-INF/**`.
-* **No MIT text ships anywhere in the APK.** Three bundled components are MIT
-  and their notice is missing.
+The in-app index is generated, not hand-maintained. `generateLicenseJson` (in
+`app/build.gradle.kts`, hooked onto `preBuild`) reads the Licensee artifacts
+report and writes `app/src/main/res/raw/third_party.json`, which the screen
+parses at runtime. Regenerate it with `./gradlew :app:generateLicenseJson`; the
+file is committed because it is a source input, not a build artifact.
 
-The three MIT components ship code — R8 retains 89 `com.materialkolor.*`, 36
+Measured against the built APK:
+
+* **All three licence texts ship under `res/raw/`**, embedded verbatim:
+  `apache_2_0.txt` (10,175 bytes, copied from the `activity-1.10.0.aar`),
+  `bsd_3_clause.txt` (1,434 bytes, from
+  `androidx.datastore:datastore-preferences-external-protobuf-1.2.1.jar`) and
+  `mit.txt` (3,311 bytes, bundling the three distinct copyright holders —
+  Jordon de Hoog, AJ Alt, QOS.ch — that the MIT artifacts carry).
+  Only distinct licence *bodies* are embedded: 3 files serve 273 artifacts.
+  Apache-2.0 §4(d) is satisfied by the full text rather than a link.
+* The APK *also* still carries 10 `META-INF/` licence copies (93,009 bytes
+  total, 0 of them MIT). They survive because the build sets no
+  `packaging { resources { excludes } }`, so AGP keeps AAR `META-INF/**`. These
+  are not user-reachable; they are why `res/raw/` exists at all.
+
+The 7 MIT artifacts ship code — R8 retains 89 `com.materialkolor.*`, 36
 `com.github.ajalt.colormath.*`, and 18 `org.slf4j.*` classes, per
 `app/build/outputs/mapping/release/mapping.txt`.
 
-Their notices are reproduced in full in `app/src/main/res/raw/open_source_notices.txt`
-and shown in-app from Settings → About → Open source notices. Each body is copied
-byte-for-byte from the upstream `LICENSE` at the released tag, never retyped.
+Each body is copied byte-for-byte from the upstream `LICENSE` at the released
+tag, never retyped. Net APK cost: **+52,290 bytes** uncompressed
+(56,362 added for the 4 new files, 4,072 removed with the superseded
+`open_source_notices.txt`).
 
 Whether these licences bind the maintainer is a judgement for the maintainer;
 this section reports what is present and what is not.
@@ -110,8 +125,14 @@ licence of a POM that has no `<licenses>` block by following its parent POM,
 which is why SLF4J and Guava need no `allowDependency` entry.
 
 Adding a dependency means re-running `./gradlew :app:licensee`; if it reports an
-unresolved licence, add it to the allow-list *and* to the table above, and add
-its notice text to the in-app file if the licence requires one.
+unresolved licence, add it to the allow-list *and* to the table above.
+
+A second gate runs on every build: `generateLicenseJson` **fails the build** on
+any artifact whose licence it cannot map to an embedded `res/raw` body. A silent
+licence regression — a new dependency whose MIT text nobody added — is exactly
+what this catches, so the failure is loud rather than a silently empty notice.
+Adding a licence therefore means adding its body under `res/raw/` and mapping the
+SPDX id in `generateLicenseJson`.
 
 ## Notes
 

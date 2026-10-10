@@ -155,3 +155,97 @@ tasks.withType<Test> {
 tasks.named("check") {
     dependsOn("licensee")
 }
+
+/**
+ * Builds res/raw/third_party.json from the graph licensee already resolved, so the
+ * in-app notices screen cannot drift from the dependency set.
+ *
+ * One entry per runtime artifact, each pointing at one of the few distinct
+ * licence bodies in res/raw/licences/. Only the bodies are embedded — the full
+ * text is shared by every artifact under the same SPDX id, so 273 artifacts cost
+ * 3 texts, not 273.
+ *
+ * Fails the build on an unmapped licence rather than shipping a row with no body:
+ * a silent licence regression is exactly what the gate above exists to catch.
+ */
+val licensesDir = layout.projectDirectory.dir("src/main/res/raw")
+val noticesOutput = licensesDir.file("third_party.json")
+
+// POMs that declare their licence by URL instead of an SPDX id. Keys are the
+// URLs licensee records in artifacts.json; values are the body we ship.
+val licenseByUrl = mapOf(
+    "https://github.com/jordond/materialkolor/blob/master/LICENSE" to "mit.txt",
+    "https://opensource.org/license/mit" to "mit.txt"
+)
+
+val generateLicenseJson by tasks.registering {
+    description = "Generates the third-party notices JSON from the resolved dependency graph."
+    group = "build"
+
+    val report = layout.buildDirectory.file("reports/licensee/androidDebug/artifacts.json")
+    val out = noticesOutput
+    val urlMap = licenseByUrl
+
+    inputs.file(report)
+    // Only the licence bodies: the output itself must not be its own input.
+    inputs.files("src/main/res/raw/apache_2_0.txt", "src/main/res/raw/mit.txt",
+        "src/main/res/raw/bsd_3_clause.txt")
+    outputs.file(out)
+
+    doLast {
+        @Suppress("UNCHECKED_CAST")
+        val parsed = groovy.json.JsonSlurper().parse(report.get().asFile)
+        val entries = parsed as List<Map<String, Any?>>
+        val rows = entries
+            .sortedBy { "${it["groupId"]}:${it["artifactId"]}" }
+            .map { a ->
+                val group = a["groupId"] as? String ?: ""
+                val name = a["artifactId"] as? String ?: ""
+                val version = a["version"] as? String ?: ""
+                val label = a["name"] as? String ?: name
+                @Suppress("UNCHECKED_CAST")
+                val spdx = (a["spdxLicenses"] as? List<Map<String, Any?>>) ?: emptyList()
+                // licensee files POMs that name a licence but give no SPDX id under
+                // "unknownLicenses", keyed by the URL the POM declared.
+                @Suppress("UNCHECKED_CAST")
+                val unknown = (a["unknownLicenses"] as? List<Map<String, Any?>>) ?: emptyList()
+                val body = when {
+                    spdx.isNotEmpty() -> when (val id = spdx[0]["identifier"] as? String) {
+                        // Values are res/raw filenames, not SPDX ids: Android resource
+                        // identifiers forbid the dash, so R.raw.apache_2_0 is the only spelling.
+                        "Apache-2.0" -> "apache_2_0.txt"
+                        "MIT" -> "mit.txt"
+                        "BSD-3-Clause" -> "bsd_3_clause.txt"
+                        else -> throw GradleException(
+                            "Licence '$id' from $group:$name has no body in res/raw/licences. " +
+                                "Add it there, or map it in generateLicenseJson."
+                        )
+                    }
+                    unknown.any { it["url"] in urlMap } ->
+                        urlMap[unknown.first { it["url"] in urlMap }["url"]]
+                    else -> throw GradleException(
+                        "$group:$name declares no SPDX id and no known licence URL " +
+                            "(${unknown.map { it["url"] }}). Add it to licenseByUrl in " +
+                            "app/build.gradle.kts."
+                    )
+                }
+                val safe = { v: String? -> (v ?: "").replace("\\", "\\\\").replace("\"", "\\\"") }
+                "  {\"group\": \"${safe(group)}\", \"artifact\": \"${safe(name)}\", " +
+                    "\"version\": \"${safe(version)}\", \"label\": \"${safe(label)}\", " +
+                    "\"license\": \"$body\"}"
+            }
+        out.asFile.writeText(rows.joinToString(",\n", prefix = "[\n", postfix = "\n]\n"), Charsets.UTF_8)
+        logger.lifecycle("Wrote ${rows.size} third-party notices to $out")
+    }
+}
+
+// artifacts.json only exists once licensee has run.
+generateLicenseJson.configure { dependsOn("licenseeAndroidDebug") }
+
+// Keep the generated JSON in step with the dependency graph on every build.
+// Hooked on preBuild rather than a generate*Assets task: AGP's task names for
+// asset generation are not stable across versions, and a missing name here fails
+// configuration outright.
+tasks.matching { it.name.endsWith("PreBuild") }.configureEach {
+    dependsOn(generateLicenseJson)
+}

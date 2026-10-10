@@ -13,6 +13,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.opencode.freeradar.ui.screens.dashboard.DashboardRoot
 import com.opencode.freeradar.ui.screens.details.DetailsRoot
 import com.opencode.freeradar.ui.screens.newmodels.NewModelsRoot
+import com.opencode.freeradar.ui.screens.settings.LicensesRoot
 import com.opencode.freeradar.ui.screens.settings.SettingsRoot
 import com.opencode.freeradar.ui.system.ImmersiveEffect
 
@@ -41,7 +42,13 @@ fun AppNavHost(deepLink: NewModels? = null) {
                 DetailsRoot(offerId = key.offerId, onBack = { backStack.removeLastOrNull() })
             }
             entry<Settings> {
-                SettingsRoot(onBack = { backStack.removeLastOrNull() })
+                SettingsRoot(
+                    onBack = { backStack.removeLastOrNull() },
+                    onOpenLicenses = { backStack.add(Licenses) }
+                )
+            }
+            entry<Licenses> {
+                LicensesRoot(onBack = { backStack.removeLastOrNull() })
             }
             entry<NewModels> { key ->
                 NewModelsRoot(
