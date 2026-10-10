@@ -7,6 +7,7 @@
 /specs/
 /docs/decisions/
 /.opencode/
+/AppIcons/
 
 # Build / local secrets (standard Android)
 local.properties
