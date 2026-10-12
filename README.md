@@ -115,13 +115,17 @@ Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/O
 
 Every free offer at a glance, light or dark — dashboard, filters, and settings.
 
+<div align="center">
+
 | Light — free filter | Dark — free filter |
 |---|---|
-| <img src="screenshots/dashboard-free-light-v2.jpg" width="270" alt="Dashboard in light mode with free filter"> | <img src="screenshots/dashboard-dark-free-v2.jpg" width="270" alt="Dashboard in dark mode with free filter"> |
+| <a href="screenshots/dashboard-free-light-v2.jpg"><img src="screenshots/dashboard-free-light-v2.jpg" width="270" alt="Dashboard in light mode with free filter"></a> | <a href="screenshots/dashboard-dark-free-v2.jpg"><img src="screenshots/dashboard-dark-free-v2.jpg" width="270" alt="Dashboard in dark mode with free filter"></a> |
 | Light — all models | Dark — offers list |
-| <img src="screenshots/dashboard-all-light-v2.jpg" width="270" alt="Dashboard in light mode showing all models"> | <img src="screenshots/dashboard-offers-dark-v2.jpg" width="270" alt="Dashboard in dark mode showing offers"> |
+| <a href="screenshots/dashboard-all-light-v2.jpg"><img src="screenshots/dashboard-all-light-v2.jpg" width="270" alt="Dashboard in light mode showing all models"></a> | <a href="screenshots/dashboard-offers-dark-v2.jpg"><img src="screenshots/dashboard-offers-dark-v2.jpg" width="270" alt="Dashboard in dark mode showing offers"></a> |
 | Settings | Filter sheet |
-| <img src="screenshots/settings-v2.jpg" width="270" alt="Settings screen with appearance options"> | <img src="screenshots/filter-sheet-v2.jpg" width="270" alt="Filter sheet with source options and local models switch"> |
+| <a href="screenshots/settings-v2.jpg"><img src="screenshots/settings-v2.jpg" width="270" alt="Settings screen with appearance options"></a> | <a href="screenshots/filter-sheet-v2.jpg"><img src="screenshots/filter-sheet-v2.jpg" width="270" alt="Filter sheet with source options and local models switch"></a> |
+
+</div>
 
 Fine-tune sources, appearance, and sync behavior in one place.
 
