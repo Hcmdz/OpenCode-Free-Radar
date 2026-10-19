@@ -7,7 +7,7 @@ import androidx.room3.PrimaryKey
 
 // Intentionally FK-free: the event log outlives offers. A cascade would wipe
 // history on every source replacement (proven on device 2026-09-15).
-// Bounded by pruneOlderThan (90 days, see ChangeEventDao).
+// Bounded by pruneOlderThan (30 days, see ChangeEventDao).
 @Entity(
     tableName = "change_event",
     indices = [Index(value = ["offerRemoteId", "createdAt"])]

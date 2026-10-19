@@ -236,4 +236,20 @@ class DetectChangesTest {
         val events = detectChanges(old = listOf(gitlabOld), new = listOf(gitlabNew), now = 2_000L)
         assertThat(types(events)).isEqualTo(setOf(ChangeType.PRICE_CHANGED))
     }
+
+    @Test
+    fun `conditions or temporary change emits CONDITIONS_CHANGED`() {
+        val old = offer().copy(conditions = "until 2026-12-01")
+        val new = offer().copy(conditions = "until 2027-01-01", temporary = true)
+        val events = detectChanges(old = listOf(old), new = listOf(new), now = 2_000L)
+        assertThat(types(events).contains(ChangeType.CONDITIONS_CHANGED)).isEqualTo(true)
+    }
+
+    @Test
+    fun `unchanged conditions and temporary emit nothing extra`() {
+        val old = offer().copy(conditions = "c", temporary = false)
+        val new = offer().copy(conditions = "c", temporary = false)
+        val events = detectChanges(old = listOf(old), new = listOf(new), now = 2_000L)
+        assertThat(types(events).contains(ChangeType.CONDITIONS_CHANGED)).isEqualTo(false)
+    }
 }

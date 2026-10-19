@@ -29,7 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * A $0 flip-flop must ring the bell once per 90-day window, not on every
+ * A $0 flip-flop must ring the bell once per 30-day window, not on every
  * swing: the second PAID -> usable-free swing stays recorded in history
  * but emits no new BECAME_FREE while the first is still in retention.
  */

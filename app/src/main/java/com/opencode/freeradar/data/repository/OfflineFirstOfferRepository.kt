@@ -143,7 +143,15 @@ class OfflineFirstOfferRepository(
                     present
                 )
                 if (plan.bump.isNotEmpty()) offers.bumpMissed(plan.bump)
-                val detected = detectChanges(current, incoming, now)
+                // Rows that migrated from another source keep their old source
+                // column until this upsert, so a per-source `current` would read
+                // them as newcomers and skip the free->paid comparison. Pull the
+                // prior state for every incoming id from the whole table so a
+                // model that moved catalogs is still compared against itself.
+                val previousForDetect = offers.snapshotAll()
+                    .filter { entity -> entity.remoteId in present }
+                    .map { it.toDomain() }
+                val detected = detectChanges(previousForDetect, incoming, now)
                     .filter { it.type != ChangeType.MODEL_REMOVED }
                     .filterNot { event ->
                         // Anti-flap: a $0 swing rings once per retention window.
@@ -275,7 +283,7 @@ class OfflineFirstOfferRepository(
     }
 
     companion object {
-        const val HISTORY_RETENTION_MILLIS = 90L * 24 * 60 * 60 * 1000
+        const val HISTORY_RETENTION_MILLIS = 30L * 24 * 60 * 60 * 1000
         const val MAX_SYNC_RUNS = 100
         const val FRESHNESS_WINDOW_MILLIS = 6L * 60 * 60 * 1000
         private const val FRESH_RUN_LOOKBACK = 20
