@@ -4,6 +4,10 @@ All notable changes to OpenCode Free Radar.
 
 Versions follow [semver](https://semver.org/); full history lives in [GitHub Releases](https://github.com/Hcmdz/OpenCode-Free-Radar/releases).
 
+## Unreleased
+
+- **A favorite survives a catalog migration** — a model that moved to another pinned catalog lost its favorite flag: the carry-over read the per-source snapshot, so the migrated row was not in the favorites set and the upsert replaced the stored row. The carry-over now reads the whole table
+
 ## v0.5.1
 
 - **Free-to-paid withdrawals are no longer masked** — a cross-source disagreement used to demote the row to unverified and silence the withdrawal it caused; the expiry test no longer depends on confidence, so the row that was shown as free rings when it stops being so
