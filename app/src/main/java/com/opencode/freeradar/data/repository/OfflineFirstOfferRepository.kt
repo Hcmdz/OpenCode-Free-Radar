@@ -99,13 +99,20 @@ class OfflineFirstOfferRepository(
                 val dtos = body.offers
                 val now = clock.millis()
                 val current = offers.snapshotBySource(source).map { it.toDomain() }
+                // One full-table read serves the favorites carry-over and the
+                // change detection below. A model that migrates catalogs keeps
+                // its row (the absence sweep never deletes a favorite), so a
+                // per-source snapshot reads it as a newcomer.
+                val allRows = offers.snapshotAll()
                 // Mapping is source-specific (S1 prices vs S2 LIMITED rule):
                 // a shared mapper here once laundered NVIDIA rows into
                 // opencode-data rows. The registry is wired in AppModule.
                 val mapOffer = mappers[source] ?: { dto: SourceOffer, at: Long -> dto.toOffer(at, source) }
                 // Mappers are sync-owned (favorite=false): carry the user's
-                // flags over, or every refresh wipes them via REPLACE.
-                val favorites = current.filter { it.favorite }.map { it.remoteId }.toSet()
+                // flags over, or every refresh wipes them via REPLACE. The
+                // whole table, not this source's rows: a favorite whose model
+                // moved to another catalog keeps its flag.
+                val favorites = allRows.filter { it.favorite }.map { it.remoteId }.toSet()
                 val incoming = dtos.map { dto ->
                     mapOffer(dto, now).let { offer ->
                         if (offer.remoteId in favorites) offer.copy(favorite = true) else offer
@@ -148,7 +155,7 @@ class OfflineFirstOfferRepository(
                 // them as newcomers and skip the free->paid comparison. Pull the
                 // prior state for every incoming id from the whole table so a
                 // model that moved catalogs is still compared against itself.
-                val previousForDetect = offers.snapshotAll()
+                val previousForDetect = allRows
                     .filter { entity -> entity.remoteId in present }
                     .map { it.toDomain() }
                 val detected = detectChanges(previousForDetect, incoming, now)

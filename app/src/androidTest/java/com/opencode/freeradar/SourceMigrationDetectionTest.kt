@@ -60,6 +60,10 @@ private class ListSource(
         )
 }
 
+/**
+ * The source-migration path: a model that moves between catalogs is compared
+ * against its own prior state, and the user state it carried survives the move.
+ */
 @RunWith(AndroidJUnit4::class)
 class SourceMigrationDetectionTest {
 
@@ -115,6 +119,26 @@ class SourceMigrationDetectionTest {
             "a model that was free then paid must ring even across a source migration",
             1,
             expiryCount()
+        )
+    }
+
+    @Test
+    fun favoriteSurvivesSourceMigration() = runTest {
+        // 1. m1 is free and lives under source a.
+        repository.refreshAll()
+        repository.setFavorite(remoteId, true)
+
+        // 2. m1 leaves a and reappears under b. The absence sweep never
+        // deletes a favorite, so its row lingers under a until b upserts it.
+        aRows.removeIf { it.modelId == "m1" }
+        bRows.add(Row("m1", 0.0))
+
+        repository.refreshAll()
+
+        val migrated = repository.observeOffers(false).first().first { it.remoteId == remoteId }
+        assertTrue(
+            "a favorite must keep its flag when its model moves between catalogs",
+            migrated.favorite
         )
     }
 }
