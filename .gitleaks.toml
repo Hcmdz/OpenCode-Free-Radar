@@ -19,7 +19,22 @@ regex = '''AAAA[A-Za-z0-9_:\-]{10,}'''
 [[rules]]
 id = "gradle-signing-password"
 description = "Gradle signing password in clear"
-regex = '''(?i)(storePassword|keyPassword|RELEASE_(STORE|KEY)_PASSWORD)\s*[=:]\s*\S+'''
+# A quoted literal is a secret. The value must not start with $, which is
+# how a reference reads (a shell variable, a workflow expression), and a
+# property lookup such as
+# providers.gradleProperty("RELEASE_STORE_PASSWORD").get() does not start
+# with a quote at all.
+regex = '''(?im)"?(storePassword|keyPassword|RELEASE_(?:STORE|KEY)_PASSWORD)"?\s*[=:]\s*"([^"$][^"]*)"'''
+secretGroup = 2
+
+[[rules]]
+id = "gradle-signing-password-unquoted"
+description = "Gradle signing password in clear, unquoted"
+# The unquoted form: a properties file, a workflow env entry, an export.
+# The value ends the line, which is what tells it apart from a call such as
+# providers.gradleProperty("RELEASE_STORE_PASSWORD").get().
+regex = '''(?im)"?(storePassword|keyPassword|RELEASE_(?:STORE|KEY)_PASSWORD)"?\s*[=:]\s*([^\s"$]+)([ \t]*(#.*)?)$'''
+secretGroup = 2
 
 [[rules]]
 id = "github-pat"
@@ -32,6 +47,8 @@ description = "GitHub CLI credentials file"
 path = '''hosts\.yml$'''
 regex = '''oauth_token\s*:\s*\S+'''
 
-[allowlist]
+[[allowlists]]
 description = "Placeholders used in docs and templates"
-regexes = ['''YOUR_[A-Z_]+''', '''EXAMPLE''', '''CHANGEME''', '''xxx''']
+# RELEASE_*_PASSWORD is a property name, not a value: a quoted one is the
+# secret being named, not disclosed.
+regexes = ['''YOUR_[A-Z_]+''', '''EXAMPLE''', '''CHANGEME''', '''xxx''', '''RELEASE_(STORE|KEY)_PASSWORD''']
