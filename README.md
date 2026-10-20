@@ -44,7 +44,7 @@ by Anomaly Innovations, Inc.
 </p>
 
 - **Package**: `com.opencode.freeradar`
-- **Version**: 0.5.0 (versionCode 50000)
+- **Version**: 0.5.1 (versionCode 50100)
 - **Author**: HcmDZ &lt;[HcmDz.Dev@gmail.com]&gt;
 
 <details>
@@ -73,11 +73,11 @@ by Anomaly Innovations, Inc.
 
 ## 📦 Downloads
 
-Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.5.0.apk`, ~4.3 MB, universal APK).
+Get OpenCode Free Radar on GitHub: **[Latest release](https://github.com/Hcmdz/OpenCode-Free-Radar/releases/latest)** (`OFR-release.v0.5.1.apk`, ~4.3 MB, universal APK).
 
 - Requires Android 10+ (API 29); allow *Install unknown apps* for your browser when prompted.
 - Architectures: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (one APK, no per-ABI download).
-- Verify integrity: `sha256sum -c OFR-release.v0.5.0.apk.sha256` (sidecar next to the APK).
+- Verify integrity: `sha256sum -c OFR-release.v0.5.1.apk.sha256` (sidecar next to the APK).
 - In-app updates check GitHub Releases daily. The install itself is signature-checked by the platform: Android refuses an update signed by a different key, so a tampered artifact cannot replace the app.
 - A signing-key change would require uninstalling before reinstalling: Android refuses in-place updates across certificates.
 
@@ -251,7 +251,7 @@ Then run:
 
 ## 📏 APK Size
 
-Release APK: **~4.3 MB** compressed (4,505,515 bytes), 134 entries, one universal binary.
+Release APK: **~4.3 MB** compressed (4,545,944 bytes), 134 entries, one universal binary.
 
 | Component | Uncompressed |
 |---|---|
