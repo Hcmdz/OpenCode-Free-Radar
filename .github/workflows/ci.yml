@@ -69,6 +69,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+      - name: Signing rule self-check
+        run: |
+          # The signing rule must ignore a value read from the environment and
+          # still catch one written down, quoted or not. The fixtures are
+          # assembled here so the shapes never sit in this file.
+          set -euo pipefail
+          command -v gitleaks >/dev/null || { echo "gitleaks is not on PATH"; exit 1; }
+          tmp=$(mktemp -d)
+          k=storePassword
+          mkdir -p "$tmp/lookup" "$tmp/reference" "$tmp/literal" "$tmp/unquoted"
+          printf '%s = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()\n' "$k" > "$tmp/lookup/signing.kts"
+          printf '%s: ${{ secrets.RELEASE_STORE_PASSWORD }}\n' "$k" > "$tmp/reference/signing.yml"
+          printf '%s = "PLACEHOLDERVALUE"\n' "$k" > "$tmp/literal/signing.kts"
+          printf '%s: PLACEHOLDERVALUE\n' "$k" > "$tmp/unquoted/signing.yml"
+          # gitleaks exits 0 when it finds nothing and 1 when it finds a leak.
+          for clean in lookup reference; do
+            if gitleaks dir "$tmp/$clean" --config .gitleaks.toml --redact --no-banner >/dev/null 2>&1; then
+              echo "$clean is clean"
+            else
+              echo "false positive: $clean must not be flagged"; exit 1
+            fi
+          done
+          for dirty in literal unquoted; do
+            set +e
+            gitleaks dir "$tmp/$dirty" --config .gitleaks.toml --redact --no-banner >/dev/null 2>&1
+            code=$?
+            set -e
+            [ "$code" -eq 1 ] || { echo "the gate missed $dirty (exit $code)"; exit 1; }
+          done
+          echo "signing rule self-check ok"
       - name: No sensitive filenames tracked
         run: |
           # The list is the same file the generic gate and the audit engine read,
