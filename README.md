@@ -231,14 +231,13 @@ respect the [Code of Conduct](CODE_OF_CONDUCT.md).
 Release builds sign with your own keystore, which lives **outside** this
 repository. Without it, every task still configures and debug builds work
 fine, but the release output ships unsigned. To sign releases, add these keys
-to `~/.gradle/gradle.properties` (outside any repo, values never committed):
+to `~/.gradle/gradle.properties` (outside any repo, values never committed),
+one `name=value` pair per line:
 
-```properties
-RELEASE_STORE_FILE=<path-to-your-keystore>
-RELEASE_STORE_[RELEASE_STORE_PASSWORD]
-RELEASE_KEY_ALIAS=[ALIAS]
-RELEASE_KEY_[RELEASE_KEY_PASSWORD]
-```
+- `RELEASE_STORE_FILE` — path to your keystore
+- `RELEASE_STORE_PASSWORD` — the keystore password
+- `RELEASE_KEY_ALIAS` — the key alias
+- `RELEASE_KEY_PASSWORD` — the key password
 
 Then run:
 
