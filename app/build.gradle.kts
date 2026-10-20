@@ -46,9 +46,9 @@ android {
             val storeFilePath = providers.gradleProperty("RELEASE_STORE_FILE").getOrElse("")
             if (storeFilePath.isNotEmpty()) {
                 storeFile = file(storeFilePath)
-                storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
+                storePassword /* from the environment */ = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
                 keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").getOrElse("")
-                keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
+                keyPassword /* from the environment */ = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
                 enableV3Signing = true
             }
         }
